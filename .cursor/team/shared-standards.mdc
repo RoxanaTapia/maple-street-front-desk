@@ -1,0 +1,16 @@
+---
+description: Standards shared by every role
+alwaysApply: true
+---
+
+# Shared standards
+
+- Write in plain English the client can read.
+- Keep each fact in one file. Link to that file instead of copying it.
+- Stay inside the current issue.
+- In files, commit messages, and pull requests, do not include unpublished prices, internal hostnames, hosting details, internal notes, or tool or model names.
+- Follow the behaviour rules in [.cursor/rules/](../rules/).
+- Follow the test rule in [tests.mdc](../rules/tests.mdc).
+- Make a change the way the [project guide](../../AGENTS.md) describes.
+- Summarize it with [pr-summary.md](../commands/pr-summary.md).
+- Role files are listed in [README.md](README.md).

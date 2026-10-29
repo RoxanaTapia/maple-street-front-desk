@@ -1,0 +1,11 @@
+---
+description: How the checks stay strict
+alwaysApply: true
+---
+
+# Tests
+
+- Locked items are listed in the [project guide](../../AGENTS.md). Do not change them to make a check pass.
+- No rule may be weakened to make a test pass.
+- When a check fails, fix the project so it meets the rule.
+- Once the agreed questions and urgent words exist, the checks cover every question and every urgent word.

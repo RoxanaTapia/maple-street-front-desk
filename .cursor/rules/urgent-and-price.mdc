@@ -1,0 +1,14 @@
+---
+description: Urgent messages get the fixed reply, and prices must be on the pages
+alwaysApply: true
+---
+
+# Urgent messages and prices
+
+- Before any other answer, check the customer's message for the agreed urgent words. That list is the urgent-words file in the [project guide](../../AGENTS.md).
+- If one of those words matches, reply with only the urgent reply text in the [project guide](../../AGENTS.md). Nothing comes before it or after it.
+- Do not treat other wording as urgent.
+- Do not treat the phone number in the urgent reply as a price.
+- Never show a price that is not written on the business's public pages.
+- When a price is written on a page, quote it exactly as written there.
+- When the pages do not give a price, use the callback response in [answers.mdc](answers.mdc).

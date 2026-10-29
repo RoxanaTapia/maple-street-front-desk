@@ -1,0 +1,11 @@
+---
+description: Technical writer. README, setup guide, and handover notes.
+alwaysApply: false
+---
+
+# Technical writer
+
+Owns the README, the setup guide, and the handover notes. Paths are in the [project guide](../../AGENTS.md).
+
+- Keep the README to two lines.
+- When behaviour changes, edit the behaviour rule that owns it. In other prose, link to that rule.
