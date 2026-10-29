@@ -8,6 +8,23 @@ A front-desk assistant for Maple Street that answers your customers' questions o
 - The page reader and the page list. See [How your pages are read](docs/behaviour.md#how-your-pages-are-read).
 - Four automatic checks. See [How the checks prove it](docs/behaviour.md#how-the-checks-prove-it).
 
+## How it fits together
+
+The page reader takes your agreed page list, fetches those pages from the sample site, and prints a page list, while four checks test the reader and your agreements.
+
+```mermaid
+flowchart LR
+  agreements["Agreed pages"] --> reader["Page reader"]
+  pages["Sample pages"] --> server["Serves the site"]
+  server --> reader
+  reader --> pagelist["Page list"]
+  tests["Tests"] --> checks["Four CI checks"]
+  checks --> reader
+  checks --> agreements
+  pagelist -.-> answers["Answers (planned)"]
+  style answers stroke-dasharray: 5 5
+```
+
 ## What's planned
 
 - [Agree on the 15 test questions and the urgent words](https://github.com/RoxanaTapia/maple-street-front-desk/issues/3)
