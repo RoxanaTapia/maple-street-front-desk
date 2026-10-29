@@ -14,7 +14,7 @@ These never change without your OK. The list is in [What you've agreed](docs/agr
 
 1. **One issue.** An issue is the written request. Each request stays one piece of work.
 2. **One branch.** A branch is a separate copy of the project, so this work does not mix with anything else.
-3. **One pull request.** A pull request is the proposal to add that copy. It includes a short summary of what changed and how it was tested.
+3. **One pull request.** A pull request is the proposal to add that copy. Write it in the short form in [the change summary](.github/pull_request_template.md): a few labelled lines on what changed, one line on how it was tested, and the commands to try it.
 4. **Automatic checks.** So nothing breaks what you agreed.
 5. **A person reviews.** A person signs off every change.
 6. **Merge.** Merge means the change joins the project.
@@ -33,7 +33,7 @@ These never change without your OK. The list is in [What you've agreed](docs/agr
 | Checks | [tests/](tests/) | The automatic checks |
 | Checks | [scripts/run_checks.py](scripts/run_checks.py) | Runs the checks |
 | Checks | [.github/workflows/ci.yml](.github/workflows/ci.yml) | Runs those same checks on every proposed change |
-| Checks | [.github/pull_request_template.md](.github/pull_request_template.md) | The form for the change summary |
+| Checks | [.github/pull_request_template.md](.github/pull_request_template.md) | The short form for the change summary |
 | Checks | [.python-version](.python-version) | Which version of Python the checks use. Python is the language they are written in. |
 | Coming in a later step | `sample-site/` | A small fictional sample of your public pages |
 | Coming in a later step | `src/` | The assistant itself, which reads pages and answers |
