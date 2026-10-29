@@ -4,7 +4,7 @@ This is the list of what you have agreed for Maple Street Front Desk. It is a fi
 
 ## Pages the assistant answers from
 
-**Status: agreed.** Dave named these pages on Oct 29.
+**Status: agreed.** You named these pages on Oct 29.
 
 | Page | Path | Status |
 |---|---|---|
@@ -50,7 +50,7 @@ When the pages do not say, the assistant offers a callback with these words:
 
 ## Test questions
 
-**Status: draft.** The first six are yours and stay draft. The other nine are proposed, to confirm with Dave.
+**Status: draft.** The first six are yours and stay draft. The other nine are proposed, to confirm with you.
 
 | Question | Page | Expected answer | Status |
 |---|---|---|---|
@@ -60,17 +60,17 @@ When the pages do not say, the assistant offers a callback with these words:
 | Do you cover Cherry Hill? | [Service Area](../sample-site/service-area.html) | Yes | Draft. Answered by the pages. |
 | Can I get same-day service? | [Services](../sample-site/services.html) | Yes | Draft. Answered by the pages. |
 | Do you offer financing? | [Hours & FAQ](../sample-site/hours.html) | Yes | Draft. Answered by the pages. |
-| Are you open Sundays? | [Hours & FAQ](../sample-site/hours.html) | Closed | Proposed, to confirm with Dave. Answered by the pages. |
-| How do I book or cancel an appointment? | [Contact](../sample-site/contact.html) | Call the main line | Proposed, to confirm with Dave. Answered by the pages. |
-| Do you cover Moorestown? | None | The [callback reply](#callback-reply) | Proposed, to confirm with Dave. Not on the pages, so the callback reply applies. |
-| How much is a water heater replacement? | None | The [callback reply](#callback-reply) | Proposed, to confirm with Dave. Not on the pages, so the callback reply applies. |
-| Do you install septic systems? | None | Waiting on Dave | Proposed, to confirm with Dave. Needs Dave. |
-| How long is your warranty? | None | Waiting on Dave | Proposed, to confirm with Dave. Needs Dave. |
-| Are you licensed and insured? | None | Waiting on Dave | Proposed, to confirm with Dave. Needs Dave. |
-| Do you offer after-hours emergency callouts? | None | Waiting on Dave | Proposed, to confirm with Dave. Needs Dave. |
-| I have a burst pipe. What should I do? | None | The [fixed urgent reply](#fixed-urgent-reply) | Proposed, to confirm with Dave. The fixed urgent reply applies. |
+| Are you open Sundays? | [Hours & FAQ](../sample-site/hours.html) | Closed | Proposed, to confirm with you. Answered by the pages. |
+| How do I book or cancel an appointment? | [Contact](../sample-site/contact.html) | Call the main line | Proposed, to confirm with you. Answered by the pages. |
+| Do you cover Moorestown? | None | The [callback reply](#callback-reply) | Proposed, to confirm with you. Not on the pages, so the callback reply applies. |
+| How much is a water heater replacement? | None | The [callback reply](#callback-reply) | Proposed, to confirm with you. Not on the pages, so the callback reply applies. |
+| Do you install septic systems? | None | Waiting on you | Proposed, to confirm with you. Needs your answer. |
+| How long is your warranty? | None | Waiting on you | Proposed, to confirm with you. Needs your answer. |
+| Are you licensed and insured? | None | Waiting on you | Proposed, to confirm with you. Needs your answer. |
+| Do you offer after-hours emergency callouts? | None | Waiting on you | Proposed, to confirm with you. Needs your answer. |
+| I have a burst pipe. What should I do? | None | The [fixed urgent reply](#fixed-urgent-reply) | Proposed, to confirm with you. The fixed urgent reply applies. |
 
-### Questions for Dave
+### Questions for you
 
 - Please confirm you are closed on Sundays.
 - Please confirm people book and cancel by calling the main line.

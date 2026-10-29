@@ -1,6 +1,8 @@
 """Read the agreed pages and print a page list.
 
-Usage: python3 scripts/read_pages.py <site address>
+Usage: python3 scripts/read_pages.py [site address]
+
+With no address, reads http://127.0.0.1:8000, the address the sample site prints by default.
 """
 
 import sys
@@ -12,6 +14,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 AGREEMENTS = ROOT / "docs" / "agreements.md"
 PAGES_HEADING = "Pages the assistant answers from"
+DEFAULT_SITE = "http://127.0.0.1:8000"
 
 
 class TitleTextParser(HTMLParser):
@@ -177,11 +180,16 @@ def format_page_list(pages):
 
 def main(argv=None):
     args = list(sys.argv[1:] if argv is None else argv)
-    if len(args) != 1 or args[0] in {"-h", "--help"}:
-        print("Usage: python3 scripts/read_pages.py <site address>", file=sys.stderr)
+    if any(arg in {"-h", "--help"} for arg in args) or len(args) > 1:
+        print(
+            "Usage: python3 scripts/read_pages.py [site address]\n"
+            f"With no address, reads {DEFAULT_SITE}.",
+            file=sys.stderr,
+        )
         return 2
+    base = args[0] if args else DEFAULT_SITE
     try:
-        pages = read_pages(args[0])
+        pages = read_pages(base)
     except ValueError as error:
         print(error, file=sys.stderr)
         return 1

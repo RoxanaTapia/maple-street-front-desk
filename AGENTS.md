@@ -43,7 +43,7 @@ These never change without your OK. The list is in [What you've agreed](docs/agr
 | Coming in a later step | `docs/setup.md` | How to run the project |
 | Coming in a later step | `docs/handover.md` | Notes for when the project is handed to you |
 
-To print the page list, run `python3 scripts/read_pages.py` with the site address.
+To print the page list, run `python3 scripts/read_pages.py`. With no address, it reads http://127.0.0.1:8000, the address the sample site prints by default.
 
 ## For the agents
 

@@ -12,6 +12,8 @@ import read_pages
 
 ROOT = Path(__file__).resolve().parents[1]
 SITE = ROOT / "sample-site"
+DEFAULT_HOST = "127.0.0.1"
+DEFAULT_PORT = 8000
 
 pricing_live = False  # Set this to True when the Pricing page is live.
 
@@ -77,19 +79,19 @@ class Handler(BaseHTTPRequestHandler):
         return
 
 
-def make_server(host="127.0.0.1", port=0):
+def make_server(host=DEFAULT_HOST, port=0):
     return SampleSiteServer((host, port), Handler)
 
 
 def main(argv=None):
     global pricing_live
     parser = argparse.ArgumentParser(description="Serve the Maple Street sample site.")
-    parser.add_argument("--port", type=int, default=8000)
+    parser.add_argument("--port", type=int, default=DEFAULT_PORT)
     parser.add_argument("--pricing-live", action="store_true", help="Serve the Pricing page.")
     args = parser.parse_args(argv)
     if args.pricing_live:
         pricing_live = True
-    server = make_server("127.0.0.1", args.port)
+    server = make_server(DEFAULT_HOST, args.port)
     host, port = server.server_address
     print(f"Serving the sample site at http://{host}:{port}", flush=True)
     try:

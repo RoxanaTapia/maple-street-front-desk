@@ -196,7 +196,7 @@ class PageListChecks(unittest.TestCase):
         self.assertIn("Carla", text)
 
     def test_command_prints_a_page_list(self):
-        """Reading the pages prints a page list, and asks for the site address when it is missing."""
+        """Reading the pages prints a page list, and uses the local sample site when no address is given."""
         stdout = io.StringIO()
         with contextlib.redirect_stdout(stdout):
             code = read_pages.main([self.site.base])
@@ -208,13 +208,26 @@ class PageListChecks(unittest.TestCase):
             self.assertIn(read_pages.page_address(self.site.base, agreed["path"]), text)
         self.assertIn("Status: read", text)
         self.assertIn("Status: unreadable (", text)
+        self.assertEqual(
+            read_pages.DEFAULT_SITE,
+            f"http://{serve_sample_site.DEFAULT_HOST}:{serve_sample_site.DEFAULT_PORT}",
+        )
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            code = read_pages.main([])
+        self.assertEqual(code, 0)
+        text = stdout.getvalue()
+        self.assertTrue(text.startswith("Page list\n"))
+        for agreed in read_pages.agreed_pages():
+            self.assertIn(read_pages.page_address(read_pages.DEFAULT_SITE, agreed["path"]), text)
         stderr = io.StringIO()
         with contextlib.redirect_stderr(stderr):
-            self.assertEqual(read_pages.main([]), 2)
+            self.assertEqual(read_pages.main(["--help"]), 2)
         self.assertIn("Usage:", stderr.getvalue())
+        self.assertIn(read_pages.DEFAULT_SITE, stderr.getvalue())
 
 
-DAVE_QUESTIONS = [
+FIRST_QUESTIONS = [
     "Do you service tankless water heaters?",
     "Are you open Saturdays?",
     "How much is a drain cleaning?",
@@ -225,7 +238,7 @@ DAVE_QUESTIONS = [
 COVERAGE = (
     "answered by the pages",
     "not on the pages, so the callback reply applies",
-    "needs dave",
+    "needs your answer",
     "the fixed urgent reply applies",
 )
 PAGE_LINK = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
@@ -265,22 +278,22 @@ class QuestionCoverageChecks(unittest.TestCase):
         rows = question_rows()
         agreed = {page["name"]: page["path"] for page in read_pages.agreed_pages()}
         self.assertEqual(len(rows), 15)
-        self.assertEqual([row["question"] for row in rows[:6]], DAVE_QUESTIONS)
-        proposed = [row for row in rows if "Proposed, to confirm with Dave." in row["status"]]
+        self.assertEqual([row["question"] for row in rows[:6]], FIRST_QUESTIONS)
+        proposed = [row for row in rows if "Proposed, to confirm with you." in row["status"]]
         self.assertEqual(len(proposed), 9)
         agreements = (ROOT / "docs" / "agreements.md").read_text(encoding="utf-8")
-        dave_list = agreements.split("### Questions for Dave", 1)[1]
-        bullets = [line for line in dave_list.splitlines() if line.startswith("- ")]
+        question_list = agreements.split("### Questions for you", 1)[1]
+        bullets = [line for line in question_list.splitlines() if line.startswith("- ")]
         self.assertEqual(len(bullets), 9)
 
         for row in rows:
             self.assertTrue(row["status"], row["question"])
             coverage = [phrase for phrase in COVERAGE if phrase in row["status"].lower()]
             self.assertEqual(len(coverage), 1, row["question"])
-            if row["question"] in DAVE_QUESTIONS:
+            if row["question"] in FIRST_QUESTIONS:
                 self.assertTrue(row["status"].startswith("Draft."), row["question"])
             else:
-                self.assertTrue(row["status"].startswith("Proposed, to confirm with Dave."), row["question"])
+                self.assertTrue(row["status"].startswith("Proposed, to confirm with you."), row["question"])
             if "answered by the pages" in row["status"].lower():
                 match = PAGE_LINK.search(row["page"])
                 self.assertIsNotNone(match, row["question"])
