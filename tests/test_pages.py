@@ -86,10 +86,12 @@ class PageListChecks(unittest.TestCase):
         serve_sample_site.pricing_live = False
 
     def test_pricing_switch_defaults_to_off(self):
+        """Pricing stays switched off until you turn it on."""
         source = (SCRIPTS / "serve_sample_site.py").read_text(encoding="utf-8")
         self.assertRegex(source, r"(?m)^pricing_live = False\b")
 
     def test_pricing_off_reads_five_and_flags_pricing(self):
+        """While Pricing is down, the other five pages are read and Pricing is marked unreadable."""
         pages = read_pages.read_pages(self.site.base)
         read = [page for page in pages if page["status"] == "read"]
         unread = [page for page in pages if page["status"] != "read"]
@@ -112,6 +114,7 @@ class PageListChecks(unittest.TestCase):
         self.assertIn(pricing["address"], text)
 
     def test_pricing_on_reads_all_six(self):
+        """When Pricing is live, all six pages are read and each title matches."""
         serve_sample_site.pricing_live = True
         pages = read_pages.read_pages(self.site.base)
         self.assertEqual(len(pages), 6)
@@ -125,6 +128,7 @@ class PageListChecks(unittest.TestCase):
             self.assertIn(page["name"], page["title"])
 
     def test_every_page_shows_the_fictional_banner(self):
+        """Every page shows the banner that this business is fictional."""
         serve_sample_site.pricing_live = True
         css = (ROOT / "sample-site" / "style.css").read_text(encoding="utf-8")
         self.assertIn(".banner", css)
@@ -138,6 +142,7 @@ class PageListChecks(unittest.TestCase):
             self.assertIn('class="banner"', html, agreed["name"])
 
     def test_every_agreed_page_appears_on_the_page_list(self):
+        """Every agreed page appears on the page list with its title, address, and status."""
         agreed = read_pages.agreed_pages()
         self.assertEqual([page["name"] for page in agreed], AGREED_NAMES)
         statuses = {page["name"]: page["status"] for page in agreed}
@@ -153,7 +158,8 @@ class PageListChecks(unittest.TestCase):
             self.assertIn("Address:", read_pages.format_page_list([page]))
             self.assertIn("Status:", read_pages.format_page_list([page]))
 
-    def test_pages_answer_the_shared_questions(self):
+    def test_pages_contain_the_shared_answers(self):
+        """This only checks that the answer text is on the pages, not that the assistant answers."""
         serve_sample_site.pricing_live = True
         text_by_name = {}
         for agreed in read_pages.agreed_pages():
@@ -174,6 +180,7 @@ class PageListChecks(unittest.TestCase):
                 self.assertEqual(amounts, [], name)
 
     def test_sample_site_uses_only_the_agreed_contact(self):
+        """The sample pages use only the agreed phone number and name Carla."""
         agreements = (ROOT / "docs" / "agreements.md").read_text(encoding="utf-8")
         self.assertIn("(856) 555-0142", agreements)
         blobs = []
@@ -189,6 +196,7 @@ class PageListChecks(unittest.TestCase):
         self.assertIn("Carla", text)
 
     def test_command_prints_a_page_list(self):
+        """Reading the pages prints a page list, and asks for the site address when it is missing."""
         stdout = io.StringIO()
         with contextlib.redirect_stdout(stdout):
             code = read_pages.main([self.site.base])
@@ -253,6 +261,7 @@ def question_rows():
 
 class QuestionCoverageChecks(unittest.TestCase):
     def test_every_question_has_a_status_and_answered_pages_are_agreed(self):
+        """Every test question has a status, and an answered question points at an agreed page."""
         rows = question_rows()
         agreed = {page["name"]: page["path"] for page in read_pages.agreed_pages()}
         self.assertEqual(len(rows), 15)
