@@ -28,6 +28,7 @@ Planned. These are not in the repo yet.
 | `src/` | Reads those pages and answers questions |
 | `tests/expected-answers.md` | The agreed questions and the answers we expect |
 | `tests/urgent-words.md` | The agreed urgent words |
+| `requirements.txt` | Project dependency file |
 | `docs/setup.md` | How to run the project |
 | `docs/handover.md` | Notes for handover |
 
@@ -53,6 +54,6 @@ Roles for that work are in [.cursor/team/README.md](.cursor/team/README.md).
   > This sounds urgent. Please call us now on (856) 555-0142.
 
 - **Expected test answers.** The expected-answers file in the folder map, once it has been agreed.
-- **Pinned engine version.** The version recorded in [.python-version](.python-version).
+- **Pinned engine version.** The answer engine is pinned to one tested version in `requirements.txt`, once that file is added.
 
 Behaviour rules are in [.cursor/rules/](.cursor/rules/).
