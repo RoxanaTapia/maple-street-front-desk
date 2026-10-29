@@ -37,11 +37,12 @@ REQUIRED_FILES = (
 
 class ProjectChecks(unittest.TestCase):
     def test_setup_files_are_present(self):
+        """The project files are in place."""
         missing = [path for path in REQUIRED_FILES if not (ROOT / path).is_file()]
         self.assertEqual(missing, [])
 
     def test_python_pin_is_set(self):
-        """The running interpreter matches the Python pin in .python-version."""
+        """Python matches the version this project records."""
         version = (ROOT / ".python-version").read_text(encoding="utf-8").strip()
         running = f"{sys.version_info.major}.{sys.version_info.minor}"
         self.assertTrue(version == running or version.startswith(running + "."))

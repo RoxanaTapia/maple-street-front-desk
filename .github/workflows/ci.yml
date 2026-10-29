@@ -6,9 +6,12 @@ on:
 permissions:
   contents: read
 
+# One job per test area. Copy a job, set the plain-English name, and point
+# the command at a test file or a file and class (tests/test_pages.py:PageListChecks).
+
 jobs:
-  checks:
-    name: Run checks
+  project-setup:
+    name: Project setup is in place
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
@@ -20,4 +23,19 @@ jobs:
           python-version-file: .python-version
 
       - name: Run checks
-        run: python3 scripts/run_checks.py
+        run: python3 scripts/run_checks.py tests/test_checks.py
+
+  doc-links:
+    name: Every link in the docs works
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Run checks
+        run: python3 scripts/run_checks.py tests/test_links.py
