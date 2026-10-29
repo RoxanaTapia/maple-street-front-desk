@@ -1,4 +1,18 @@
-"""Checks for the sample site and the page list."""
+"""Checks for the sample site and the page list.
+
+PageListChecks is the "Your pages are read" area: the page list, Pricing
+down and live, the fictional banner, and the words on the pages.
+QuestionCoverageChecks is the "Every test question has an answer plan"
+area: every test question has one status, and an answered question
+points at an agreed page.
+
+The docstring of each test is what the CI checklist prints.
+
+Run every check with python3 scripts/run_checks.py.
+Run one area, as the CI jobs do, with
+python3 scripts/run_checks.py tests/test_pages.py:PageListChecks
+or python3 scripts/run_checks.py tests/test_pages.py:QuestionCoverageChecks.
+"""
 
 import contextlib
 import io
