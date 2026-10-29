@@ -8,6 +8,15 @@ This is what a customer experiences. The words you have agreed are in [What you'
 - Show a page list with each page's title, address, and whether it was read.
 - When a page cannot be read, leave it on the list and give the reason.
 
+## How your pages are read
+
+1. Which pages: only the pages listed in [What you've agreed](agreements.md#pages-the-assistant-answers-from).
+2. Fetching: each page is fetched over the web, the way a browser would. If a page can't be fetched (for example, Pricing while it's down), it is marked unreadable with the reason. Nothing is skipped silently.
+3. Reading: the page title and visible text are taken from each page. Scripts and styling are ignored.
+4. Page list: each page is listed with its name, title, address, and status.
+
+This step only reads your pages; answers come in a later step.
+
 ## Answers
 
 - Answer only from the pages in [Pages the assistant answers from](agreements.md#pages-the-assistant-answers-from).

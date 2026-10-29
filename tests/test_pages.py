@@ -127,6 +127,24 @@ class PageListChecks(unittest.TestCase):
             self.assertTrue(page["title"])
             self.assertIn(page["name"], page["title"])
 
+    def test_scripts_and_styling_are_left_out(self):
+        """Scripts and styling are left out of the title and the visible text."""
+        html = (
+            "<html><head><title>Home | Maple Street</title>"
+            "<style>.secret { color: red; }</style>"
+            "<script>var hidden = 'not for customers';</script></head>"
+            "<body><p>Visible line</p>"
+            "<script>alert('also hidden')</script></body></html>"
+        )
+        parser = read_pages.TitleTextParser()
+        parser.feed(html)
+        parser.close()
+        self.assertEqual(parser.title, "Home | Maple Street")
+        self.assertIn("Visible line", parser.text)
+        for hidden in ("secret", "not for customers", "also hidden", "alert"):
+            self.assertNotIn(hidden, parser.text)
+            self.assertNotIn(hidden, parser.title)
+
     def test_every_page_shows_the_fictional_banner(self):
         """Every page shows the banner that this business is fictional."""
         serve_sample_site.pricing_live = True

@@ -1,5 +1,10 @@
 """Read the agreed pages and print a page list.
 
+1. Which pages: agreed_pages reads the list under "Pages the assistant answers from".
+2. Fetching: fetch requests each page over HTTP. A page that cannot be fetched is marked unreadable with the reason and stays on the list.
+3. Reading: TitleTextParser takes the title and the visible text. Script and style elements are ignored.
+4. Page list: format_page_list prints each page's name, title, address, and status.
+
 Usage: python3 scripts/read_pages.py [site address]
 
 With no address, reads http://127.0.0.1:8000, the address the sample site prints by default.

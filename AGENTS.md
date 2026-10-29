@@ -29,7 +29,7 @@ These never change without your OK. The list is in [What you've agreed](docs/agr
 | For you | [AGENTS.md](AGENTS.md) | This guide |
 | For you | [sample-site/](sample-site/) | A small fictional sample of your public pages |
 | For you | [scripts/serve_sample_site.py](scripts/serve_sample_site.py) | Serves that sample like a website |
-| For you | [scripts/read_pages.py](scripts/read_pages.py) | Reads the agreed pages and prints the page list |
+| For you | [scripts/read_pages.py](scripts/read_pages.py) | Reads the agreed pages and prints the page list. See [How your pages are read](docs/behaviour.md#how-your-pages-are-read). |
 | For the agents | [.cursor/rules/](.cursor/rules/) | How the agents are allowed to work |
 | For the agents | [.cursor/team/](.cursor/team/README.md) | The roles they work in |
 | For the agents | [.cursor/commands/](.cursor/commands/run-checks.md) | Shortcuts for the checks and the change summary |
