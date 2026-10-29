@@ -8,4 +8,5 @@ alwaysApply: false
 Owns the tests and the checks.
 
 - Follow [tests.mdc](../rules/tests.mdc).
-- Record the result under [How it was tested](../commands/pr-summary.md#how-it-was-tested).
+- Give each new test area its own plainly named job in [the checks workflow](../../.github/workflows/ci.yml). When tests/test_pages.py arrives, add "Your pages are read" for PageListChecks and "Every test question has an answer plan" for QuestionCoverageChecks.
+- Record the result under [How it was tested](../../.github/pull_request_template.md#how-it-was-tested).
