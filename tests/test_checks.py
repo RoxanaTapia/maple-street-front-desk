@@ -1,6 +1,7 @@
 """Automatic checks for Maple Street Front Desk.
 
-Later changes add the page, question, urgent-word, and price checks here.
+Page checks live in test_pages.py. Later changes add the question,
+urgent-word, and price checks here.
 """
 
 import sys
@@ -28,6 +29,9 @@ REQUIRED_FILES = (
     ".cursor/commands/pr-summary.md",
     ".github/pull_request_template.md",
     ".github/workflows/ci.yml",
+    "scripts/read_pages.py",
+    "scripts/serve_sample_site.py",
+    "tests/test_pages.py",
 )
 
 

@@ -27,6 +27,9 @@ These never change without your OK. The list is in [What you've agreed](docs/agr
 | For you | [docs/agreements.md](docs/agreements.md) | What you have agreed |
 | For you | [docs/behaviour.md](docs/behaviour.md) | What the assistant does for a customer |
 | For you | [AGENTS.md](AGENTS.md) | This guide |
+| For you | [sample-site/](sample-site/) | A small fictional sample of your public pages |
+| For you | [scripts/serve_sample_site.py](scripts/serve_sample_site.py) | Serves that sample like a website |
+| For you | [scripts/read_pages.py](scripts/read_pages.py) | Reads the agreed pages and prints the page list |
 | For the agents | [.cursor/rules/](.cursor/rules/) | How the agents are allowed to work |
 | For the agents | [.cursor/team/](.cursor/team/README.md) | The roles they work in |
 | For the agents | [.cursor/commands/](.cursor/commands/run-checks.md) | Shortcuts for the checks and the change summary |
@@ -35,11 +38,12 @@ These never change without your OK. The list is in [What you've agreed](docs/agr
 | Checks | [.github/workflows/ci.yml](.github/workflows/ci.yml) | Runs those same checks on every proposed change |
 | Checks | [.github/pull_request_template.md](.github/pull_request_template.md) | The form for the change summary |
 | Checks | [.python-version](.python-version) | Which version of Python the checks use. Python is the language they are written in. |
-| Coming in a later step | `sample-site/` | A small fictional sample of your public pages |
 | Coming in a later step | `src/` | The assistant itself, which reads pages and answers |
 | Coming in a later step | `requirements.txt` | The list of parts the project needs |
 | Coming in a later step | `docs/setup.md` | How to run the project |
 | Coming in a later step | `docs/handover.md` | Notes for when the project is handed to you |
+
+To print the page list, run `python3 scripts/read_pages.py` with the site address.
 
 ## For the agents
 

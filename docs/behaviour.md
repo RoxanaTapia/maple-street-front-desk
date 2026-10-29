@@ -2,6 +2,12 @@
 
 This is what a customer experiences. The words you have agreed are in [What you've agreed](agreements.md). This page does not copy them.
 
+## Page list
+
+- Read every page in [Pages the assistant answers from](agreements.md#pages-the-assistant-answers-from) over the web.
+- Show a page list with each page's title, address, and whether it was read.
+- When a page cannot be read, leave it on the list and give the reason.
+
 ## Answers
 
 - Answer only from the pages in [Pages the assistant answers from](agreements.md#pages-the-assistant-answers-from).

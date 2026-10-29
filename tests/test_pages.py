@@ -1,0 +1,210 @@
+"""Checks for the sample site and the page list."""
+
+import contextlib
+import io
+import re
+import sys
+import threading
+import time
+import unittest
+import urllib.request
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parents[1]
+SCRIPTS = ROOT / "scripts"
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+import read_pages
+import serve_sample_site
+
+BANNER = "This is a fictional business made for this demo."
+AGREED_NAMES = [
+    "Home",
+    "Services",
+    "Pricing",
+    "Service Area",
+    "Hours & FAQ",
+    "Contact",
+]
+PHONE = re.compile(r"(?:\(\d{3}\)\s*|\b\d{3}[-.])\d{3}[-.]\d{4}")
+EMAIL = re.compile(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}")
+PRICE = re.compile(r"\$\d+(?:\.\d{2})?")
+
+
+def visible_text(html):
+    parser = read_pages.TitleTextParser()
+    parser.feed(html)
+    parser.close()
+    return parser.text, parser.title
+
+
+def fetch_page(url):
+    with urllib.request.urlopen(url, timeout=5) as response:
+        charset = response.headers.get_content_charset() or "utf-8"
+        html = response.read().decode(charset)
+        status = response.status
+    text, title = visible_text(html)
+    return status, html, text, title
+
+
+class RunningSite:
+    def __init__(self):
+        self.httpd = serve_sample_site.make_server("127.0.0.1", 0)
+        self.base = f"http://127.0.0.1:{self.httpd.server_address[1]}"
+        self.thread = threading.Thread(target=self.httpd.serve_forever, daemon=True)
+        self.thread.start()
+        self._wait()
+
+    def _wait(self):
+        deadline = time.time() + 3
+        last_error = None
+        while time.time() < deadline:
+            try:
+                with urllib.request.urlopen(self.base + "/", timeout=0.5) as response:
+                    response.read()
+                    if response.status == 200:
+                        return
+            except Exception as error:
+                last_error = error
+                time.sleep(0.02)
+        raise AssertionError(f"sample site did not start: {last_error}")
+
+    def close(self):
+        self.httpd.shutdown()
+        self.httpd.server_close()
+        self.thread.join(timeout=2)
+
+
+class PageListChecks(unittest.TestCase):
+    def setUp(self):
+        serve_sample_site.pricing_live = False
+        self.site = RunningSite()
+
+    def tearDown(self):
+        self.site.close()
+        serve_sample_site.pricing_live = False
+
+    def test_pricing_switch_defaults_to_off(self):
+        source = (SCRIPTS / "serve_sample_site.py").read_text(encoding="utf-8")
+        self.assertRegex(source, r"(?m)^pricing_live = False\b")
+
+    def test_pricing_off_reads_five_and_flags_pricing(self):
+        pages = read_pages.read_pages(self.site.base)
+        read = [page for page in pages if page["status"] == "read"]
+        unread = [page for page in pages if page["status"] != "read"]
+        self.assertEqual([page["name"] for page in read], [
+            "Home",
+            "Services",
+            "Service Area",
+            "Hours & FAQ",
+            "Contact",
+        ])
+        self.assertEqual(len(unread), 1)
+        pricing = unread[0]
+        self.assertEqual(pricing["name"], "Pricing")
+        self.assertEqual(pricing["status"], "unreadable")
+        self.assertIn("503", pricing["reason"])
+        self.assertEqual(pricing["title"], "")
+        text = read_pages.format_page_list(pages)
+        self.assertIn("Pricing", text)
+        self.assertIn("unreadable", text)
+        self.assertIn(pricing["address"], text)
+
+    def test_pricing_on_reads_all_six(self):
+        serve_sample_site.pricing_live = True
+        pages = read_pages.read_pages(self.site.base)
+        self.assertEqual(len(pages), 6)
+        for page in pages:
+            self.assertEqual(page["status"], "read", page["name"])
+            self.assertEqual(page["reason"], "")
+            status, _html, _text, title = fetch_page(page["address"])
+            self.assertEqual(status, 200)
+            self.assertEqual(page["title"], title)
+            self.assertTrue(page["title"])
+            self.assertIn(page["name"], page["title"])
+
+    def test_every_page_shows_the_fictional_banner(self):
+        serve_sample_site.pricing_live = True
+        css = (ROOT / "sample-site" / "style.css").read_text(encoding="utf-8")
+        self.assertIn(".banner", css)
+        banner_rule = css.split(".banner", 1)[1].split("}", 1)[0]
+        self.assertNotIn("display: none", banner_rule)
+        self.assertNotIn("visibility: hidden", banner_rule)
+        for agreed in read_pages.agreed_pages():
+            url = read_pages.page_address(self.site.base, agreed["path"])
+            _status, html, text, _title = fetch_page(url)
+            self.assertIn(BANNER, text, agreed["name"])
+            self.assertIn('class="banner"', html, agreed["name"])
+
+    def test_every_agreed_page_appears_on_the_page_list(self):
+        agreed = read_pages.agreed_pages()
+        self.assertEqual([page["name"] for page in agreed], AGREED_NAMES)
+        statuses = {page["name"]: page["status"] for page in agreed}
+        self.assertEqual(statuses["Pricing"], "pending")
+        for name in AGREED_NAMES:
+            if name != "Pricing":
+                self.assertEqual(statuses[name], "agreed", name)
+        pages = read_pages.read_pages(self.site.base)
+        self.assertEqual([page["name"] for page in pages], [page["name"] for page in agreed])
+        for item, page in zip(agreed, pages):
+            self.assertEqual(page["address"], read_pages.page_address(self.site.base, item["path"]))
+            self.assertIn("Title:", read_pages.format_page_list([page]))
+            self.assertIn("Address:", read_pages.format_page_list([page]))
+            self.assertIn("Status:", read_pages.format_page_list([page]))
+
+    def test_pages_answer_the_shared_questions(self):
+        serve_sample_site.pricing_live = True
+        text_by_name = {}
+        for agreed in read_pages.agreed_pages():
+            url = read_pages.page_address(self.site.base, agreed["path"])
+            _status, _html, text, _title = fetch_page(url)
+            text_by_name[agreed["name"]] = text
+        self.assertIn("tankless water heaters", text_by_name["Services"].lower())
+        self.assertIn("same-day service", text_by_name["Services"].lower())
+        self.assertIn("saturday", text_by_name["Hours & FAQ"].lower())
+        self.assertIn("financing", text_by_name["Hours & FAQ"].lower())
+        self.assertIn("cherry hill", text_by_name["Service Area"].lower())
+        self.assertIn("drain cleaning", text_by_name["Pricing"].lower())
+        for name, text in text_by_name.items():
+            amounts = PRICE.findall(text)
+            if name == "Pricing":
+                self.assertEqual(len(amounts), 1)
+            else:
+                self.assertEqual(amounts, [], name)
+
+    def test_sample_site_uses_only_the_agreed_contact(self):
+        agreements = (ROOT / "docs" / "agreements.md").read_text(encoding="utf-8")
+        self.assertIn("(856) 555-0142", agreements)
+        blobs = []
+        for path in sorted((ROOT / "sample-site").iterdir()):
+            if path.suffix in {".html", ".css"}:
+                blobs.append(path.read_text(encoding="utf-8"))
+        combined = "\n".join(blobs)
+        self.assertEqual(PHONE.findall(combined), ["(856) 555-0142"])
+        self.assertEqual(EMAIL.findall(combined), [])
+        self.assertIn("Carla", combined)
+        _status, _html, text, _title = fetch_page(read_pages.page_address(self.site.base, "/contact.html"))
+        self.assertIn("(856) 555-0142", text)
+        self.assertIn("Carla", text)
+
+    def test_command_prints_a_page_list(self):
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            code = read_pages.main([self.site.base])
+        self.assertEqual(code, 0)
+        text = stdout.getvalue()
+        self.assertTrue(text.startswith("Page list\n"))
+        for agreed in read_pages.agreed_pages():
+            self.assertIn(agreed["name"], text)
+            self.assertIn(read_pages.page_address(self.site.base, agreed["path"]), text)
+        self.assertIn("Status: read", text)
+        self.assertIn("Status: unreadable (", text)
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr):
+            self.assertEqual(read_pages.main([]), 2)
+        self.assertIn("Usage:", stderr.getvalue())
+
+
+if __name__ == "__main__":
+    unittest.main()

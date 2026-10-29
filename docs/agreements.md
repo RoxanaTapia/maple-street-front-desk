@@ -6,12 +6,16 @@ This is the list of what you have agreed for Maple Street Front Desk. It is a fi
 
 **Status: agreed.** Dave named these pages on Oct 29.
 
-- Home
-- Services
-- Pricing. **Status: pending.** You are fixing this page. The assistant treats it as unreadable until you confirm it is live.
-- Service Area
-- Hours & FAQ
-- Contact
+| Page | Path | Status |
+|---|---|---|
+| Home | / | agreed |
+| Services | /services.html | agreed |
+| Pricing | /pricing.html | pending |
+| Service Area | /service-area.html | agreed |
+| Hours & FAQ | /hours.html | agreed |
+| Contact | /contact.html | agreed |
+
+You are fixing the Pricing page. The assistant treats it as unreadable until you confirm it is live.
 
 ## Main contact
 

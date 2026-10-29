@@ -1,0 +1,27 @@
+body {
+  font-family: Georgia, serif;
+  line-height: 1.5;
+  max-width: 40rem;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  color: #1d1d1d;
+}
+
+.banner {
+  background: #fff3bf;
+  border: 1px solid #e0b400;
+  padding: 0.75rem 1rem;
+  font-weight: bold;
+}
+
+nav {
+  margin: 1rem 0;
+}
+
+nav a {
+  margin-right: 0.75rem;
+}
+
+h1 {
+  font-size: 1.6rem;
+}
