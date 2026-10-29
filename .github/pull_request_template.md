@@ -17,8 +17,23 @@ No internal notes, prices, hostnames, or tool footers. Write for the client.
 
 ## Try it
 
-```
-<!-- one command per line -->
-```
+<!--
+3-4 short numbered steps a non-developer can follow in Cursor.
+Keep the opening line. Step 1 checks out this pull request's branch.
+Each later step is one command and one short line on what to look at.
+End with how to stop anything left running. Leave that line out when nothing stays running.
+-->
+
+In Cursor, open the project and a terminal (``Ctrl+` ``, or `Cmd+J` on a Mac), then:
+
+1. Get this change: `git fetch origin && git checkout <branch>`
+2. Short label: `command` and what to look at.
+3. Short label: `command` and what to look at.
+
+Stop anything left running with `Ctrl+C`.
+
+## Notes
+
+<!-- Say anything the client should look at. If there is nothing to add, write "None." -->
 
 Closes #N
