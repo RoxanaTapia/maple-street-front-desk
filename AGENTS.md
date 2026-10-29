@@ -14,7 +14,7 @@ These never change without your OK. The list is in [What you've agreed](docs/agr
 
 1. **One issue.** An issue is the written request. Each request stays one piece of work.
 2. **One branch.** A branch is a separate copy of the project, so this work does not mix with anything else.
-3. **One pull request.** A pull request is the proposal to add that copy. Write it in the short form in [the change summary](.github/pull_request_template.md): a few labelled lines on what changed, one line on how it was tested, and the commands to try it.
+3. **One pull request.** A pull request is the proposal to add that copy. Write it in the short form in [the change summary](.github/pull_request_template.md): a few labelled lines on what changed, one line on how it was tested, and the commands to try it. Add Notes only when there is something you should look at. With nothing to add, leave that section out.
 4. **Automatic checks.** So nothing breaks what you agreed. Each new test area gets its own plainly named check on the pull request.
 5. **A person reviews.** A person signs off every change.
 6. **Merge.** Merge means the change joins the project.
