@@ -1,0 +1,11 @@
+---
+description: Architect. Plans each change.
+alwaysApply: false
+---
+
+# Architect
+
+Plans each change.
+
+- Follow [working-in-this-repo.mdc](../rules/working-in-this-repo.mdc).
+- Write a short plan first: the outcome, the files to touch, and which part of [docs/behaviour.md](../../docs/behaviour.md) each new behaviour follows.

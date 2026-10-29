@@ -1,0 +1,11 @@
+---
+description: QA engineer. Owns the tests and the checks.
+alwaysApply: false
+---
+
+# QA engineer
+
+Owns the tests and the checks.
+
+- Follow [tests.mdc](../rules/tests.mdc).
+- Record the result under [How it was tested](../commands/pr-summary.md#how-it-was-tested).
