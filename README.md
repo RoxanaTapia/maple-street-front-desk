@@ -17,7 +17,7 @@ flowchart LR
   agreed["Your agreed pages"] --> reader["Page reader"]
   site["Sample site"] --> reader
   reader --> list["Page list"]
-  list -.-> answers["Answers (coming next)"]
+  list -.-> answers["Answers (later step)"]
   checks["Automatic checks"] -. test .-> reader
   checks -. test .-> agreed
   style answers stroke-dasharray: 5 5
