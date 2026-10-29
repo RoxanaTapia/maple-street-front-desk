@@ -1,59 +1,55 @@
-# Maple Street Front Desk
+# Project guide
 
-Project guide. [README.md](README.md) says what this project is. This page is the layout, how to run the checks, how a change is made, and what stays fixed unless the client agrees.
+This is the project guide. I build your assistant with AI coding agents, and every agent reads this file first, like a briefing for a new team member. It tells them what we're building, what you've agreed, and how a change is allowed to happen. You can read it too: it's the shortest way to see how your project is run.
 
-## Folder map
+## What we're building
 
-| Path | What it is |
-|---|---|
-| [README.md](README.md) | What the project is |
-| [AGENTS.md](AGENTS.md) | This guide |
-| [.python-version](.python-version) | Pinned Python version |
-| [scripts/run_checks.py](scripts/run_checks.py) | Runs the checks |
-| [tests/](tests/) | Automatic checks |
-| [.cursor/rules/answers.mdc](.cursor/rules/answers.mdc) | How questions are answered |
-| [.cursor/rules/urgent-and-price.mdc](.cursor/rules/urgent-and-price.mdc) | Urgent replies and prices |
-| [.cursor/rules/tests.mdc](.cursor/rules/tests.mdc) | How the checks stay strict |
-| [.cursor/team/README.md](.cursor/team/README.md) | Roles |
-| [.cursor/commands/run-checks.md](.cursor/commands/run-checks.md) | Shortcut: run the checks |
-| [.cursor/commands/pr-summary.md](.cursor/commands/pr-summary.md) | Shortcut: write the change summary |
-| [.github/pull_request_template.md](.github/pull_request_template.md) | Summary that comes with every change |
-| [.github/workflows/ci.yml](.github/workflows/ci.yml) | Runs the checks on every pull request |
+Maple Street Front Desk is a chat assistant for your customers. It answers from your own public web pages, and [How the assistant behaves](docs/behaviour.md) is the full description of what it does.
 
-Planned. These are not in the repo yet.
+## What you've agreed (never changes without your OK)
 
-| Path | What it is |
-|---|---|
-| `sample-site/` | A small fictional sample of the business's public pages |
-| `src/` | Reads those pages and answers questions |
-| `tests/expected-answers.md` | The agreed questions and the answers we expect |
-| `tests/urgent-words.md` | The agreed urgent words |
-| `requirements.txt` | Project dependency file |
-| `docs/setup.md` | How to run the project |
-| `docs/handover.md` | Notes for handover |
-
-## How to run the checks
-
-Follow [.cursor/commands/run-checks.md](.cursor/commands/run-checks.md).
-
-## How a change is made
-
-1. One issue.
-2. One branch.
-3. One pull request. Use the summary template, and write it with [.cursor/commands/pr-summary.md](.cursor/commands/pr-summary.md).
-4. Automatic checks.
-5. A person reviews the change.
-6. Merge.
-
-Roles for that work are in [.cursor/team/README.md](.cursor/team/README.md).
-
-## What never changes without the client's OK
-
-- **Urgent reply text**
+- **Urgent reply text.** A customer with an urgent problem always sees the same words, including your phone number.
 
   > This sounds urgent. Please call us now on (856) 555-0142.
 
-- **Expected test answers.** The expected-answers file in the folder map, once it has been agreed.
-- **Pinned engine version.** The answer engine is pinned to one tested version in `requirements.txt`, once that file is added.
+- **Expected test answers.** Every change is checked against the answers you signed off. The file is coming in a later step (see Where things are).
+- **Urgent words.** Only the words you chose are treated as urgent. The file is coming in a later step (see Where things are).
+- **Pinned engine version.** The answer engine is the part that writes the replies. It stays on one tested version in `requirements.txt`, so a newer copy cannot change the answers. That file is coming in a later step.
 
-Behaviour rules are in [.cursor/rules/](.cursor/rules/).
+## How a change happens
+
+1. **One issue.** An issue is the written request. Each request stays one piece of work.
+2. **One branch.** A branch is a separate copy of the project, so this work does not mix with anything else.
+3. **One pull request.** A pull request is the proposal to add that copy. It includes a short summary of what changed and how it was tested.
+4. **Automatic checks.** So nothing breaks what you agreed.
+5. **A person reviews.** A person signs off every change.
+6. **Merge.** Merge means the change joins the project.
+
+## Where things are
+
+| Group | File | What it is |
+|---|---|---|
+| For you | [README.md](README.md) | What this project is |
+| For you | [docs/behaviour.md](docs/behaviour.md) | What the assistant does for a customer |
+| For you | [AGENTS.md](AGENTS.md) | This guide |
+| For the agents | [.cursor/rules/](.cursor/rules/) | How the agents are allowed to work |
+| For the agents | [.cursor/team/](.cursor/team/README.md) | The roles they work in |
+| For the agents | [.cursor/commands/](.cursor/commands/run-checks.md) | Shortcuts for the checks and the change summary |
+| Checks | [tests/](tests/) | The automatic checks |
+| Checks | [scripts/run_checks.py](scripts/run_checks.py) | Runs the checks |
+| Checks | [.github/workflows/ci.yml](.github/workflows/ci.yml) | Runs those same checks on every proposed change |
+| Checks | [.github/pull_request_template.md](.github/pull_request_template.md) | The form for the change summary |
+| Checks | [.python-version](.python-version) | Which version of Python the checks use. Python is the language they are written in. |
+| Coming in a later step | `sample-site/` | A small fictional sample of your public pages |
+| Coming in a later step | `src/` | The assistant itself, which reads pages and answers |
+| Coming in a later step | `tests/expected-answers.md` | The questions and answers you signed off |
+| Coming in a later step | `tests/urgent-words.md` | The urgent words you chose |
+| Coming in a later step | `requirements.txt` | The list of parts the project needs |
+| Coming in a later step | `docs/setup.md` | How to run the project |
+| Coming in a later step | `docs/handover.md` | Notes for when the project is handed to you |
+
+## For the agents
+
+Three layers. What you've agreed above wins if anything else disagrees. [How the assistant behaves](docs/behaviour.md) says what the assistant does. The code (the part that does the work) and the checks prove it.
+
+`.cursor/` is the instructions for the agents that build it. How you work: [.cursor/rules/](.cursor/rules/). Roles: [.cursor/team/README.md](.cursor/team/README.md).

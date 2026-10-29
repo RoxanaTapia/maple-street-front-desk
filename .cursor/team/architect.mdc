@@ -7,8 +7,6 @@ alwaysApply: false
 
 Plans each change.
 
-- Read the issue and the [project guide](../../AGENTS.md) before editing.
-- Write a short plan first: the outcome, the files to touch, and which behaviour rule each new behaviour follows.
-- Keep the plan inside the issue.
+- Follow [working-in-this-repo.mdc](../rules/working-in-this-repo.mdc) and [protected-agreements.mdc](../rules/protected-agreements.mdc).
+- Write a short plan first: the outcome, the files to touch, and which part of [docs/behaviour.md](../../docs/behaviour.md) each new behaviour follows.
 - If a fact already has a home, link to it.
-- Leave the locked items in the project guide as they are.

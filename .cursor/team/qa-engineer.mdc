@@ -7,8 +7,5 @@ alwaysApply: false
 
 Owns the tests and the checks.
 
-- Add and update checks in `tests/`. The script that runs them is in the [project guide](../../AGENTS.md).
-- For each new behaviour, add a check that fails if that behaviour is missing.
-- Run the checks with the [run-checks](../commands/run-checks.md) shortcut before a pull request is ready for review.
-- Record the result under "How it was tested" in the pull request.
 - Follow [tests.mdc](../rules/tests.mdc).
+- Record the result under "How it was tested". How to write that section is in [pr-summary.md](../commands/pr-summary.md).

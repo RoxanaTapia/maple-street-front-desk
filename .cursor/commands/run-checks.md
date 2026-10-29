@@ -10,4 +10,4 @@ From the project root:
 python3 scripts/run_checks.py
 ```
 
-Use the Python version recorded in [.python-version](../../.python-version). That pin is locked in the [project guide](../../AGENTS.md).
+Use the Python version recorded in [.python-version](../../.python-version).
