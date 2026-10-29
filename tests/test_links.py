@@ -100,12 +100,14 @@ def broken_links():
 
 class LinkChecks(unittest.TestCase):
     def test_github_slug_matches_known_headings(self):
+        """Headings keep a working link, even with an apostrophe or an &."""
         self.assertEqual(github_slug("What you've agreed"), "what-youve-agreed")
         self.assertEqual(github_slug("Pages the assistant answers from"), "pages-the-assistant-answers-from")
         self.assertEqual(github_slug("How a change happens"), "how-a-change-happens")
         self.assertEqual(github_slug("Hours & FAQ"), "hours--faq")
 
     def test_relative_links_resolve(self):
+        """Every link in the docs points at a real page and heading."""
         problems = broken_links()
         self.assertEqual(problems, [])
 
