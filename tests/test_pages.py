@@ -206,5 +206,92 @@ class PageListChecks(unittest.TestCase):
         self.assertIn("Usage:", stderr.getvalue())
 
 
+DAVE_QUESTIONS = [
+    "Do you service tankless water heaters?",
+    "Are you open Saturdays?",
+    "How much is a drain cleaning?",
+    "Do you cover Cherry Hill?",
+    "Can I get same-day service?",
+    "Do you offer financing?",
+]
+COVERAGE = (
+    "answered by the pages",
+    "not on the pages, so the callback reply applies",
+    "needs dave",
+    "the fixed urgent reply applies",
+)
+PAGE_LINK = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
+
+
+def question_rows():
+    text = (ROOT / "docs" / "agreements.md").read_text(encoding="utf-8")
+    rows = []
+    in_section = False
+    for line in text.splitlines():
+        if line.startswith("## "):
+            if in_section:
+                break
+            in_section = line[3:].strip() == "Test questions"
+            continue
+        if not in_section or not line.startswith("|"):
+            continue
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        if len(cells) < 4 or cells[0] == "Question":
+            continue
+        if all(not cell.strip(":- ") for cell in cells):
+            continue
+        rows.append(
+            {
+                "question": cells[0],
+                "page": cells[1],
+                "answer": cells[2],
+                "status": cells[3],
+            }
+        )
+    return rows
+
+
+class QuestionCoverageChecks(unittest.TestCase):
+    def test_every_question_has_a_status_and_answered_pages_are_agreed(self):
+        rows = question_rows()
+        agreed = {page["name"]: page["path"] for page in read_pages.agreed_pages()}
+        self.assertEqual(len(rows), 15)
+        self.assertEqual([row["question"] for row in rows[:6]], DAVE_QUESTIONS)
+        proposed = [row for row in rows if "Proposed, to confirm with Dave." in row["status"]]
+        self.assertEqual(len(proposed), 9)
+        agreements = (ROOT / "docs" / "agreements.md").read_text(encoding="utf-8")
+        dave_list = agreements.split("### Questions for Dave", 1)[1]
+        bullets = [line for line in dave_list.splitlines() if line.startswith("- ")]
+        self.assertEqual(len(bullets), 9)
+
+        for row in rows:
+            self.assertTrue(row["status"], row["question"])
+            coverage = [phrase for phrase in COVERAGE if phrase in row["status"].lower()]
+            self.assertEqual(len(coverage), 1, row["question"])
+            if row["question"] in DAVE_QUESTIONS:
+                self.assertTrue(row["status"].startswith("Draft."), row["question"])
+            else:
+                self.assertTrue(row["status"].startswith("Proposed, to confirm with Dave."), row["question"])
+            if "answered by the pages" in row["status"].lower():
+                match = PAGE_LINK.search(row["page"])
+                self.assertIsNotNone(match, row["question"])
+                name, href = match.group(1), match.group(2)
+                self.assertIn(name, agreed, row["question"])
+                self.assertEqual((ROOT / "docs" / href).resolve(), _sample_file(agreed[name]).resolve())
+            else:
+                self.assertEqual(row["page"], "None", row["question"])
+            if row["question"] == "How much is a drain cleaning?":
+                self.assertIn("once Pricing is live", row["answer"])
+        hours = (ROOT / "sample-site" / "hours.html").read_text(encoding="utf-8").lower()
+        contact = (ROOT / "sample-site" / "contact.html").read_text(encoding="utf-8").lower()
+        self.assertIn("sunday: closed", hours)
+        self.assertIn("book or cancel", contact)
+
+
+def _sample_file(path):
+    relative = "index.html" if path == "/" else path.lstrip("/")
+    return ROOT / "sample-site" / relative
+
+
 if __name__ == "__main__":
     unittest.main()

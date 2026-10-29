@@ -50,16 +50,37 @@ When the pages do not say, the assistant offers a callback with these words:
 
 ## Test questions
 
-**Status: draft.** You have shared 6 of 15 questions. The other 9 will be proposed from the pages and agreed in issue #3.
+**Status: draft.** The first six are yours and stay draft. The other nine are proposed, to confirm with Dave.
 
-1. Do you service tankless water heaters?
-2. Are you open Saturdays?
-3. How much is a drain cleaning?
-4. Do you cover Cherry Hill?
-5. Can I get same-day service?
-6. Do you offer financing?
+| Question | Page | Expected answer | Status |
+|---|---|---|---|
+| Do you service tankless water heaters? | [Services](../sample-site/services.html) | Yes | Draft. Answered by the pages. |
+| Are you open Saturdays? | [Hours & FAQ](../sample-site/hours.html) | Open Saturday morning | Draft. Answered by the pages. |
+| How much is a drain cleaning? | [Pricing](../sample-site/pricing.html) | The price on Pricing, once Pricing is live | Draft. Answered by the pages. |
+| Do you cover Cherry Hill? | [Service Area](../sample-site/service-area.html) | Yes | Draft. Answered by the pages. |
+| Can I get same-day service? | [Services](../sample-site/services.html) | Yes | Draft. Answered by the pages. |
+| Do you offer financing? | [Hours & FAQ](../sample-site/hours.html) | Yes | Draft. Answered by the pages. |
+| Are you open Sundays? | [Hours & FAQ](../sample-site/hours.html) | Closed | Proposed, to confirm with Dave. Answered by the pages. |
+| How do I book or cancel an appointment? | [Contact](../sample-site/contact.html) | Call the main line | Proposed, to confirm with Dave. Answered by the pages. |
+| Do you cover Moorestown? | None | The [callback reply](#callback-reply) | Proposed, to confirm with Dave. Not on the pages, so the callback reply applies. |
+| How much is a water heater replacement? | None | The [callback reply](#callback-reply) | Proposed, to confirm with Dave. Not on the pages, so the callback reply applies. |
+| Do you install septic systems? | None | Waiting on Dave | Proposed, to confirm with Dave. Needs Dave. |
+| How long is your warranty? | None | Waiting on Dave | Proposed, to confirm with Dave. Needs Dave. |
+| Are you licensed and insured? | None | Waiting on Dave | Proposed, to confirm with Dave. Needs Dave. |
+| Do you offer after-hours emergency callouts? | None | Waiting on Dave | Proposed, to confirm with Dave. Needs Dave. |
+| I have a burst pipe. What should I do? | None | The [fixed urgent reply](#fixed-urgent-reply) | Proposed, to confirm with Dave. The fixed urgent reply applies. |
 
-**Expected answers. Status: pending.** They will be filled in once the pages exist and you confirm them.
+### Questions for Dave
+
+- Please confirm you are closed on Sundays.
+- Please confirm people book and cancel by calling the main line.
+- Do you cover Moorestown, or should the assistant say the pages don't confirm it?
+- Should a water heater replacement price stay off the pages, so the assistant offers a callback?
+- Do you install septic systems?
+- How long is the warranty, if you publish one?
+- Are you licensed and insured, and do you want that on the site?
+- Do you offer after-hours emergency callouts?
+- Please confirm a burst pipe should get the fixed urgent reply.
 
 ## Pinned engine version
 
