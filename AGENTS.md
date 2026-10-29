@@ -8,13 +8,7 @@ Maple Street Front Desk is a chat assistant for your customers. It answers from 
 
 ## What you've agreed (never changes without your OK)
 
-- **Urgent reply text.** A customer with an urgent problem always sees the same words, including your phone number.
-
-  > This sounds urgent. Please call us now on (856) 555-0142.
-
-- **Expected test answers.** Every change is checked against the answers you signed off. The file is coming in a later step (see Where things are).
-- **Urgent words.** Only the words you chose are treated as urgent. The file is coming in a later step (see Where things are).
-- **Pinned engine version.** The answer engine is the part that writes the replies. It stays on one tested version in `requirements.txt`, so a newer copy cannot change the answers. That file is coming in a later step.
+These never change without your OK. The list is in [What you've agreed](docs/agreements.md).
 
 ## How a change happens
 
@@ -30,6 +24,7 @@ Maple Street Front Desk is a chat assistant for your customers. It answers from 
 | Group | File | What it is |
 |---|---|---|
 | For you | [README.md](README.md) | What this project is |
+| For you | [docs/agreements.md](docs/agreements.md) | What you have agreed |
 | For you | [docs/behaviour.md](docs/behaviour.md) | What the assistant does for a customer |
 | For you | [AGENTS.md](AGENTS.md) | This guide |
 | For the agents | [.cursor/rules/](.cursor/rules/) | How the agents are allowed to work |
@@ -42,14 +37,12 @@ Maple Street Front Desk is a chat assistant for your customers. It answers from 
 | Checks | [.python-version](.python-version) | Which version of Python the checks use. Python is the language they are written in. |
 | Coming in a later step | `sample-site/` | A small fictional sample of your public pages |
 | Coming in a later step | `src/` | The assistant itself, which reads pages and answers |
-| Coming in a later step | `tests/expected-answers.md` | The questions and answers you signed off |
-| Coming in a later step | `tests/urgent-words.md` | The urgent words you chose |
 | Coming in a later step | `requirements.txt` | The list of parts the project needs |
 | Coming in a later step | `docs/setup.md` | How to run the project |
 | Coming in a later step | `docs/handover.md` | Notes for when the project is handed to you |
 
 ## For the agents
 
-Three layers. What you've agreed above wins if anything else disagrees. [How the assistant behaves](docs/behaviour.md) says what the assistant does. The code (the part that does the work) and the checks prove it.
+Three layers. [What you've agreed](docs/agreements.md) wins if anything else disagrees. [How the assistant behaves](docs/behaviour.md) says what the assistant does. The code (the part that does the work) and the checks prove it.
 
 `.cursor/` is the instructions for the agents that build it. How you work: [.cursor/rules/](.cursor/rules/). Roles: [.cursor/team/README.md](.cursor/team/README.md).

@@ -5,5 +5,5 @@ alwaysApply: true
 
 # Protected agreements
 
-- Never change the items under "What you've agreed" in the [project guide](../../AGENTS.md), and never weaken a test, to make a check pass. Ask the client first.
+- Never change [what the client has agreed](../../docs/agreements.md), and never weaken a test, to make a check pass. Ask the client first.
 - When a check fails, fix the project so it matches [docs/behaviour.md](../../docs/behaviour.md).

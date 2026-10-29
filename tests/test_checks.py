@@ -15,6 +15,7 @@ REQUIRED_FILES = (
     ".python-version",
     "scripts/run_checks.py",
     "docs/behaviour.md",
+    "docs/agreements.md",
     ".cursor/rules/working-in-this-repo.mdc",
     ".cursor/rules/protected-agreements.mdc",
     ".cursor/rules/tests.mdc",
