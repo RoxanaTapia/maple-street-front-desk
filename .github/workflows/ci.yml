@@ -39,3 +39,33 @@ jobs:
 
       - name: Run checks
         run: python3 scripts/run_checks.py tests/test_links.py
+
+  pages-read:
+    name: Your pages are read
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Run checks
+        run: python3 scripts/run_checks.py tests/test_pages.py:PageListChecks
+
+  answer-plan:
+    name: Every test question has an answer plan
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Run checks
+        run: python3 scripts/run_checks.py tests/test_pages.py:QuestionCoverageChecks
