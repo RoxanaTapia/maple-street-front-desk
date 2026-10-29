@@ -34,6 +34,6 @@ Stop anything left running with `Ctrl+C`.
 
 ## Notes
 
-<!-- Say anything the client should look at. If there is nothing to add, write "None." -->
+<!-- Say anything the client should look at. Delete this section if there is nothing to add. -->
 
 Closes #N
