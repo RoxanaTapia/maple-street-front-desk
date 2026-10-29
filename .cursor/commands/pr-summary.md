@@ -4,7 +4,7 @@ description: Write the pull request summary
 
 # Pull request summary
 
-Use [.github/pull_request_template.md](../../.github/pull_request_template.md). Write for the client, in plain English. Do not add a footer.
+Use [.github/pull_request_template.md](../../.github/pull_request_template.md). Do not add a footer.
 
 ## What changes
 

@@ -6,4 +6,4 @@ Pick the role that matches the task. Standards for every role: [shared-standards
 - [QA engineer](qa-engineer.mdc)
 - [Technical writer](technical-writer.mdc)
 
-The way a change is made is in the [project guide](../../AGENTS.md).
+The way a change is made is in [How a change happens](../../AGENTS.md#how-a-change-happens).

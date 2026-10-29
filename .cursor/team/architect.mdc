@@ -7,6 +7,5 @@ alwaysApply: false
 
 Plans each change.
 
-- Follow [working-in-this-repo.mdc](../rules/working-in-this-repo.mdc) and [protected-agreements.mdc](../rules/protected-agreements.mdc).
+- Follow [working-in-this-repo.mdc](../rules/working-in-this-repo.mdc).
 - Write a short plan first: the outcome, the files to touch, and which part of [docs/behaviour.md](../../docs/behaviour.md) each new behaviour follows.
-- If a fact already has a home, link to it.

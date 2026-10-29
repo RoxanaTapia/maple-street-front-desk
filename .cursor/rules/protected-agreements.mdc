@@ -1,9 +1,0 @@
----
-description: Do not change what the client agreed, or weaken a test
-alwaysApply: true
----
-
-# Protected agreements
-
-- Never change [what the client has agreed](../../docs/agreements.md), and never weaken a test, to make a check pass. Ask the client first.
-- When a check fails, fix the project so it matches [docs/behaviour.md](../../docs/behaviour.md).

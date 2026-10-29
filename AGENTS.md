@@ -6,7 +6,7 @@ This is the project guide. I build your assistant with AI coding agents, and eve
 
 Maple Street Front Desk is a chat assistant for your customers. It answers from your own public web pages, and [How the assistant behaves](docs/behaviour.md) is the full description of what it does.
 
-## What you've agreed (never changes without your OK)
+## What you've agreed
 
 These never change without your OK. The list is in [What you've agreed](docs/agreements.md).
 

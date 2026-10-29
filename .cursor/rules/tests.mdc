@@ -6,5 +6,6 @@ alwaysApply: true
 # Tests
 
 - Every behaviour in [docs/behaviour.md](../../docs/behaviour.md) gets a check that fails if that behaviour is missing.
-- Once the agreed questions and urgent words exist, the checks cover every question and every urgent word.
+- The checks cover every question in [Test questions](../../docs/agreements.md#test-questions) and every urgent word in [Urgent words](../../docs/agreements.md#urgent-words).
+- When a check fails, fix the project so it matches [docs/behaviour.md](../../docs/behaviour.md).
 - Before a pull request is ready for review, run the checks in [run-checks.md](../commands/run-checks.md).
