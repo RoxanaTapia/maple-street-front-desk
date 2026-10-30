@@ -4,7 +4,7 @@ A front-desk assistant for Maple Street that answers your customers' questions o
 
 ## What works now
 
-- A [sample site](sample-site/) of six pages.
+- A [sample site](sample-site/) of six pages, including a readable Pricing page.
 - The page reader and the page list. See [How your pages are read](docs/behaviour.md#how-your-pages-are-read).
 - Four automatic checks. See [How the checks prove it](docs/behaviour.md#how-the-checks-prove-it).
 
@@ -25,7 +25,7 @@ flowchart LR
 
 ## What's planned
 
-- Answers from your pages, in a later step.
+- Answers from your pages, in a later step. The drain-cleaning question will be answered from Pricing.
 - [Agree on the 15 test questions and the urgent words](https://github.com/RoxanaTapia/maple-street-front-desk/issues/3), Sat Oct 31
 - [Urgent messages get a fixed reply with your main line](https://github.com/RoxanaTapia/maple-street-front-desk/issues/4), Mon Nov 2
 - [Never give a price that isn't on your pages](https://github.com/RoxanaTapia/maple-street-front-desk/issues/5), Mon Nov 2
@@ -35,7 +35,7 @@ flowchart LR
 
 1. In Cursor, open the project and a terminal (``Ctrl+` `` or `Cmd+J` on a Mac). You need Python 3.
 2. Run `python3 scripts/serve_sample_site.py` and open the address it prints.
-3. In a second terminal, run `python3 scripts/read_pages.py`.
+3. In a second terminal, run `python3 scripts/read_pages.py`. Every page is listed as read.
 
 Stop the site with `Ctrl+C`.
 
