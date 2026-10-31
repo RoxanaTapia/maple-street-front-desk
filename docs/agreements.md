@@ -10,12 +10,12 @@ This is the list of what you have agreed for Maple Street Front Desk. It is a fi
 |---|---|---|
 | Home | / | agreed |
 | Services | /services.html | agreed |
-| Pricing | /pricing.html | pending |
+| Pricing | /pricing.html | agreed |
 | Service Area | /service-area.html | agreed |
 | Hours & FAQ | /hours.html | agreed |
 | Contact | /contact.html | agreed |
 
-You are fixing the Pricing page. The assistant treats it as unreadable until you confirm it is live.
+You confirmed the Pricing page is live on Oct 30.
 
 ## Main contact
 
@@ -56,7 +56,7 @@ When the pages do not say, the assistant offers a callback with these words:
 |---|---|---|---|
 | Do you service tankless water heaters? | [Services](../sample-site/services.html) | Yes | Draft. Answered by the pages. |
 | Are you open Saturdays? | [Hours & FAQ](../sample-site/hours.html) | Open Saturday morning | Draft. Answered by the pages. |
-| How much is a drain cleaning? | [Pricing](../sample-site/pricing.html) | The price on Pricing, once Pricing is live | Draft. Answered by the pages. |
+| How much is a drain cleaning? | [Pricing](../sample-site/pricing.html) | The price on Pricing | Draft. Answered by the pages. |
 | Do you cover Cherry Hill? | [Service Area](../sample-site/service-area.html) | Yes | Draft. Answered by the pages. |
 | Can I get same-day service? | [Services](../sample-site/services.html) | Yes | Draft. Answered by the pages. |
 | Do you offer financing? | [Hours & FAQ](../sample-site/hours.html) | Yes | Draft. Answered by the pages. |

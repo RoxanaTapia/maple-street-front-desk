@@ -1,7 +1,8 @@
 """Checks for the sample site and the page list.
 
 PageListChecks is the "Your pages are read" area: the page list, Pricing
-down and live, the fictional banner, and the words on the pages.
+live, a page that can't be fetched, the fictional banner, and the words
+on the pages.
 QuestionCoverageChecks is the "Every test question has an answer plan"
 area: every test question has one status, and an answered question
 points at an agreed page.
@@ -92,20 +93,31 @@ class RunningSite:
 
 class PageListChecks(unittest.TestCase):
     def setUp(self):
-        serve_sample_site.pricing_live = False
+        serve_sample_site.pricing_live = True
         self.site = RunningSite()
 
     def tearDown(self):
         self.site.close()
-        serve_sample_site.pricing_live = False
+        serve_sample_site.pricing_live = True
 
-    def test_pricing_switch_defaults_to_off(self):
-        """Pricing stays switched off until you turn it on."""
+    def test_pricing_is_live_and_all_six_pages_are_read(self):
+        """Pricing is live, so all six pages are read. Each title matches the page and includes the page's name."""
         source = (SCRIPTS / "serve_sample_site.py").read_text(encoding="utf-8")
-        self.assertRegex(source, r"(?m)^pricing_live = False\b")
+        self.assertRegex(source, r"(?m)^pricing_live = True\b")
+        pages = read_pages.read_pages(self.site.base)
+        self.assertEqual(len(pages), 6)
+        for page in pages:
+            self.assertEqual(page["status"], "read", page["name"])
+            self.assertEqual(page["reason"], "")
+            status, _html, _text, title = fetch_page(page["address"])
+            self.assertEqual(status, 200)
+            self.assertEqual(page["title"], title)
+            self.assertTrue(page["title"])
+            self.assertIn(page["name"], page["title"])
 
-    def test_pricing_off_reads_five_and_flags_pricing(self):
-        """While Pricing is down, the other five pages are read and Pricing is marked unreadable."""
+    def test_unreadable_page_stays_on_the_list(self):
+        """A page that can't be fetched stays on the list as unreadable, with the reason, and with no title. The other pages are still read."""
+        serve_sample_site.pricing_live = False
         pages = read_pages.read_pages(self.site.base)
         read = [page for page in pages if page["status"] == "read"]
         unread = [page for page in pages if page["status"] != "read"]
@@ -126,20 +138,7 @@ class PageListChecks(unittest.TestCase):
         self.assertIn("Pricing", text)
         self.assertIn("unreadable", text)
         self.assertIn(pricing["address"], text)
-
-    def test_pricing_on_reads_all_six(self):
-        """When Pricing is live, all six pages are read and each title matches."""
-        serve_sample_site.pricing_live = True
-        pages = read_pages.read_pages(self.site.base)
-        self.assertEqual(len(pages), 6)
-        for page in pages:
-            self.assertEqual(page["status"], "read", page["name"])
-            self.assertEqual(page["reason"], "")
-            status, _html, _text, title = fetch_page(page["address"])
-            self.assertEqual(status, 200)
-            self.assertEqual(page["title"], title)
-            self.assertTrue(page["title"])
-            self.assertIn(page["name"], page["title"])
+        self.assertIn("Status: read", text)
 
     def test_scripts_and_styling_are_left_out(self):
         """Scripts and styling are left out of the title and the visible text."""
@@ -161,7 +160,6 @@ class PageListChecks(unittest.TestCase):
 
     def test_every_page_shows_the_fictional_banner(self):
         """Every page shows the banner that this business is fictional."""
-        serve_sample_site.pricing_live = True
         css = (ROOT / "sample-site" / "style.css").read_text(encoding="utf-8")
         self.assertIn(".banner", css)
         banner_rule = css.split(".banner", 1)[1].split("}", 1)[0]
@@ -178,10 +176,8 @@ class PageListChecks(unittest.TestCase):
         agreed = read_pages.agreed_pages()
         self.assertEqual([page["name"] for page in agreed], AGREED_NAMES)
         statuses = {page["name"]: page["status"] for page in agreed}
-        self.assertEqual(statuses["Pricing"], "pending")
         for name in AGREED_NAMES:
-            if name != "Pricing":
-                self.assertEqual(statuses[name], "agreed", name)
+            self.assertEqual(statuses[name], "agreed", name)
         pages = read_pages.read_pages(self.site.base)
         self.assertEqual([page["name"] for page in pages], [page["name"] for page in agreed])
         for item, page in zip(agreed, pages):
@@ -192,7 +188,6 @@ class PageListChecks(unittest.TestCase):
 
     def test_pages_contain_the_shared_answers(self):
         """This only checks that the answer text is on the pages, not that the assistant answers."""
-        serve_sample_site.pricing_live = True
         text_by_name = {}
         for agreed in read_pages.agreed_pages():
             url = read_pages.page_address(self.site.base, agreed["path"])
@@ -238,8 +233,8 @@ class PageListChecks(unittest.TestCase):
         for agreed in read_pages.agreed_pages():
             self.assertIn(agreed["name"], text)
             self.assertIn(read_pages.page_address(self.site.base, agreed["path"]), text)
-        self.assertIn("Status: read", text)
-        self.assertIn("Status: unreadable (", text)
+        self.assertEqual(text.count("Status: read"), len(read_pages.agreed_pages()))
+        self.assertNotIn("unreadable", text)
         self.assertEqual(
             read_pages.DEFAULT_SITE,
             f"http://{serve_sample_site.DEFAULT_HOST}:{serve_sample_site.DEFAULT_PORT}",
@@ -306,7 +301,7 @@ def question_rows():
 
 class QuestionCoverageChecks(unittest.TestCase):
     def test_every_question_has_a_status_and_answered_pages_are_agreed(self):
-        """Every test question has a status, and an answered question points at an agreed page."""
+        """Every test question has a status, an answered question points at an agreed page, and the drain-cleaning question is answered from Pricing."""
         rows = question_rows()
         agreed = {page["name"]: page["path"] for page in read_pages.agreed_pages()}
         self.assertEqual(len(rows), 15)
@@ -335,7 +330,10 @@ class QuestionCoverageChecks(unittest.TestCase):
             else:
                 self.assertEqual(row["page"], "None", row["question"])
             if row["question"] == "How much is a drain cleaning?":
-                self.assertIn("once Pricing is live", row["answer"])
+                self.assertEqual(row["answer"], "The price on Pricing")
+                pricing_page = (ROOT / "sample-site" / "pricing.html").read_text(encoding="utf-8")
+                self.assertIn("drain cleaning", pricing_page.lower())
+                self.assertTrue(PRICE.search(pricing_page))
         hours = (ROOT / "sample-site" / "hours.html").read_text(encoding="utf-8").lower()
         contact = (ROOT / "sample-site" / "contact.html").read_text(encoding="utf-8").lower()
         self.assertIn("sunday: closed", hours)
