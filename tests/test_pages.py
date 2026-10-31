@@ -195,6 +195,7 @@ class PageListChecks(unittest.TestCase):
             text_by_name[agreed["name"]] = text
         self.assertIn("tankless water heaters", text_by_name["Services"].lower())
         self.assertIn("same-day service", text_by_name["Services"].lower())
+        self.assertIn("call-out fee", text_by_name["Services"].lower())
         self.assertIn("saturday", text_by_name["Hours & FAQ"].lower())
         self.assertIn("financing", text_by_name["Hours & FAQ"].lower())
         self.assertIn("cherry hill", text_by_name["Service Area"].lower())
@@ -203,6 +204,8 @@ class PageListChecks(unittest.TestCase):
             amounts = PRICE.findall(text)
             if name == "Pricing":
                 self.assertEqual(len(amounts), 1)
+            elif name == "Services":
+                self.assertEqual(amounts, ["$99"])
             else:
                 self.assertEqual(amounts, [], name)
 
@@ -338,6 +341,14 @@ class QuestionCoverageChecks(unittest.TestCase):
         contact = (ROOT / "sample-site" / "contact.html").read_text(encoding="utf-8").lower()
         self.assertIn("sunday: closed", hours)
         self.assertIn("book or cancel", contact)
+        call_out = next(row for row in rows if row["question"] == "How much is a call-out?")
+        self.assertEqual(call_out["answer"], "The call-out fee on Services, $99")
+        self.assertIn("services.html", call_out["page"])
+        services = (ROOT / "sample-site" / "services.html").read_text(encoding="utf-8")
+        self.assertIn("The call-out fee is $99.", services)
+        self.assertNotIn("How long is your warranty?", [row["question"] for row in rows])
+        self.assertTrue(any("call-out" in line.lower() for line in bullets))
+        self.assertFalse(any("warranty" in line.lower() for line in bullets))
 
 
 def _sample_file(path):
