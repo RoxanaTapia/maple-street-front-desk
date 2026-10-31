@@ -44,15 +44,17 @@ def _section(heading):
 
 def quoted_urgent_words():
     words = []
-    for line in _section("Urgent words"):
-        if line.strip().startswith("- "):
-            words.extend(re.findall(r'"([^"]+)"', line))
+    for line in _section("Urgent messages"):
+        for word in re.findall(r"\*\*([^*]+)\*\*", line):
+            word = word.strip()
+            if word:
+                words.append(word)
     return words
 
 
 def blockquote_reply():
     parts = []
-    for line in _section("Fixed urgent reply"):
+    for line in _section("Urgent messages"):
         stripped = line.strip()
         if stripped.startswith(">"):
             part = stripped[1:].strip()
@@ -61,23 +63,37 @@ def blockquote_reply():
     return " ".join(parts)
 
 
+def _is_urgent_question(row):
+    return row["group"] == "Handled by a set reply" and "urgent reply" in row["detail"].lower()
+
+
 def question_rows():
     rows = []
     in_section = False
+    group = None
     for line in AGREEMENTS.read_text(encoding="utf-8").splitlines():
         if line.startswith("## "):
             if in_section:
                 break
-            in_section = line[3:].strip() == "Test questions"
+            in_section = line[3:].strip() == "The 15 test questions"
             continue
-        if not in_section or not line.startswith("|"):
+        if not in_section:
             continue
-        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
-        if len(cells) < 4 or cells[0] == "Question":
+        bold = re.fullmatch(r"\*\*(.+?)\*\*", line.strip())
+        if bold:
+            group = bold.group(1).strip()
             continue
-        if all(not cell.strip(":- ") for cell in cells):
+        match = re.match(r"^\d+\.\s+(.+)$", line.strip())
+        if not match or not group:
             continue
-        rows.append({"question": cells[0], "status": cells[3]})
+        text = match.group(1).strip()
+        mark = text.find("?")
+        if mark == -1:
+            question, detail = text, ""
+        else:
+            question = text[: mark + 1].strip()
+            detail = text[mark + 1 :].strip()
+        rows.append({"question": question, "detail": detail, "group": group})
     return rows
 
 
@@ -118,22 +134,14 @@ class UrgentReplyChecks(unittest.TestCase):
                 self.assertEqual(got, reply, message)
                 self.assertNotIn("\n", got)
         self.assertEqual(urgent_reply.reply_if_urgent(" and ".join(words)), reply)
-        urgent_questions = [
-            row
-            for row in question_rows()
-            if "the fixed urgent reply applies" in row["status"].lower()
-        ]
+        urgent_questions = [row for row in question_rows() if _is_urgent_question(row)]
         self.assertGreaterEqual(len(urgent_questions), 1)
         for row in urgent_questions:
             self.assertEqual(urgent_reply.reply_if_urgent(row["question"]), reply)
 
     def test_a_normal_question_is_not_treated_as_urgent(self):
         """A normal question is not treated as urgent."""
-        normal = [
-            row
-            for row in question_rows()
-            if "the fixed urgent reply applies" not in row["status"].lower()
-        ]
+        normal = [row for row in question_rows() if not _is_urgent_question(row)]
         self.assertGreaterEqual(len(normal), 1)
         for row in normal:
             self.assertIsNone(
@@ -165,10 +173,8 @@ class UrgentReplyChecks(unittest.TestCase):
             self.assertNotIn(f"'{word}'", source)
             self.assertNotIn(word, behaviour)
         sample = (
-            "## Urgent words\n\n"
-            '- "roof leak"\n'
-            '- "no water"\n\n'
-            "## Fixed urgent reply\n\n"
+            "## Urgent messages\n\n"
+            "When a message mentions **roof leak** or **no water**, it replies with exactly this:\n\n"
             "> Please call\n"
             "> the owner.\n"
         )
@@ -186,11 +192,14 @@ class UrgentReplyChecks(unittest.TestCase):
         )
         self.assertIsNone(urgent_reply.reply_if_urgent("hello", text=sample))
         with self.assertRaises(ValueError):
-            urgent_reply.reply_if_urgent("roof leak", text="## Urgent words\n\n- \"roof leak\"\n")
+            urgent_reply.reply_if_urgent(
+                "roof leak",
+                text="## Urgent messages\n\nWhen a message mentions **roof leak**, reply.\n",
+            )
         with self.assertRaises(ValueError):
-            urgent_reply.urgent_words(text="## Fixed urgent reply\n\n> Hello.\n")
+            urgent_reply.urgent_words(text="## When the pages don't say\n\n> Hello.\n")
         with self.assertRaises(ValueError):
-            urgent_reply.fixed_urgent_reply(text="## Urgent words\n\n- \"roof leak\"\n")
+            urgent_reply.fixed_urgent_reply(text="## Urgent messages\n\n**roof leak**\n")
 
     def test_an_urgent_message_does_not_read_your_pages(self):
         """An urgent message does not read your pages."""
@@ -233,11 +242,7 @@ class UrgentReplyChecks(unittest.TestCase):
                 code = urgent_reply.main([f"We have {word}."])
             self.assertEqual(code, 0)
             self.assertEqual(stdout.getvalue(), reply + "\n")
-        normal = next(
-            row["question"]
-            for row in question_rows()
-            if "the fixed urgent reply applies" not in row["status"].lower()
-        )
+        normal = next(row["question"] for row in question_rows() if not _is_urgent_question(row))
         stdout = io.StringIO()
         with contextlib.redirect_stdout(stdout):
             code = urgent_reply.main(normal.split())

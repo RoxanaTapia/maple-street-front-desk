@@ -14,8 +14,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 AGREEMENTS = ROOT / "docs" / "agreements.md"
-URGENT_WORDS_HEADING = "Urgent words"
-FIXED_REPLY_HEADING = "Fixed urgent reply"
+URGENT_HEADING = "Urgent messages"
 NOT_URGENT = "This message is not urgent."
 USAGE = (
     'Usage: python3 scripts/urgent_reply.py "customer message"\n'
@@ -50,11 +49,8 @@ def _section(body, heading):
 def urgent_words(text=None):
     """Return the urgent words from your agreements."""
     words = []
-    for line in _section(_body(text), URGENT_WORDS_HEADING):
-        stripped = line.strip()
-        if not stripped.startswith("- "):
-            continue
-        for word in re.findall(r'"([^"]+)"', stripped):
+    for line in _section(_body(text), URGENT_HEADING):
+        for word in re.findall(r"\*\*([^*]+)\*\*", line):
             word = word.strip()
             if word:
                 words.append(word)
@@ -66,7 +62,7 @@ def urgent_words(text=None):
 def fixed_urgent_reply(text=None):
     """Return the fixed urgent reply from your agreements."""
     parts = []
-    for line in _section(_body(text), FIXED_REPLY_HEADING):
+    for line in _section(_body(text), URGENT_HEADING):
         stripped = line.strip()
         if not stripped.startswith(">"):
             continue

@@ -1,6 +1,6 @@
 """Read the agreed pages and print a page list.
 
-1. Which pages: agreed_pages reads the list under "Pages the assistant answers from".
+1. Which pages: agreed_pages reads the names under "Your pages".
 2. Fetching: fetch requests each page over HTTP. A page that cannot be fetched is marked unreadable with the reason and stays on the list.
 3. Reading: TitleTextParser takes the title and the visible text. Script and style elements are ignored.
 4. Page list: format_page_list prints each page's name, title, address, and status.
@@ -10,16 +10,20 @@ Usage: python3 scripts/read_pages.py [site address]
 With no address, reads http://127.0.0.1:8000, the address the sample site prints by default.
 """
 
+import re
 import sys
 import urllib.error
 import urllib.request
+from html import unescape
 from html.parser import HTMLParser
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 AGREEMENTS = ROOT / "docs" / "agreements.md"
-PAGES_HEADING = "Pages the assistant answers from"
+PAGES_HEADING = "Your pages"
 DEFAULT_SITE = "http://127.0.0.1:8000"
+_NAV_LINK = re.compile(r'<a href="([^"]+)">([^<]+)</a>')
+_PAGE_LIST = re.compile(r"pages of your website:\s*(.+?)\.")
 
 
 class TitleTextParser(HTMLParser):
@@ -67,33 +71,60 @@ def _collapse(parts):
     return " ".join("".join(parts).split())
 
 
-def _is_divider(cells):
-    return all(not cell.strip(":- ") for cell in cells)
+def _section(body, heading):
+    found = False
+    lines = []
+    for line in body.splitlines():
+        if line.startswith("## "):
+            title = line[3:].strip().strip("#").strip()
+            if found:
+                break
+            found = title == heading
+            continue
+        if found:
+            lines.append(line)
+    if not found:
+        raise ValueError(f"No pages found under {heading}")
+    return lines
+
+
+def _page_names(section_lines):
+    text = " ".join(line.strip() for line in section_lines)
+    match = _PAGE_LIST.search(text)
+    if not match:
+        raise ValueError(f"No pages found under {PAGES_HEADING}")
+    raw = re.sub(r"\band\b", ",", match.group(1))
+    names = [part.strip() for part in raw.split(",") if part.strip()]
+    if not names:
+        raise ValueError(f"No pages found under {PAGES_HEADING}")
+    return names
+
+
+def _paths_on_the_sample_site():
+    index = (ROOT / "sample-site" / "index.html").read_text(encoding="utf-8")
+    paths = {}
+    for href, label in _NAV_LINK.findall(index):
+        name = unescape(label).strip()
+        if href in {"index.html", "/"}:
+            path = "/"
+        elif href.startswith("/"):
+            path = href
+        else:
+            path = "/" + href
+        paths[name] = path
+    return paths
 
 
 def agreed_pages(text=None):
-    """Return the page name, path, and status from the agreements page list."""
+    """Return each page's name and path from Your pages."""
     body = AGREEMENTS.read_text(encoding="utf-8") if text is None else text
+    paths = _paths_on_the_sample_site()
     pages = []
-    in_section = False
-    for line in body.splitlines():
-        if line.startswith("## "):
-            heading = line[3:].strip().strip("#").strip()
-            if in_section:
-                break
-            in_section = heading == PAGES_HEADING
-            continue
-        if not in_section or not line.startswith("|"):
-            continue
-        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
-        if len(cells) < 3 or cells[0] in {"", "Page"} or _is_divider(cells):
-            continue
-        name, path, status = cells[0], cells[1], cells[2]
+    for name in _page_names(_section(body, PAGES_HEADING)):
+        path = paths.get(name, "")
         if not path.startswith("/"):
             raise ValueError(f"{name} is missing a path in the page list")
-        pages.append({"name": name, "path": path, "status": status})
-    if not pages:
-        raise ValueError(f"No pages found under {PAGES_HEADING}")
+        pages.append({"name": name, "path": path})
     return pages
 
 

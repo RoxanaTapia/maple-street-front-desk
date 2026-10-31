@@ -1,89 +1,57 @@
-# What you've agreed
+# What we've agreed
 
-This is the list of what you have agreed for Maple Street Front Desk. It is a fictional business, used for this project. Each item is marked agreed, draft, or pending.
+This page keeps everything we've agreed for your front-desk assistant in one place. When something changes, it changes here first, and the assistant follows it.
 
-## Pages the assistant answers from
+## Your pages
 
-**Status: agreed.** You named these pages on Oct 29.
+The assistant answers only from these six pages of your website: Home, Services, Pricing, Service Area, Hours & FAQ, and Contact. If something isn't on them, it doesn't guess.
 
-| Page | Path | Status |
-|---|---|---|
-| Home | / | agreed |
-| Services | /services.html | agreed |
-| Pricing | /pricing.html | agreed |
-| Service Area | /service-area.html | agreed |
-| Hours & FAQ | /hours.html | agreed |
-| Contact | /contact.html | agreed |
+## Your main line and contact
 
-You confirmed the Pricing page is live on Oct 30.
+Your main line is **(856) 555-0142**, and Carla is the person to go to with questions.
 
-## Main contact
+## Urgent messages
 
-**Status: agreed.**
-
-- Main line: (856) 555-0142
-- Carla is the go-to person for questions.
-
-## Urgent words
-
-**Status: draft.** Please confirm these words.
-
-- "no heat"
-- "burst pipe"
-- "flooding"
-
-## Fixed urgent reply
-
-**Status: agreed.**
-
-When a message contains an urgent word, the assistant uses these words and no others:
+When a message mentions **no heat**, a **burst pipe**, or **flooding**, the assistant doesn't try to help on its own. It replies with exactly this:
 
 > This sounds urgent. Please call us now on (856) 555-0142.
 
-## Callback reply
+## When the pages don't say
 
-**Status: agreed.**
-
-When the pages do not say, the assistant offers a callback with these words:
+If a customer asks something your pages don't answer, the assistant says so honestly and points them to you:
 
 > I can't confirm that from your pages.
 
-## Test questions
+## The 15 test questions
 
-**Status: draft.** The first six are yours and stay draft. The other nine are proposed, to confirm with you.
+Every time the assistant changes, it's checked against these 15 questions. They decide what "working" means.
 
-| Question | Page | Expected answer | Status |
-|---|---|---|---|
-| Do you service tankless water heaters? | [Services](../sample-site/services.html) | Yes | Draft. Answered by the pages. |
-| Are you open Saturdays? | [Hours & FAQ](../sample-site/hours.html) | Open Saturday morning | Draft. Answered by the pages. |
-| How much is a drain cleaning? | [Pricing](../sample-site/pricing.html) | The price on Pricing | Draft. Answered by the pages. |
-| Do you cover Cherry Hill? | [Service Area](../sample-site/service-area.html) | Yes | Draft. Answered by the pages. |
-| Can I get same-day service? | [Services](../sample-site/services.html) | Yes | Draft. Answered by the pages. |
-| Do you offer financing? | [Hours & FAQ](../sample-site/hours.html) | Yes | Draft. Answered by the pages. |
-| Are you open Sundays? | [Hours & FAQ](../sample-site/hours.html) | Closed | Proposed, to confirm with you. Answered by the pages. |
-| How do I book or cancel an appointment? | [Contact](../sample-site/contact.html) | Call the main line | Proposed, to confirm with you. Answered by the pages. |
-| Do you cover Moorestown? | None | The [callback reply](#callback-reply) | Proposed, to confirm with you. Not on the pages, so the callback reply applies. |
-| How much is a water heater replacement? | None | The [callback reply](#callback-reply) | Proposed, to confirm with you. Not on the pages, so the callback reply applies. |
-| Do you install septic systems? | None | Waiting on you | Proposed, to confirm with you. Needs your answer. |
-| How much is a call-out? | [Services](../sample-site/services.html) | The call-out fee on Services, $99 | Proposed, to confirm with you. Answered by the pages. |
-| Are you licensed and insured? | None | Waiting on you | Proposed, to confirm with you. Needs your answer. |
-| Do you offer after-hours emergency callouts? | None | Waiting on you | Proposed, to confirm with you. Needs your answer. |
-| I have a burst pipe. What should I do? | None | The [fixed urgent reply](#fixed-urgent-reply) | Proposed, to confirm with you. The fixed urgent reply applies. |
+**Answered by your pages**
 
-### Questions for you
+1. Do you service tankless water heaters? Yes, from Services.
+2. Are you open Saturdays? Yes, 8:00 am to 12:00 pm, from Hours & FAQ.
+3. How much is a drain cleaning? $149, from Pricing.
+4. Do you cover Cherry Hill? Yes, from Service Area.
+5. Can I get same-day service? Yes, from Services.
+6. Do you offer financing? Yes, from Hours & FAQ.
+7. Are you open Sundays? No, closed, from Hours & FAQ.
+8. How do I book or cancel an appointment? By calling the main line, from Contact.
+9. How much is a call-out? $99, from Services.
 
-- Please confirm you are closed on Sundays.
-- Please confirm people book and cancel by calling the main line.
-- Do you cover Moorestown, or should the assistant say the pages don't confirm it?
-- Should a water heater replacement price stay off the pages, so the assistant offers a callback?
-- Do you install septic systems?
-- Please confirm the call-out fee on Services.
-- Are you licensed and insured, and do you want that on the site?
-- Do you offer after-hours emergency callouts?
-- Please confirm a burst pipe should get the fixed urgent reply.
+**Handled by a set reply**
 
-## Pinned engine version
+10. I have a burst pipe. What should I do? The urgent reply above.
+11. Do you cover Moorestown? Your pages don't list it, so the assistant offers a callback.
+12. How much is a water heater replacement? Pricing doesn't list it, so the assistant offers a callback.
 
-**Status: pending.**
+**Yours to decide**
 
-The answer engine is the part that writes the replies. Its version will be recorded in this section once the engine is added, and it stays on that one tested version.
+Callers often ask these, and your pages don't cover them yet. Until you decide, the assistant offers a callback.
+
+13. Do you install septic systems?
+14. Are you licensed and insured?
+15. Do you offer after-hours emergency callouts?
+
+## Which AI the assistant uses
+
+The assistant uses Claude by default. OpenAI or Grok are available if you'd prefer one of them.

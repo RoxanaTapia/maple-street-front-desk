@@ -4,8 +4,8 @@ PageListChecks is the "Your pages are read" area: the page list, Pricing
 live, a page that can't be fetched, the fictional banner, and the words
 on the pages.
 QuestionCoverageChecks is the "Every test question has an answer plan"
-area: every test question has one status, and an answered question
-points at an agreed page.
+area: every test question sits in one of the three groups, and an
+answered question names one of your pages.
 
 The docstring of each test is what the CI checklist prints.
 
@@ -175,9 +175,19 @@ class PageListChecks(unittest.TestCase):
         """Every agreed page appears on the page list with its title, address, and status."""
         agreed = read_pages.agreed_pages()
         self.assertEqual([page["name"] for page in agreed], AGREED_NAMES)
-        statuses = {page["name"]: page["status"] for page in agreed}
-        for name in AGREED_NAMES:
-            self.assertEqual(statuses[name], "agreed", name)
+        for item in agreed:
+            self.assertTrue(item["path"].startswith("/"), item["name"])
+            self.assertTrue(_sample_file(item["path"]).is_file(), item["name"])
+        sample = (
+            "## Your pages\n\n"
+            "The assistant answers only from these six pages of your website: "
+            "Home and Contact.\n"
+        )
+        named = read_pages.agreed_pages(sample)
+        self.assertEqual([page["name"] for page in named], ["Home", "Contact"])
+        self.assertEqual([page["path"] for page in named], ["/", "/contact.html"])
+        with self.assertRaises(ValueError):
+            read_pages.agreed_pages("## Something else\n\nNo pages here.\n")
         pages = read_pages.read_pages(self.site.base)
         self.assertEqual([page["name"] for page in pages], [page["name"] for page in agreed])
         for item, page in zip(agreed, pages):
@@ -256,6 +266,26 @@ class PageListChecks(unittest.TestCase):
         self.assertIn("Usage:", stderr.getvalue())
         self.assertIn(read_pages.DEFAULT_SITE, stderr.getvalue())
 
+    def test_a_busy_port_prints_a_friendly_message(self):
+        """When the port is already in use, you get a short message and the script stops."""
+        held = serve_sample_site.make_server("127.0.0.1", 0)
+        try:
+            port = held.server_address[1]
+            stdout = io.StringIO()
+            stderr = io.StringIO()
+            with contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
+                code = serve_sample_site.main(["--port", str(port)])
+        finally:
+            held.server_close()
+        self.assertEqual(code, 1)
+        self.assertEqual(stdout.getvalue(), "")
+        self.assertEqual(
+            stderr.getvalue().strip(),
+            f"The sample site is already running on port {port}. "
+            "Stop it with Ctrl+C, or start on another port with --port.",
+        )
+        self.assertNotIn("Traceback", stderr.getvalue())
+
 
 FIRST_QUESTIONS = [
     "Do you service tankless water heaters?",
@@ -265,90 +295,172 @@ FIRST_QUESTIONS = [
     "Can I get same-day service?",
     "Do you offer financing?",
 ]
-COVERAGE = (
-    "answered by the pages",
-    "not on the pages, so the callback reply applies",
-    "needs your answer",
-    "the fixed urgent reply applies",
-)
-PAGE_LINK = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
+GROUP_HEADING = re.compile(r"^\*\*(.+?)\*\*$")
+QUESTION_LINE = re.compile(r"^(\d+)\.\s+(.+)$")
+FROM_PAGE = re.compile(r"\bfrom\s+(.+?)\.?$")
+AGREEMENTS = ROOT / "docs" / "agreements.md"
+
+
+def _agreements_text():
+    return AGREEMENTS.read_text(encoding="utf-8")
+
+
+def _section_lines(heading):
+    found = False
+    lines = []
+    for line in _agreements_text().splitlines():
+        if line.startswith("## "):
+            if found:
+                break
+            found = line[3:].strip() == heading
+            continue
+        if found:
+            lines.append(line)
+    if not found:
+        raise AssertionError(f"missing section {heading}")
+    return lines
+
+
+def blockquote(heading):
+    parts = []
+    for line in _section_lines(heading):
+        stripped = line.strip()
+        if not stripped.startswith(">"):
+            continue
+        part = stripped[1:].strip()
+        if part:
+            parts.append(part)
+    return " ".join(parts)
 
 
 def question_rows():
-    text = (ROOT / "docs" / "agreements.md").read_text(encoding="utf-8")
     rows = []
-    in_section = False
-    for line in text.splitlines():
-        if line.startswith("## "):
-            if in_section:
-                break
-            in_section = line[3:].strip() == "Test questions"
+    group = None
+    for line in _section_lines("The 15 test questions"):
+        bold = GROUP_HEADING.match(line.strip())
+        if bold:
+            group = bold.group(1).strip()
             continue
-        if not in_section or not line.startswith("|"):
+        match = QUESTION_LINE.match(line.strip())
+        if not match or not group:
             continue
-        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
-        if len(cells) < 4 or cells[0] == "Question":
-            continue
-        if all(not cell.strip(":- ") for cell in cells):
-            continue
+        text = match.group(2).strip()
+        mark = text.find("?")
+        if mark == -1:
+            question, detail = text, ""
+        else:
+            question = text[: mark + 1].strip()
+            detail = text[mark + 1 :].strip()
         rows.append(
             {
-                "question": cells[0],
-                "page": cells[1],
-                "answer": cells[2],
-                "status": cells[3],
+                "number": int(match.group(1)),
+                "question": question,
+                "detail": detail,
+                "group": group,
             }
         )
     return rows
 
 
+def page_named(detail):
+    match = FROM_PAGE.search(detail.strip())
+    if not match:
+        return None
+    return match.group(1).strip()
+
+
 class QuestionCoverageChecks(unittest.TestCase):
-    def test_every_question_has_a_status_and_answered_pages_are_agreed(self):
-        """Every test question has a status, an answered question points at an agreed page, and the drain-cleaning question is answered from Pricing."""
+    def test_every_question_has_an_answer_plan(self):
+        """Every test question has an answer plan, an answered question names one of your pages, and the drain-cleaning question is answered from Pricing."""
         rows = question_rows()
         agreed = {page["name"]: page["path"] for page in read_pages.agreed_pages()}
         self.assertEqual(len(rows), 15)
+        self.assertEqual([row["number"] for row in rows], list(range(1, 16)))
         self.assertEqual([row["question"] for row in rows[:6]], FIRST_QUESTIONS)
-        proposed = [row for row in rows if "Proposed, to confirm with you." in row["status"]]
-        self.assertEqual(len(proposed), 9)
-        agreements = (ROOT / "docs" / "agreements.md").read_text(encoding="utf-8")
-        question_list = agreements.split("### Questions for you", 1)[1]
-        bullets = [line for line in question_list.splitlines() if line.startswith("- ")]
-        self.assertEqual(len(bullets), 9)
-
+        groups = []
         for row in rows:
-            self.assertTrue(row["status"], row["question"])
-            coverage = [phrase for phrase in COVERAGE if phrase in row["status"].lower()]
-            self.assertEqual(len(coverage), 1, row["question"])
-            if row["question"] in FIRST_QUESTIONS:
-                self.assertTrue(row["status"].startswith("Draft."), row["question"])
-            else:
-                self.assertTrue(row["status"].startswith("Proposed, to confirm with you."), row["question"])
-            if "answered by the pages" in row["status"].lower():
-                match = PAGE_LINK.search(row["page"])
-                self.assertIsNotNone(match, row["question"])
-                name, href = match.group(1), match.group(2)
-                self.assertIn(name, agreed, row["question"])
-                self.assertEqual((ROOT / "docs" / href).resolve(), _sample_file(agreed[name]).resolve())
-            else:
-                self.assertEqual(row["page"], "None", row["question"])
-            if row["question"] == "How much is a drain cleaning?":
-                self.assertEqual(row["answer"], "The price on Pricing")
-                pricing_page = (ROOT / "sample-site" / "pricing.html").read_text(encoding="utf-8")
-                self.assertIn("drain cleaning", pricing_page.lower())
-                self.assertTrue(PRICE.search(pricing_page))
-        hours = (ROOT / "sample-site" / "hours.html").read_text(encoding="utf-8").lower()
+            if not groups or groups[-1] != row["group"]:
+                groups.append(row["group"])
+        self.assertEqual(
+            groups,
+            [
+                "Answered by your pages",
+                "Handled by a set reply",
+                "Yours to decide",
+            ],
+        )
+        by_group = {}
+        for row in rows:
+            by_group.setdefault(row["group"], []).append(row)
+        self.assertEqual(len(by_group["Answered by your pages"]), 9)
+        self.assertEqual(len(by_group["Handled by a set reply"]), 3)
+        self.assertEqual(len(by_group["Yours to decide"]), 3)
+
+        for row in by_group["Answered by your pages"]:
+            name = page_named(row["detail"])
+            self.assertIn(name, agreed, row["question"])
+            self.assertTrue(_sample_file(agreed[name]).is_file(), row["question"])
+        for row in rows:
+            if row["group"] != "Answered by your pages":
+                self.assertIsNone(page_named(row["detail"]), row["question"])
+
+        handled = by_group["Handled by a set reply"]
+        urgent_rows = [row for row in handled if "urgent reply" in row["detail"].lower()]
+        callback_rows = [row for row in handled if "callback" in row["detail"].lower()]
+        self.assertEqual(len(urgent_rows), 1)
+        self.assertEqual(len(callback_rows), 2)
+        handled_questions = {row["question"] for row in handled}
+        covered = {row["question"] for row in urgent_rows + callback_rows}
+        self.assertEqual(covered, handled_questions)
+
+        urgent_quote = blockquote("Urgent messages")
+        callback_quote = blockquote("When the pages don't say")
+        self.assertTrue(urgent_quote)
+        self.assertTrue(callback_quote)
+        self.assertNotEqual(urgent_quote, callback_quote)
+        behaviour = (ROOT / "docs" / "behaviour.md").read_text(encoding="utf-8")
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        for quote in (urgent_quote, callback_quote):
+            self.assertNotIn(quote, behaviour)
+            self.assertNotIn(quote, readme)
+
+        drain = next(row for row in rows if row["question"] == "How much is a drain cleaning?")
+        self.assertEqual(page_named(drain["detail"]), "Pricing")
+        amount = PRICE.search(drain["detail"])
+        self.assertIsNotNone(amount)
+        pricing_page = (ROOT / "sample-site" / "pricing.html").read_text(encoding="utf-8")
+        self.assertIn("drain cleaning", pricing_page.lower())
+        self.assertIn(amount.group(0), pricing_page)
+
+        saturday = next(row for row in rows if row["question"] == "Are you open Saturdays?")
+        hours = (ROOT / "sample-site" / "hours.html").read_text(encoding="utf-8")
+        stamps = re.findall(r"\d{1,2}:\d{2} am to \d{1,2}:\d{2} pm", saturday["detail"])
+        self.assertTrue(stamps, saturday["detail"])
+        for stamp in stamps:
+            self.assertIn(stamp, hours)
+        self.assertIn("sunday: closed", hours.lower())
+
         contact = (ROOT / "sample-site" / "contact.html").read_text(encoding="utf-8").lower()
-        self.assertIn("sunday: closed", hours)
         self.assertIn("book or cancel", contact)
+
         call_out = next(row for row in rows if row["question"] == "How much is a call-out?")
-        self.assertEqual(call_out["answer"], "The call-out fee on Services, $99")
-        self.assertIn("services.html", call_out["page"])
+        self.assertEqual(page_named(call_out["detail"]), "Services")
+        fee = PRICE.search(call_out["detail"])
+        self.assertIsNotNone(fee)
         services = (ROOT / "sample-site" / "services.html").read_text(encoding="utf-8")
+        self.assertIn(fee.group(0), services)
         self.assertIn("The call-out fee is $99.", services)
+
+        area = (ROOT / "sample-site" / "service-area.html").read_text(encoding="utf-8").lower()
+        self.assertNotIn("moorestown", area)
+        self.assertNotIn("water heater", pricing_page.lower())
         self.assertNotIn("How long is your warranty?", [row["question"] for row in rows])
-        self.assertTrue(any("call-out" in line.lower() for line in bullets))
-        self.assertFalse(any("warranty" in line.lower() for line in bullets))
+        yours = " ".join(row["question"].lower() for row in by_group["Yours to decide"])
+        self.assertIn("septic", yours)
+        self.assertIn("licensed", yours)
+        self.assertIn("after-hours", yours)
+        yours_block = _agreements_text().split("**Yours to decide**", 1)[1]
+        self.assertIn("offers a callback", yours_block.lower())
 
 
 def _sample_file(path):
