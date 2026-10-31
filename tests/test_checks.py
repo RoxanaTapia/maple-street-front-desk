@@ -17,6 +17,7 @@ REQUIRED_FILES = (
     "scripts/run_checks.py",
     "docs/behaviour.md",
     "docs/agreements.md",
+    "docs/contributing.md",
     ".cursor/rules/working-in-this-repo.mdc",
     ".cursor/rules/tests.mdc",
     "tests/test_links.py",

@@ -1,9 +1,13 @@
 """Serve the Maple Street sample site over HTTP.
 
 Usage: python3 scripts/serve_sample_site.py [--port PORT]
+
+If the port is already in use, prints a short message and exits.
 """
 
 import argparse
+import errno
+import sys
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
@@ -87,7 +91,17 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description="Serve the Maple Street sample site.")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT)
     args = parser.parse_args(argv)
-    server = make_server(DEFAULT_HOST, args.port)
+    try:
+        server = make_server(DEFAULT_HOST, args.port)
+    except OSError as error:
+        if error.errno != errno.EADDRINUSE:
+            raise
+        print(
+            f"The sample site is already running on port {args.port}. "
+            "Stop it with Ctrl+C, or start on another port with --port.",
+            file=sys.stderr,
+        )
+        return 1
     host, port = server.server_address
     print(f"Serving the sample site at http://{host}:{port}", flush=True)
     try:
