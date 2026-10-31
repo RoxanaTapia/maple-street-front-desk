@@ -11,9 +11,19 @@ This is what a customer experiences. The words you have agreed are in [What you'
 
 This step only reads your pages; answers come in a later step.
 
+## How it works
+
+An urgent message is checked before any answer.
+
+1. The customer's message is checked for the [urgent words](agreements.md#urgent-words).
+2. Those words and the [fixed urgent reply](agreements.md#fixed-urgent-reply) are read from [What you've agreed](agreements.md).
+3. When the message contains one of those words, the reply is only that fixed reply. Nothing comes before it or after it, and your pages are not read.
+4. Other wording is not treated as urgent.
+5. The phone number in that reply is not a price.
+
 ## How the checks prove it
 
-Every change runs these automatically, and the pull request's checks box shows each as a checklist. The checks are in [the test file](../tests/test_pages.py).
+Every change runs these automatically, and the pull request's checks box shows each as a checklist. The page checks are in [tests/test_pages.py](../tests/test_pages.py). The urgent reply check is in [tests/test_urgent.py](../tests/test_urgent.py).
 
 **Your pages are read**
 
@@ -30,6 +40,16 @@ Every change runs these automatically, and the pull request's checks box shows e
 
 - All 15 test questions have a status, and each status is exactly one of these: answered by the pages, the callback reply, needs your answer, or the fixed urgent reply. The first six stay draft. The other nine are proposed, to confirm with you, with nine questions for you. An answered question points at an agreed page. The others name no page. The drain-cleaning answer is the price on Pricing. The hours page says Sunday is closed, and the contact page says how to book or cancel.
 
+**Urgent messages get the fixed reply**
+
+- Each urgent word gets the fixed reply, and nothing else.
+- A normal question is not treated as urgent.
+- The words and the reply are read from your agreements.
+- An urgent message does not read your pages.
+- The phone number in the urgent reply is not treated as a price.
+- Checking a message prints the fixed reply when it is urgent, and says it is not when it is not.
+- You see this check on the pull request as Urgent messages get the fixed reply.
+
 ## Answers
 
 - Answer only from the pages in [Pages the assistant answers from](agreements.md#pages-the-assistant-answers-from).
@@ -38,13 +58,6 @@ Every change runs these automatically, and the pull request's checks box shows e
 - Do not guess, and do not add a fact that is not on those pages.
 
 The answers we expect are the [test questions](agreements.md#test-questions).
-
-## Urgent messages
-
-- Before any other answer, check the customer's message for the [urgent words](agreements.md#urgent-words).
-- If one of those words matches, reply with only the [fixed urgent reply](agreements.md#fixed-urgent-reply). Nothing comes before it or after it.
-- Do not treat other wording as urgent.
-- Do not treat the phone number in that urgent reply as a price.
 
 ## Prices
 
