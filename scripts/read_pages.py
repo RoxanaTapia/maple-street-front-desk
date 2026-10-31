@@ -135,7 +135,7 @@ def page_address(base_url, path):
 
 
 def _unreadable(reason):
-    return {"title": "", "status": "unreadable", "reason": reason}
+    return {"title": "", "text": "", "status": "unreadable", "reason": reason}
 
 
 def _read_html(html):
@@ -147,7 +147,12 @@ def _read_html(html):
         return _unreadable(f"Could not read the page: {error}")
     if not parser.title:
         return _unreadable("The page has no title")
-    return {"title": parser.title, "status": "read", "reason": ""}
+    return {
+        "title": parser.title,
+        "text": parser.text,
+        "status": "read",
+        "reason": "",
+    }
 
 
 def fetch(url):
@@ -186,6 +191,7 @@ def read_pages(base_url):
             {
                 "name": agreed["name"],
                 "title": fetched["title"],
+                "text": fetched["text"],
                 "address": address,
                 "status": fetched["status"],
                 "reason": fetched["reason"],
