@@ -15,7 +15,7 @@ SITE = ROOT / "sample-site"
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 8000
 
-pricing_live = False  # Set this to True when the Pricing page is live.
+pricing_live = True  # Pricing is live. Set this to False only to simulate a page that can't be fetched.
 
 CONTENT_TYPES = {
     ".html": "text/html; charset=utf-8",
@@ -84,13 +84,9 @@ def make_server(host=DEFAULT_HOST, port=0):
 
 
 def main(argv=None):
-    global pricing_live
     parser = argparse.ArgumentParser(description="Serve the Maple Street sample site.")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT)
-    parser.add_argument("--pricing-live", action="store_true", help="Serve the Pricing page.")
     args = parser.parse_args(argv)
-    if args.pricing_live:
-        pricing_live = True
     server = make_server(DEFAULT_HOST, args.port)
     host, port = server.server_address
     print(f"Serving the sample site at http://{host}:{port}", flush=True)

@@ -5,7 +5,7 @@ This is what a customer experiences. The words you have agreed are in [What you'
 ## How your pages are read
 
 1. Which pages: only the pages listed in [What you've agreed](agreements.md#pages-the-assistant-answers-from).
-2. Fetching: each page is fetched over the web, the way a browser would. If a page can't be fetched (for example, Pricing while it's down), it stays on the list and is marked unreadable with the reason. Nothing is skipped silently.
+2. Fetching: each page is fetched over the web, the way a browser would. Pricing is read with the other pages. If a page can't be fetched, it stays on the list and is marked unreadable with the reason. Nothing is skipped silently.
 3. Reading: the page title and visible text are taken from each page. Scripts and styling are ignored.
 4. Page list: each page is listed with its name, title, address, and status.
 
@@ -27,19 +27,18 @@ Every change runs these automatically, and the pull request's checks box shows e
 
 **Your pages are read**
 
-- Pricing starts switched off.
-- While Pricing is down, the other five pages are read. Pricing stays on the list as unreadable, with the reason, and with no title.
-- When Pricing is on, all six pages are read. Each title matches the page and includes the page's name.
+- Pricing is live, so all six pages are read. Each title matches the page and includes the page's name.
+- A page that can't be fetched stays on the list as unreadable, with the reason, and with no title. The other pages are still read.
 - Scripts and styling are left out of the title and the visible text.
 - Every page shows the banner that this business is fictional, and that banner is not hidden.
-- Every agreed page appears on the page list, in order, with its title, address, and status. In your agreements, Pricing is pending and the other pages are agreed.
+- Every agreed page appears on the page list, in order, with its title, address, and status. In your agreements, all six pages are agreed.
 - Services names tankless water heaters and same-day service. Hours & FAQ names Saturday and financing. Service Area names Cherry Hill. Pricing names drain cleaning. Only Pricing shows a price. This does not check that the assistant answers.
 - The sample pages use only the agreed phone number, (856) 555-0142, and they name Carla. No email address is included, and the contact page shows that phone number and Carla.
-- Reading the pages prints a page list, with each page's name and address, including pages that were read and the one that was not. With no address, the list uses the local sample site. Asking for help shows how to run it.
+- Reading the pages prints a page list, with each page's name and address, and every page read. With no address, the list uses the local sample site. Asking for help shows how to run it.
 
 **Every test question has an answer plan**
 
-- All 15 test questions have a status, and each status is exactly one of these: answered by the pages, the callback reply, needs your answer, or the fixed urgent reply. The first six stay draft. The other nine are proposed, to confirm with you, with nine questions for you. An answered question points at an agreed page. The others name no page. The drain-cleaning answer says it applies once Pricing is live. The hours page says Sunday is closed, and the contact page says how to book or cancel.
+- All 15 test questions have a status, and each status is exactly one of these: answered by the pages, the callback reply, needs your answer, or the fixed urgent reply. The first six stay draft. The other nine are proposed, to confirm with you, with nine questions for you. An answered question points at an agreed page. The others name no page. The drain-cleaning answer is the price on Pricing. The hours page says Sunday is closed, and the contact page says how to book or cancel.
 
 **Urgent messages get the fixed reply**
 

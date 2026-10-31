@@ -10,12 +10,12 @@ This is the list of what you have agreed for Maple Street Front Desk. It is a fi
 |---|---|---|
 | Home | / | agreed |
 | Services | /services.html | agreed |
-| Pricing | /pricing.html | pending |
+| Pricing | /pricing.html | agreed |
 | Service Area | /service-area.html | agreed |
 | Hours & FAQ | /hours.html | agreed |
 | Contact | /contact.html | agreed |
 
-You are fixing the Pricing page. The assistant treats it as unreadable until you confirm it is live.
+You confirmed the Pricing page is live on Oct 30.
 
 ## Main contact
 
@@ -56,7 +56,7 @@ When the pages do not say, the assistant offers a callback with these words:
 |---|---|---|---|
 | Do you service tankless water heaters? | [Services](../sample-site/services.html) | Yes | Draft. Answered by the pages. |
 | Are you open Saturdays? | [Hours & FAQ](../sample-site/hours.html) | Open Saturday morning | Draft. Answered by the pages. |
-| How much is a drain cleaning? | [Pricing](../sample-site/pricing.html) | The price on Pricing, once Pricing is live | Draft. Answered by the pages. |
+| How much is a drain cleaning? | [Pricing](../sample-site/pricing.html) | The price on Pricing | Draft. Answered by the pages. |
 | Do you cover Cherry Hill? | [Service Area](../sample-site/service-area.html) | Yes | Draft. Answered by the pages. |
 | Can I get same-day service? | [Services](../sample-site/services.html) | Yes | Draft. Answered by the pages. |
 | Do you offer financing? | [Hours & FAQ](../sample-site/hours.html) | Yes | Draft. Answered by the pages. |
@@ -65,7 +65,7 @@ When the pages do not say, the assistant offers a callback with these words:
 | Do you cover Moorestown? | None | The [callback reply](#callback-reply) | Proposed, to confirm with you. Not on the pages, so the callback reply applies. |
 | How much is a water heater replacement? | None | The [callback reply](#callback-reply) | Proposed, to confirm with you. Not on the pages, so the callback reply applies. |
 | Do you install septic systems? | None | Waiting on you | Proposed, to confirm with you. Needs your answer. |
-| How long is your warranty? | None | Waiting on you | Proposed, to confirm with you. Needs your answer. |
+| How much is a call-out? | [Services](../sample-site/services.html) | The call-out fee on Services, $99 | Proposed, to confirm with you. Answered by the pages. |
 | Are you licensed and insured? | None | Waiting on you | Proposed, to confirm with you. Needs your answer. |
 | Do you offer after-hours emergency callouts? | None | Waiting on you | Proposed, to confirm with you. Needs your answer. |
 | I have a burst pipe. What should I do? | None | The [fixed urgent reply](#fixed-urgent-reply) | Proposed, to confirm with you. The fixed urgent reply applies. |
@@ -77,7 +77,7 @@ When the pages do not say, the assistant offers a callback with these words:
 - Do you cover Moorestown, or should the assistant say the pages don't confirm it?
 - Should a water heater replacement price stay off the pages, so the assistant offers a callback?
 - Do you install septic systems?
-- How long is the warranty, if you publish one?
+- Please confirm the call-out fee on Services.
 - Are you licensed and insured, and do you want that on the site?
 - Do you offer after-hours emergency callouts?
 - Please confirm a burst pipe should get the fixed urgent reply.
