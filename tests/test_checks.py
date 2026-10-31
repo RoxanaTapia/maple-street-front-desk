@@ -1,7 +1,7 @@
 """Automatic checks for Maple Street Front Desk.
 
-Page checks live in test_pages.py. Later changes add the question,
-urgent-word, and price checks here.
+Page checks live in test_pages.py. Urgent reply checks live in
+test_urgent.py. A later change adds the price checks here.
 """
 
 import sys
@@ -31,7 +31,9 @@ REQUIRED_FILES = (
     ".github/workflows/ci.yml",
     "scripts/read_pages.py",
     "scripts/serve_sample_site.py",
+    "scripts/urgent_reply.py",
     "tests/test_pages.py",
+    "tests/test_urgent.py",
 )
 
 
