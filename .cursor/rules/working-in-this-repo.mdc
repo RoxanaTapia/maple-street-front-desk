@@ -7,8 +7,7 @@ alwaysApply: true
 
 - Read [AGENTS.md](../../AGENTS.md) and [docs/behaviour.md](../../docs/behaviour.md) before you edit.
 - Follow [How a change happens](../../AGENTS.md#how-a-change-happens).
-- A pull request description follows [the change summary](../../.github/pull_request_template.md). Section headings are 📝 What changes, ⚙️ How it works, 🔍 How to review, and ✅ Checks. Emojis are only for those headings. Issue titles and pull request titles stay plain sentences. How to review stays concise: name the script or file to run, in backticks, give two or three ready-to-paste commands that show the expected result (single quotes around $ amounts), and one sentence on what each command should return. Leave How to review out when there's nothing to try by hand. Under ✅ Checks, once they have passed the link reads All checks passed. Each new check gets one bullet under that link: the check name in bold, a colon, then one plain line naming the cases it tries and what each gives. Existing checks aren't listed, and don't link to test files.
-- When a change adds or changes a script, update its section in docs/how-it-works.md (what it does, why it's there, a command to try).
+- PR descriptions follow [the change summary](../../.github/pull_request_template.md), with headings 📝 What changes, ⚙️ How it works, 🔍 How to review and ✅ Checks.
 - Stay inside the current issue.
 - Every change to how the assistant behaves must match [docs/behaviour.md](../../docs/behaviour.md).
 - Never change anything in [docs/agreements.md](../../docs/agreements.md), and never weaken a test to make it pass. Ask the client first.

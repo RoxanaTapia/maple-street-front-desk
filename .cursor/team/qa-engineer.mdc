@@ -9,4 +9,4 @@ Owns the tests and the checks.
 
 - Follow [tests.mdc](../rules/tests.mdc).
 - Give each new test area its own plainly named job in [the checks workflow](../../.github/workflows/ci.yml). When tests/test_pages.py arrives, add "Your pages are read" for PageListChecks and "Every test question has an answer plan" for QuestionCoverageChecks.
-- Record the result under [Checks](../../.github/pull_request_template.md#✅-checks).
+- Record the result under [the change summary](../../.github/pull_request_template.md), its ✅ Checks section.
