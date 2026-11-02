@@ -10,6 +10,7 @@ Optional. One or two plain sentences right after Closes #N, saying why this step
 Short bullets in plain English, one line each.
 List the acceptance boxes from the issue that this change covers.
 No links to test files. No internal notes, prices, hostnames, or tool footers.
+When a change adds or changes a script, update its section in docs/how-it-works.md (what it does, why it's there, a command to try).
 -->
 
 - One change, in a sentence.
