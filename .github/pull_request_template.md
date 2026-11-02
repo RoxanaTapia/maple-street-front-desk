@@ -1,6 +1,10 @@
 Closes #N
 
-## What changes
+<!--
+Optional. One or two plain sentences right after Closes #N, saying why this step comes at this point in the plan.
+-->
+
+## 📝 What changes
 
 <!--
 Short bullets in plain English, one line each.
@@ -10,7 +14,22 @@ No links to test files. No internal notes, prices, hostnames, or tool footers.
 
 - One change, in a sentence.
 
-## Checks
+## ⚙️ How it works
+
+<!--
+Two or three plain sentences on why the change exists and what it does.
+Start from the risk it handles, for example: "The AI can make up a price, so we check what it's about to say."
+Then a "Not covered yet" list of at most a few one-line bullets naming which step covers each.
+No implementation detail, no code terms.
+-->
+
+Why this change exists, and what it does, in two or three plain sentences.
+
+Not covered yet:
+
+- One gap, and the step that covers it.
+
+## ✅ Checks
 
 <!--
 Link to this pull request's checks tab.
