@@ -384,7 +384,7 @@ class AnswerChecks(unittest.TestCase):
         self.assertIn("`scripts/front_desk.py`", how)
         section = how.split("## 3 · Write the answer", 1)[1].split("## 4 ·", 1)[0]
         self.assertIn("**Answers come from your pages**", section)
-        self.assertIn("include the text of your pages", section)
+        self.assertIn("include the text of the business's pages", section)
         self.assertIn(
             "You see this check on the pull request as Answers come from your pages.",
             section,
@@ -392,7 +392,7 @@ class AnswerChecks(unittest.TestCase):
         self.assertIn("real AI call", section)
         self.assertIn("not a real AI", section)
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
-        self.assertIn("- ⏳ **Writes the answer:** a short reply from your pages.", readme)
+        self.assertIn("- ⏳ **Writes the answer:** a short reply from the business's pages.", readme)
         self.assertNotIn("answer_reply.py", readme)
         self.assertNotIn("front_desk.py", readme)
         for name in ("answer_reply.py", "front_desk.py", "tests/test_answers.py"):

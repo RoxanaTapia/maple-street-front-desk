@@ -37,7 +37,7 @@ Every message takes the same path, in this order:
 flowchart LR
     msg([Customer message]) --> one["1 · Spot an emergency"]
     one -->|urgent| call([Please call us now])
-    one -->|not urgent| two["2 · Read your pages"]
+    one -->|not urgent| two["2 · Read the pages"]
     two --> three["3 · Write the answer"]
     three --> four["4 · Check every price"]
     four -->|prices match| reply([Reply goes out])
@@ -47,11 +47,11 @@ flowchart LR
 | | What happens | Script | Ready? |
 |---|---|---|---|
 | 1 | Spot an emergency | `scripts/urgent_reply.py` | Yes |
-| 2 | Read your pages | `scripts/read_pages.py` | Yes |
+| 2 | Read the pages | `scripts/read_pages.py` | Yes |
 | 3 | Write the answer | `scripts/answer_reply.py` | Shared parts |
 | 4 | Check every price | `scripts/price_reply.py` | Yes |
 
-An emergency stops at the first stop: the customer is asked to call, and nothing else runs. Every other message is answered from your pages, and the answer only goes out once every price in it matches what you've published. One command, `scripts/front_desk.py`, runs that whole path.
+An emergency stops at the first stop: the customer is asked to call, and nothing else runs. Every other message is answered from the business's pages, and the answer only goes out once every price in it matches what the business has published. One command, `scripts/front_desk.py`, runs that whole path.
 
 ## 1 · Spot an emergency
 
@@ -59,7 +59,7 @@ An emergency should get a phone call, not a paragraph about opening hours. An ur
 
 **Urgent messages get the fixed reply**
 
-This part looks for the urgent words we agreed in [Urgent messages](agreements.md#urgent-messages). Those words, and the reply that goes with them, are read from that same place. When one of the words is there, the customer gets only the fixed urgent reply: nothing before it, nothing after it, and your pages are not read. A normal question is not treated as urgent. The phone number inside that reply is not a price. Checking a message prints the fixed reply when it is urgent, and says it is not when it is not.
+This part looks for the urgent words agreed with the client in [Urgent messages](agreements.md#urgent-messages). Those words, and the reply that goes with them, are read from that same place. When one of the words is there, the customer gets only the fixed urgent reply: nothing before it, nothing after it, and the business's pages are not read. A normal question is not treated as urgent. The phone number inside that reply is not a price. Checking a message prints the fixed reply when it is urgent, and says it is not when it is not.
 
 ```
 python3 scripts/urgent_reply.py 'I have a burst pipe'
@@ -71,13 +71,13 @@ You'll see:
 1. The fixed urgent reply.
 2. `This message is not urgent.`
 
-## 2 · Read your pages
+## 2 · Read the pages
 
-The assistant can only answer from what you've published, so it first reads the six pages listed in [Your pages](agreements.md#your-pages). It opens each one over the web, the way a browser would, and keeps the title and the words a customer can see. Code and styling are left out.
+The assistant can only answer from what the business has published, so it first reads the six pages listed in [Your pages](agreements.md#your-pages). It opens each one over the web, the way a browser would, and keeps the title and the words a customer can see. Code and styling are left out.
 
 **Your pages are read**
 
-All six pages are read, and each title matches its page. A page that can't be opened stays on the list as unreadable, with the reason, and the others are still read. Nothing is dropped quietly. The list shows the name, the title, the address, and whether the page was read. Every page shows the banner that this business is fictional. The sample pages use your phone number and the name Carla.
+All six pages are read, and each title matches its page. A page that can't be opened stays on the list as unreadable, with the reason, and the others are still read. Nothing is dropped quietly. The list shows the name, the title, the address, and whether the page was read. Every page shows the banner that this business is fictional. The sample pages use the business phone number and the name Carla.
 
 ```
 python3 scripts/read_pages.py
@@ -87,21 +87,21 @@ You'll see `Page list`, then Home, Services, Pricing, Service Area, Hours & FAQ,
 
 ## 3 · Write the answer
 
-A question should get a short answer from your pages, not a guess.
+A question should get a short answer from the business's pages, not a guess.
 
 **Answers come from your pages**
 
-Every question your pages answer gets a short answer that names the page it came from. Every question your pages don't cover gets the callback reply from [When the pages don't say](agreements.md#when-the-pages-dont-say). An urgent message stops before the pages are read. An amount that isn't on your pages is replaced with the callback reply.
+Every question the business's pages answer gets a short answer that names the page it came from. Every question the business's pages don't cover gets the callback reply from [When the pages don't say](agreements.md#when-the-pages-dont-say). An urgent message stops before the pages are read. An amount that isn't on the business's pages is replaced with the callback reply.
 
-The instructions for that answer include the text of your pages and the callback reply. They say to answer only from these pages, keep it short, name the page, and use that callback sentence when the pages don't cover the question.
+The instructions for that answer include the text of the business's pages and the callback reply. They say to answer only from these pages, keep it short, name the page, and use that callback sentence when the pages don't cover the question.
 
 You see this check on the pull request as Answers come from your pages.
 
-`scripts/front_desk.py` runs the four parts in order: the urgent reply, then your pages, then this answer, then the price check. The real AI call waits until you choose the setup. Until then, the checks use a stand-in that answers the agreed test questions. It is not a real AI.
+`scripts/front_desk.py` runs the four parts in order: the urgent reply, then the business's pages, then this answer, then the price check. The real AI call waits until the setup is chosen. Until then, the checks use a stand-in that answers the agreed test questions. It is not a real AI.
 
 **Every test question has an answer plan**
 
-The 15 questions in [The 15 test questions](agreements.md#the-15-test-questions) fall into three groups. A question your pages answer names the page it comes from. A question with a set reply uses the urgent reply, or offers a callback. A question that is still yours to decide offers a callback until you say otherwise. The drain-cleaning question is answered from Pricing. Hours says Sunday is closed, and Contact says how to book or cancel.
+The 15 questions in [The 15 test questions](agreements.md#the-15-test-questions) fall into three groups. A question the business's pages answer names the page it comes from. A question with a set reply uses the urgent reply, or offers a callback. A question that is still the client's to decide offers a callback until the client says otherwise. The drain-cleaning question is answered from Pricing. Hours says Sunday is closed, and Contact says how to book or cancel.
 
 ```
 python3 scripts/answer_reply.py 'Are you open Saturdays?'
@@ -119,11 +119,11 @@ You'll see:
 
 ## 4 · Check every price
 
-The AI could make up a price, so every answer is checked before it goes out. Each money amount must appear on your pages exactly as written. If even one doesn't, the whole answer is replaced with the callback reply.
+The AI could make up a price, so every answer is checked before it goes out. Each money amount must appear on the business's pages exactly as written. If even one doesn't, the whole answer is replaced with the callback reply.
 
 **Prices come only from your pages**
 
-A price written on your pages is left as written. Before an answer is shown, each amount in it is kept only as it is written there. An amount that isn't on your pages is replaced with the callback reply. An answer with no amount is left as it is, and an urgent message is still handled first.
+A price written on the business's pages is left as written. Before an answer is shown, each amount in it is kept only as it is written there. An amount that isn't on the business's pages is replaced with the callback reply. An answer with no amount is left as it is, and an urgent message is still handled first.
 
 **A longer price isn't mistaken for a shorter one**
 
@@ -139,8 +139,8 @@ python3 scripts/price_reply.py 'A water heater replacement is $1,200.'
 
 You'll see:
 
-1. `A drain cleaning is $149.` It's unchanged, because your Pricing page says $149.
-2. The callback reply. Your Services page writes the fee as $99, and "99 dollars" doesn't match it exactly.
+1. `A drain cleaning is $149.` It's unchanged, because the Pricing page says $149.
+2. The callback reply. The Services page writes the fee as $99, and "99 dollars" doesn't match it exactly.
 3. The callback reply. Pricing doesn't list a water heater replacement.
 
 ## Still to come
@@ -148,5 +148,5 @@ You'll see:
 - **The real AI call**, once you choose the setup. The instructions, the page name, the callback, and the path a message takes are already in place.
 - **Matching each price to the right service.** A published amount is kept. The check does not yet confirm that the amount belongs to the service in the question.
 - **More ways of writing prices.** Today "99 dollars" and "$149.00" get the callback reply, and "250 bucks" isn't read as a price.
-- **Your OK on the 15 test questions and urgent words**, already written in [What we've agreed](agreements.md).
-- **A demo link you can try**, then a setup guide and handover notes so you can run it yourself.
+- **The client's OK on the 15 test questions and urgent words**, already written in [What we've agreed](agreements.md).
+- **A demo link to try**, then a setup guide and handover notes.
