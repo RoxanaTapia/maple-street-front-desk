@@ -32,6 +32,8 @@ These never change without your OK. The list is in [What we've agreed](docs/agre
 | For you | [scripts/read_pages.py](scripts/read_pages.py) | Reads the agreed pages and prints the page list. See [How your pages are read](docs/behaviour.md#how-your-pages-are-read). |
 | For you | [scripts/urgent_reply.py](scripts/urgent_reply.py) | Checks a customer message for your urgent words and prints the fixed reply. See [How it works](docs/behaviour.md#how-it-works). |
 | For you | [scripts/price_reply.py](scripts/price_reply.py) | Checks an answer and keeps a price only when your pages state it. See [Prices](docs/behaviour.md#prices). |
+| For you | [scripts/answer_reply.py](scripts/answer_reply.py) | Writes a short answer from the pages it was given, and names the page. See [Answers](docs/behaviour.md#answers). |
+| For you | [scripts/front_desk.py](scripts/front_desk.py) | Runs one message through the urgent reply, your pages, the answer, and the price check. See [The journey of a message](docs/how-it-works.md#the-journey-of-a-message). |
 | For the agents | [docs/contributing.md](docs/contributing.md) | How to run the sample site and the checks. See [How to run it](docs/contributing.md#how-to-run-it). |
 | For the agents | [.cursor/rules/](.cursor/rules/) | How the agents are allowed to work |
 | For the agents | [.cursor/team/](.cursor/team/README.md) | The roles they work in |

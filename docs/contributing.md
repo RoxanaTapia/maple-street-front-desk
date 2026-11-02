@@ -12,7 +12,11 @@ You need Python 3. From the project folder, open a terminal.
 4. Try a normal question with `python3 scripts/urgent_reply.py "Are you open Saturdays?"`. You should see that it is not treated as urgent.
 5. With the sample site still running, try a price from your pages with `python3 scripts/price_reply.py 'A drain cleaning is $149.'`. You should see that same sentence.
 6. Try a price that isn't on your pages with `python3 scripts/price_reply.py 'A water heater replacement is $1,200.'`. You should see the callback reply.
-7. Run every check with `python3 scripts/run_checks.py`.
+7. With the sample site still running, try an answer with `python3 scripts/answer_reply.py 'Are you open Saturdays?'`. You should see a short answer that names Hours & FAQ.
+8. Try the whole path with `python3 scripts/front_desk.py 'How much is a drain cleaning?'`. You should see a short answer that names Pricing.
+9. Try a question the pages don't cover with `python3 scripts/front_desk.py 'Do you cover Moorestown?'`. You should see the callback reply.
+10. Try an urgent message on the whole path with `python3 scripts/front_desk.py 'I have a burst pipe'`. You should see the fixed urgent reply.
+11. Run every check with `python3 scripts/run_checks.py`.
 
 `price_reply.py` takes an answer (what the assistant would say), not a customer question. Use single quotes when a message contains a dollar sign, so the shell keeps the amount.
 
@@ -27,3 +31,4 @@ The same checks run on every pull request. To run one area:
 - `python3 scripts/run_checks.py tests/test_urgent.py:UrgentReplyChecks`
 - `python3 scripts/run_checks.py tests/test_prices.py:PriceChecks`
 - `python3 scripts/run_checks.py tests/test_prices.py:LongerPriceChecks`
+- `python3 scripts/run_checks.py tests/test_answers.py:AnswerChecks`

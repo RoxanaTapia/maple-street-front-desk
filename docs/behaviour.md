@@ -28,6 +28,10 @@ All six pages are read, and each title matches its page. A page that can't be op
 
 The 15 questions in [The 15 test questions](agreements.md#the-15-test-questions) fall into three groups. A question your pages answer names the page it comes from. A question with a set reply uses the urgent reply, or offers a callback. A question that is still yours to decide offers a callback until you say otherwise. The drain-cleaning question is answered from Pricing. Hours says Sunday is closed, and Contact says how to book or cancel.
 
+**Answers come from your pages**
+
+Every question your pages answer gets a short answer that names the page it came from. Every question your pages don't cover gets the callback reply. The instructions for that answer include the text of your pages and the callback reply. An urgent message stops before the pages are read. An amount that isn't on your pages is replaced with the callback reply. You see this check on the pull request as Answers come from your pages.
+
 **Urgent messages get the fixed reply**
 
 Each urgent word gets the fixed reply, and nothing else. A normal question is not treated as urgent. The words and the reply are read from your agreements. An urgent message does not read your pages. The phone number in the urgent reply is not treated as a price. Checking a message prints the fixed reply when it is urgent, and says it is not when it is not. You see this check on the pull request as Urgent messages get the fixed reply.
@@ -43,6 +47,8 @@ A dollar amount is read whole. $1499 is not treated as $149, and $149 at the end
 ## Answers
 
 Answers come only from the pages in [Your pages](agreements.md#your-pages), and the assistant shows which page an answer came from. When the pages don't say, it offers a callback in the words from [When the pages don't say](agreements.md#when-the-pages-dont-say). It doesn't guess, and it doesn't add anything that isn't written there.
+
+An urgent message stops before those pages are read. Every other message is answered from them, and each price in the answer is checked before the reply goes out. The instructions for the answer say to use only those pages, to keep it short, to name the page the answer came from, and to use the callback reply when the pages don't cover the question. The instructions include the text of the pages.
 
 The answers we expect are the [15 test questions](agreements.md#the-15-test-questions).
 

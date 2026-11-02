@@ -34,9 +34,12 @@ REQUIRED_FILES = (
     "scripts/serve_sample_site.py",
     "scripts/urgent_reply.py",
     "scripts/price_reply.py",
+    "scripts/answer_reply.py",
+    "scripts/front_desk.py",
     "tests/test_pages.py",
     "tests/test_urgent.py",
     "tests/test_prices.py",
+    "tests/test_answers.py",
 )
 
 
