@@ -8,4 +8,4 @@ To open the sample site, run `python3 scripts/serve_sample_site.py` and visit th
 
 What a customer experiences is described in [How your assistant behaves](docs/behaviour.md).
 
-How a question moves through the system is in [How the whole system works](docs/how-it-works.md).
+How a question moves through the system is in [How the assistant works](docs/how-it-works.md).
