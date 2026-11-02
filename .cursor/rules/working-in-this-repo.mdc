@@ -7,6 +7,7 @@ alwaysApply: true
 
 - Read [AGENTS.md](../../AGENTS.md) and [docs/behaviour.md](../../docs/behaviour.md) before you edit.
 - Follow [How a change happens](../../AGENTS.md#how-a-change-happens).
+- PR descriptions follow [the change summary](../../.github/pull_request_template.md), with headings 📝 What changes, ⚙️ How it works, 🔍 How to review and ✅ Checks.
 - Stay inside the current issue.
 - Every change to how the assistant behaves must match [docs/behaviour.md](../../docs/behaviour.md).
 - Never change anything in [docs/agreements.md](../../docs/agreements.md), and never weaken a test to make it pass. Ask the client first.
