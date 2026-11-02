@@ -11,7 +11,7 @@ flowchart LR
     msg([Customer message]) --> one["1 · Spot an emergency"]
     one -->|urgent| call([Please call us now])
     one -->|not urgent| two["2 · Read your pages"]
-    two --> three["3 · Write the answer"]
+    two --> three["3 · Write the answer (coming next)"]
     three --> four["4 · Check every price"]
     four -->|prices match| reply([Reply goes out])
     four -->|unknown price| back([We'll call you back])
@@ -21,7 +21,7 @@ flowchart LR
 |---|---|---|---|
 | 1 | Spot an emergency | `scripts/urgent_reply.py` | Yes |
 | 2 | Read your pages | `scripts/read_pages.py` | Yes |
-| 3 | Write the answer | not written yet | Next |
+| 3 | Write the answer | not written yet | Coming next |
 | 4 | Check every price | `scripts/price_reply.py` | Yes |
 
 An emergency stops at the first stop: the customer is told to call, and nothing else runs. Every other message is answered from your pages, and the answer only goes out once every price in it matches what you've published.
