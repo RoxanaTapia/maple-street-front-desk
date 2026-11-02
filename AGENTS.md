@@ -14,7 +14,7 @@ These never change without your OK. The list is in [What we've agreed](docs/agre
 
 1. **One issue.** An issue is the written request. Each request stays one piece of work.
 2. **One branch.** A branch is a separate copy of the project, so this work does not mix with anything else. Its name is plain and descriptive, such as step-5-price-rule.
-3. **One pull request.** A pull request is the proposal to add that copy. The title is a plain sentence, with no prefix such as "fix:". The description follows [the change summary](.github/pull_request_template.md): it starts with Closes #N, then What changes as short bullets, then Checks with a link to that pull request's checks tab. When the checks have passed, the link reads All checks passed, and any new check is named there. List the acceptance boxes from the issue that this change covers. Leave out How it was tested, leave out Try it, and don't link to test files.
+3. **One pull request.** A pull request is the proposal to add that copy. The title is a plain sentence, with no prefix such as "fix:", and issue titles and pull request titles use no emoji. PR descriptions follow [the change summary](.github/pull_request_template.md), with headings 📝 What changes, ⚙️ How it works, 🔍 How to review and ✅ Checks. When a change adds or changes a script, update its section in docs/how-it-works.md (what it does, why it's there, a command to try).
 4. **Automatic checks.** So nothing breaks what you agreed. Each new test area gets its own plainly named check on the pull request.
 5. **A person reviews.** A person signs off every change.
 6. **Merge.** Merge means the change joins the project.
