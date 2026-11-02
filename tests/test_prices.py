@@ -1,12 +1,14 @@
 """Checks that a price is shown only when your pages state it.
 
 PriceChecks is the "Prices come only from your pages" area.
-Amounts are taken from your pages as the page reader reads them.
+LongerPriceChecks is the "A longer price isn't mistaken for a shorter one"
+area. Amounts are taken from your pages as the page reader reads them.
 The callback reply is read from your agreements. The docstring of
 each test is what the checklist prints.
 
-Run this area with
-python3 scripts/run_checks.py tests/test_prices.py:PriceChecks.
+Run one area with
+python3 scripts/run_checks.py tests/test_prices.py:PriceChecks
+or python3 scripts/run_checks.py tests/test_prices.py:LongerPriceChecks.
 """
 
 import contextlib
@@ -338,6 +340,123 @@ class PriceChecks(unittest.TestCase):
         self.assertIn("**Prices come only from your pages**", behaviour)
         self.assertIn("kept only as it is written there", behaviour)
         self.assertIn("an urgent message is still handled first", behaviour)
+
+
+class LongerPriceChecks(unittest.TestCase):
+    def setUp(self):
+        self.site = RunningSite()
+
+    def tearDown(self):
+        self.site.close()
+        serve_sample_site.pricing_live = True
+
+    def test_a_dollar_amount_is_read_whole(self):
+        """A dollar amount is read whole."""
+        cases = {
+            "$1499": ["$1499"],
+            "$1,499": ["$1,499"],
+            "$149": ["$149"],
+            "A drain cleaning is $149.": ["$149"],
+            "A water heater is $1499.": ["$1499"],
+            "A water heater replacement is $1,499.": ["$1,499"],
+            "It is $1,200, please.": ["$1,200"],
+            "It is $50, please.": ["$50"],
+            "$149.00": ["$149.00"],
+            "$99": ["$99"],
+            "99 dollars": ["99 dollars"],
+            "250 dollars": ["250 dollars"],
+            "1,499 dollars": ["1,499 dollars"],
+        }
+        for text, expected in cases.items():
+            self.assertEqual(price_reply.find_amounts(text), expected, text)
+        self.assertNotEqual(price_reply.find_amounts("$1499"), ["$149"])
+        self.assertNotEqual(price_reply.find_amounts("$1,499"), ["$1"])
+        self.assertNotEqual(price_reply.find_amounts("$1,499"), ["$149"])
+
+    def test_a_longer_price_isnt_mistaken_for_a_shorter_one(self):
+        """A longer price isn't mistaken for a shorter one."""
+        published = price_reply.published_amounts(self.site.base)
+        callback = price_reply.callback_reply()
+        self.assertEqual(callback, "I can't confirm that from your pages.")
+        self.assertIn("$149", published)
+        self.assertNotIn("$1499", published)
+        self.assertNotIn("$1,499", published)
+        answer = "A water heater is $1499."
+        self.assertEqual(price_reply.find_amounts(answer), ["$1499"])
+        got = price_reply.checked_answer(answer, base_url=self.site.base)
+        self.assertEqual(got, callback)
+        self.assertNotIn("$149", got)
+        self.assertNotIn("1499", got)
+        comma = "A water heater is $1,499."
+        self.assertEqual(
+            price_reply.checked_answer(comma, base_url=self.site.base),
+            callback,
+        )
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            code = price_reply.main([answer, self.site.base])
+        self.assertEqual(code, 0)
+        self.assertEqual(stdout.getvalue(), callback + "\n")
+
+    def test_a_price_at_the_end_of_a_sentence_stays_the_amount(self):
+        """$149 at the end of a sentence is still $149."""
+        answer = "A drain cleaning is $149."
+        self.assertEqual(price_reply.find_amounts(answer), ["$149"])
+        self.assertEqual(
+            price_reply.checked_answer(answer, base_url=self.site.base),
+            answer,
+        )
+        page = "A drain cleaning is $149."
+        self.assertEqual(
+            price_reply.checked_answer(answer, page_text=page),
+            answer,
+        )
+        callback = price_reply.callback_reply()
+        for other in (
+            "A drain cleaning is $1499.",
+            "A drain cleaning is $1,499.",
+            "A drain cleaning is $149.00.",
+            "A drain cleaning is 149 dollars.",
+            "The visit is 99 dollars.",
+        ):
+            self.assertEqual(
+                price_reply.checked_answer(other, page_text=page),
+                callback,
+                other,
+            )
+
+    def test_an_address_a_phone_number_and_a_time_are_not_prices(self):
+        """An address, a phone number, and a time are not prices."""
+        answers = (
+            "We're at 149 Maple Street",
+            "We're at 149 Maple Street.",
+            "We are at 149 Maple Street.",
+            "Call us at (856) 555-0142.",
+            "Call us at 555-0142.",
+            "Saturday: 8:00 am to 12:00 pm.",
+        )
+        for answer in answers:
+            self.assertEqual(price_reply.find_amounts(answer), [], answer)
+            self.assertEqual(
+                price_reply.checked_answer(answer, base_url=self.site.base),
+                answer,
+            )
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            code = price_reply.main(["We're at 149 Maple Street", self.site.base])
+        self.assertEqual(code, 0)
+        self.assertEqual(stdout.getvalue(), "We're at 149 Maple Street\n")
+
+    def test_you_see_this_check_on_the_pull_request(self):
+        """You see this check on the pull request as A longer price isn't mistaken for a shorter one."""
+        workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+        self.assertIn("name: A longer price isn't mistaken for a shorter one\n", workflow)
+        self.assertIn("tests/test_prices.py:LongerPriceChecks", workflow)
+        behaviour = (ROOT / "docs" / "behaviour.md").read_text(encoding="utf-8")
+        self.assertIn("**A longer price isn't mistaken for a shorter one**", behaviour)
+        self.assertIn("An amount is read whole", behaviour)
+        self.assertIn("A water heater is $1499.", behaviour)
+        self.assertIn("We're at 149 Maple Street", behaviour)
 
 
 if __name__ == "__main__":

@@ -24,8 +24,10 @@ AGREEMENTS = ROOT / "docs" / "agreements.md"
 CALLBACK_HEADING = "When the pages don't say"
 # A dollar amount, or a number of dollars.
 # A comma is part of the amount only when it separates thousands.
+# A dollar amount is read whole: the match cannot end in the middle of a number,
+# and a full stop after it stays outside the amount.
 _AMOUNT = re.compile(
-    r"\$\s?\d{1,3}(?:,\d{3})*(?:\.\d+)?"
+    r"\$\s?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?(?!,?\d)"
     r"|(?<![\d,.])\d{1,3}(?:,\d{3})+(?:\.\d+)?\s+dollars?(?!\w)"
     r"|(?<![\d,.])\d+(?:\.\d+)?\s+dollars?(?!\w)",
     re.IGNORECASE,

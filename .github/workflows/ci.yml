@@ -99,3 +99,18 @@ jobs:
 
       - name: Run checks
         run: python3 scripts/run_checks.py tests/test_prices.py:PriceChecks
+
+  longer-price:
+    name: A longer price isn't mistaken for a shorter one
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Run checks
+        run: python3 scripts/run_checks.py tests/test_prices.py:LongerPriceChecks
