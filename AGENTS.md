@@ -1,10 +1,10 @@
 # Project guide
 
-This is the project guide. I build your assistant with AI coding agents, and every agent reads this file first, like a briefing for a new team member. It tells them what we're building, what you've agreed, and how a change is allowed to happen. You can read it too: it's the shortest way to see how your project is run.
+This page is for the agents who build your assistant, and for you, Dave, when you want to see how the project is run. Every agent reads it first, like a briefing for a new team member. It says what we're building, what you've agreed, and how a change is allowed to happen.
 
 ## What we're building
 
-Maple Street Front Desk is a chat assistant for your customers. It answers from your own public web pages, and [How your assistant behaves](docs/behaviour.md) is the full description of what it does.
+Maple Street Front Desk is a chat assistant for your customers. It answers from your own public web pages. [How your assistant behaves](docs/behaviour.md) is what a customer experiences, and [How the assistant works](docs/how-it-works.md) is how a message gets there.
 
 ## What we've agreed
 
@@ -25,16 +25,16 @@ These never change without your OK. The list is in [What we've agreed](docs/agre
 |---|---|---|
 | For you | [README.md](README.md) | What this project is |
 | For you | [docs/agreements.md](docs/agreements.md) | What we've agreed |
-| For you | [docs/behaviour.md](docs/behaviour.md) | What the assistant does for a customer |
+| For you | [docs/behaviour.md](docs/behaviour.md) | What a customer writes, and what they get back |
+| For you | [docs/how-it-works.md](docs/how-it-works.md) | How a message is handled, and how to try the sample site and the checks. See [Try it yourself](docs/how-it-works.md#try-it-yourself). |
 | For you | [AGENTS.md](AGENTS.md) | This guide |
 | For you | [sample-site/](sample-site/) | A small fictional sample of your public pages |
 | For you | [scripts/serve_sample_site.py](scripts/serve_sample_site.py) | Serves that sample like a website |
-| For you | [scripts/read_pages.py](scripts/read_pages.py) | Reads the agreed pages and prints the page list. See [How your pages are read](docs/behaviour.md#how-your-pages-are-read). |
-| For you | [scripts/urgent_reply.py](scripts/urgent_reply.py) | Checks a customer message for your urgent words and prints the fixed reply. See [How it works](docs/behaviour.md#how-it-works). |
-| For you | [scripts/price_reply.py](scripts/price_reply.py) | Checks an answer and keeps a price only when your pages state it. See [Prices](docs/behaviour.md#prices). |
-| For you | [scripts/answer_reply.py](scripts/answer_reply.py) | Writes a short answer from the pages it was given, and names the page. See [Answers](docs/behaviour.md#answers). |
+| For you | [scripts/read_pages.py](scripts/read_pages.py) | Reads the agreed pages and prints the page list. See [Read your pages](docs/how-it-works.md#2-·-read-your-pages). |
+| For you | [scripts/urgent_reply.py](scripts/urgent_reply.py) | Checks a customer message for your urgent words and prints the fixed reply. See [Spot an emergency](docs/how-it-works.md#1-·-spot-an-emergency). |
+| For you | [scripts/price_reply.py](scripts/price_reply.py) | Checks an answer and keeps a price only when your pages state it. See [Check every price](docs/how-it-works.md#4-·-check-every-price). |
+| For you | [scripts/answer_reply.py](scripts/answer_reply.py) | Writes a short answer from the pages it was given, and names the page. See [Write the answer](docs/how-it-works.md#3-·-write-the-answer). |
 | For you | [scripts/front_desk.py](scripts/front_desk.py) | Runs one message through the urgent reply, your pages, the answer, and the price check. See [The journey of a message](docs/how-it-works.md#the-journey-of-a-message). |
-| For the agents | [docs/contributing.md](docs/contributing.md) | How to run the sample site and the checks. See [How to run it](docs/contributing.md#how-to-run-it). |
 | For the agents | [.cursor/rules/](.cursor/rules/) | How the agents are allowed to work |
 | For the agents | [.cursor/team/](.cursor/team/README.md) | The roles they work in |
 | For the agents | [.cursor/commands/](.cursor/commands/run-checks.md) | Shortcuts for the checks and the change summary |
@@ -48,7 +48,7 @@ These never change without your OK. The list is in [What we've agreed](docs/agre
 | Coming in a later step | `docs/setup.md` | How to run the project |
 | Coming in a later step | `docs/handover.md` | Notes for when the project is handed to you |
 
-To try the sample site, read the pages, or run the checks, follow [How to run it](docs/contributing.md#how-to-run-it).
+To try the sample site, read the pages, or run the checks, follow [Try it yourself](docs/how-it-works.md#try-it-yourself).
 
 ## For the agents
 

@@ -7,4 +7,4 @@ alwaysApply: false
 
 Owns the README, the setup guide, and the handover notes. Paths are in [Where things are](../../AGENTS.md#where-things-are).
 
-- Keep the README short and in the client's voice. The commands for running it live in [How to run it](../../docs/contributing.md#how-to-run-it).
+- Keep the README short and in the client's voice. The commands for running it live in [Try it yourself](../../docs/how-it-works.md#try-it-yourself).

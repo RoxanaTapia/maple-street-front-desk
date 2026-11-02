@@ -374,13 +374,8 @@ class AnswerChecks(unittest.TestCase):
         self.assertIn("name: Answers come from your pages\n", workflow)
         self.assertIn("tests/test_answers.py:AnswerChecks", workflow)
         behaviour = (ROOT / "docs" / "behaviour.md").read_text(encoding="utf-8")
-        self.assertIn("**Answers come from your pages**", behaviour)
+        self.assertIn("| A customer writes | What they get |", behaviour)
         self.assertIn("names the page it came from", behaviour)
-        self.assertIn("include the text of your pages", behaviour)
-        self.assertIn(
-            "You see this check on the pull request as Answers come from your pages.",
-            behaviour,
-        )
         how = (ROOT / "docs" / "how-it-works.md").read_text(encoding="utf-8")
         self.assertNotIn("Write the answer (coming next)", how)
         self.assertNotIn("not written yet", how)
@@ -388,6 +383,12 @@ class AnswerChecks(unittest.TestCase):
         self.assertIn("`scripts/answer_reply.py`", how)
         self.assertIn("`scripts/front_desk.py`", how)
         section = how.split("## 3 · Write the answer", 1)[1].split("## 4 ·", 1)[0]
+        self.assertIn("**Answers come from your pages**", section)
+        self.assertIn("include the text of your pages", section)
+        self.assertIn(
+            "You see this check on the pull request as Answers come from your pages.",
+            section,
+        )
         self.assertIn("real AI call", section)
         self.assertIn("not a real AI", section)
         readme = (ROOT / "README.md").read_text(encoding="utf-8")

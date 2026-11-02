@@ -165,9 +165,11 @@ class UrgentReplyChecks(unittest.TestCase):
         source = (SCRIPTS / "urgent_reply.py").read_text(encoding="utf-8")
         behaviour = (ROOT / "docs" / "behaviour.md").read_text(encoding="utf-8")
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        how = (ROOT / "docs" / "how-it-works.md").read_text(encoding="utf-8")
         self.assertNotIn(reply, source)
         self.assertNotIn(reply, behaviour)
         self.assertNotIn(reply, readme)
+        self.assertNotIn(reply, how)
         for word in words:
             self.assertNotIn(f'"{word}"', source)
             self.assertNotIn(f"'{word}'", source)
@@ -264,8 +266,11 @@ class UrgentReplyChecks(unittest.TestCase):
         self.assertIn("name: Urgent messages get the fixed reply\n", workflow)
         self.assertIn("tests/test_urgent.py:UrgentReplyChecks", workflow)
         behaviour = (ROOT / "docs" / "behaviour.md").read_text(encoding="utf-8")
-        self.assertIn("## How it works\n", behaviour)
-        self.assertIn("**Urgent messages get the fixed reply**", behaviour)
+        self.assertIn("An urgent message", behaviour)
+        self.assertIn("fixed urgent reply", behaviour)
+        how = (ROOT / "docs" / "how-it-works.md").read_text(encoding="utf-8")
+        section = how.split("## 1 · Spot an emergency", 1)[1].split("## 2 ·", 1)[0]
+        self.assertIn("**Urgent messages get the fixed reply**", section)
 
 
 if __name__ == "__main__":

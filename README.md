@@ -1,8 +1,10 @@
 # Maple Street Front Desk
 
+This page is for you, Dave. Open it when you want the short picture of your customer assistant: what it does for a customer, how far along it is, and which page to read next.
+
 **A front desk that will answer from your own pages, tells urgent callers to ring you right away, and never quotes a price you haven't published.**
 
-This is where you can follow your customer assistant as it's built: what it does, how far along it is, and how every change is checked before it reaches your customers. For now it works on a small practice copy of your site, so nothing touches your real one.
+For now it works on a small practice copy of your site, so nothing touches your real one.
 
 ## What your customers get
 
@@ -12,7 +14,7 @@ This is where you can follow your customer assistant as it's built: what it does
 | "How much is a water heater replacement?" | An offer of a callback, since that price isn't on your pages | ✅ |
 | "Are you open Saturdays?" | A short answer from your Hours & FAQ page | ⏳ |
 
-Once answers are in place, every answer will come from your published pages. If your pages don't say, the assistant says so instead of guessing. The exact replies, and more examples, are in [How your assistant behaves](docs/behaviour.md).
+Once answers are in place, every answer will come from your published pages. If your pages don't say, the assistant says so instead of guessing. What each kind of message gets back is in [How your assistant behaves](docs/behaviour.md).
 
 ## How a message is handled
 
@@ -50,6 +52,6 @@ Your assistant is built with the help of AI agents, each with a clear job, and e
 
 - [What we've agreed](docs/agreements.md): your pages, urgent words, contact details and the 15 test questions.
 - [How your assistant behaves](docs/behaviour.md): what your customers will experience.
-- [How the assistant works](docs/how-it-works.md): a step-by-step look at the journey of a message.
+- [How the assistant works](docs/how-it-works.md): how a message is handled, and how to try the sample site.
 
 **Next up:** the answer step, then a demo link you can try yourself.

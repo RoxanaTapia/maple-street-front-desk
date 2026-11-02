@@ -17,7 +17,7 @@ REQUIRED_FILES = (
     "scripts/run_checks.py",
     "docs/behaviour.md",
     "docs/agreements.md",
-    "docs/contributing.md",
+    "docs/how-it-works.md",
     ".cursor/rules/working-in-this-repo.mdc",
     ".cursor/rules/tests.mdc",
     "tests/test_links.py",
@@ -48,6 +48,7 @@ class ProjectChecks(unittest.TestCase):
         """The project files are in place."""
         missing = [path for path in REQUIRED_FILES if not (ROOT / path).is_file()]
         self.assertEqual(missing, [])
+        self.assertFalse((ROOT / "docs" / "contributing.md").exists())
 
     def test_python_pin_is_set(self):
         """Python matches the version this project records."""

@@ -1,6 +1,6 @@
 # What we've agreed
 
-This page keeps everything we've agreed for your front-desk assistant in one place. When something changes, it changes here first, and the assistant follows it.
+This page is for you, Dave. Open it when you want to see what we've agreed, or when that list should change. It keeps your pages, your urgent words, the callback, and the 15 test questions in one place. When something changes, it changes here first, and the assistant follows it.
 
 ## Your pages
 
