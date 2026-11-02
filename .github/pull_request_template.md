@@ -53,7 +53,10 @@ What each command returns, in one sentence.
 <!--
 Link to this pull request's checks tab.
 When they have passed, the link text is "All checks passed".
-Name any new check. Do not add How it was tested or Try it.
+Each new check gets one bullet under the link: the check name in bold, a colon, then one plain line naming the cases it tries and what each gives.
+Existing checks aren't listed. Do not add How it was tested or Try it. No links to test files.
 -->
 
-[All checks passed](https://github.com/RoxanaTapia/maple-street-front-desk/pull/N/checks)
+[All checks passed](https://github.com/RoxanaTapia/maple-street-front-desk/pull/N/checks), including a new one:
+
+- **Prices come only from your pages:** $149 is shown, $1,200 gets the callback reply, and an answer with no price is left as it is.
