@@ -420,9 +420,11 @@ class QuestionCoverageChecks(unittest.TestCase):
         self.assertNotEqual(urgent_quote, callback_quote)
         behaviour = (ROOT / "docs" / "behaviour.md").read_text(encoding="utf-8")
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        how = (ROOT / "docs" / "how-it-works.md").read_text(encoding="utf-8")
         for quote in (urgent_quote, callback_quote):
             self.assertNotIn(quote, behaviour)
             self.assertNotIn(quote, readme)
+            self.assertNotIn(quote, how)
 
         drain = next(row for row in rows if row["question"] == "How much is a drain cleaning?")
         self.assertEqual(page_named(drain["detail"]), "Pricing")

@@ -168,8 +168,10 @@ class PriceChecks(unittest.TestCase):
         self.assertEqual(price_reply.find_amounts(callback), [])
         source = (SCRIPTS / "price_reply.py").read_text(encoding="utf-8")
         behaviour = (ROOT / "docs" / "behaviour.md").read_text(encoding="utf-8")
+        how = (ROOT / "docs" / "how-it-works.md").read_text(encoding="utf-8")
         self.assertNotIn(callback, source)
         self.assertNotIn(callback, behaviour)
+        self.assertNotIn(callback, how)
         for banned in ("openai", "anthropic", "grok"):
             self.assertNotIn(banned, source)
         invented = [item for item in ("$1,200", "$50", "250 dollars", "$149.00") if item not in published]
@@ -337,9 +339,13 @@ class PriceChecks(unittest.TestCase):
         self.assertIn("name: Prices come only from your pages\n", workflow)
         self.assertIn("tests/test_prices.py:PriceChecks", workflow)
         behaviour = (ROOT / "docs" / "behaviour.md").read_text(encoding="utf-8")
-        self.assertIn("**Prices come only from your pages**", behaviour)
-        self.assertIn("kept only as it is written there", behaviour)
-        self.assertIn("an urgent message is still handled first", behaviour)
+        self.assertIn("| A customer writes | What they get |", behaviour)
+        self.assertIn("A price", behaviour)
+        how = (ROOT / "docs" / "how-it-works.md").read_text(encoding="utf-8")
+        section = how.split("## 4 · Check every price", 1)[1].split("## Still to come", 1)[0]
+        self.assertIn("**Prices come only from your pages**", section)
+        self.assertIn("kept only as it is written there", section)
+        self.assertIn("an urgent message is still handled first", section)
 
 
 class LongerPriceChecks(unittest.TestCase):
@@ -452,11 +458,12 @@ class LongerPriceChecks(unittest.TestCase):
         workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
         self.assertIn("name: A longer price isn't mistaken for a shorter one\n", workflow)
         self.assertIn("tests/test_prices.py:LongerPriceChecks", workflow)
-        behaviour = (ROOT / "docs" / "behaviour.md").read_text(encoding="utf-8")
-        self.assertIn("**A longer price isn't mistaken for a shorter one**", behaviour)
-        self.assertIn("An amount is read whole", behaviour)
-        self.assertIn("A water heater is $1499.", behaviour)
-        self.assertIn("We're at 149 Maple Street", behaviour)
+        how = (ROOT / "docs" / "how-it-works.md").read_text(encoding="utf-8")
+        section = how.split("## 4 · Check every price", 1)[1].split("## Still to come", 1)[0]
+        self.assertIn("**A longer price isn't mistaken for a shorter one**", section)
+        self.assertIn("An amount is read whole", section)
+        self.assertIn("A water heater is $1499.", section)
+        self.assertIn("We're at 149 Maple Street", section)
 
 
 if __name__ == "__main__":
