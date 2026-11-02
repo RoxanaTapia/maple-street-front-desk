@@ -29,6 +29,25 @@ Not covered yet:
 
 - One gap, and the step that covers it.
 
+## 🔍 How to review
+
+<!--
+Keep it concise.
+Name the script or file to run, in backticks.
+Give two or three ready-to-paste commands that show the expected result. Use single quotes around $ amounts.
+Add one sentence on what each command should return.
+Leave this whole section out when there's nothing to try by hand.
+-->
+
+One short reason to try it, and the file in backticks.
+
+```
+first command
+second command
+```
+
+What each command returns, in one sentence.
+
 ## ✅ Checks
 
 <!--
