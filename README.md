@@ -6,13 +6,13 @@ This is where you can follow your customer assistant as it's built: what it does
 
 ## What your customers get
 
-| A customer writes | The assistant replies | Ready? |
+| A customer writes | What they get | Ready? |
 |---|---|---|
-| "I have a burst pipe" | "This sounds urgent. Please call us now on (856) 555-0142." | ✅ |
-| "How much is a water heater replacement?" | "I can't confirm that from your pages." | ✅ |
-| "Are you open Saturdays?" | A short reply from your Hours & FAQ page: open Saturday morning | ⏳ |
+| "I have a burst pipe" | A message to call you right away, with your number | ✅ |
+| "How much is a water heater replacement?" | An offer of a callback, since that price isn't on your pages | ✅ |
+| "Are you open Saturdays?" | A short answer from your Hours & FAQ page | ⏳ |
 
-Once answers are in place, every answer will come from your published pages. If your pages don't say, the assistant says so instead of guessing. More examples are in [How your assistant behaves](docs/behaviour.md).
+Once answers are in place, every answer will come from your published pages. If your pages don't say, the assistant says so instead of guessing. The exact replies, and more examples, are in [How your assistant behaves](docs/behaviour.md).
 
 ## How a message is handled
 
