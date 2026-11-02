@@ -25,3 +25,5 @@ The same checks run on every pull request. To run one area:
 - `python3 scripts/run_checks.py tests/test_pages.py:PageListChecks`
 - `python3 scripts/run_checks.py tests/test_pages.py:QuestionCoverageChecks`
 - `python3 scripts/run_checks.py tests/test_urgent.py:UrgentReplyChecks`
+- `python3 scripts/run_checks.py tests/test_prices.py:PriceChecks`
+- `python3 scripts/run_checks.py tests/test_prices.py:LongerPriceChecks`
