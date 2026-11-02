@@ -1,7 +1,5 @@
 # What we've agreed
 
-This page is for you, Dave. Open it when you want to see what we've agreed, or when that list should change. It keeps your pages, your urgent words, the callback, and the 15 test questions in one place. When something changes, it changes here first, and the assistant follows it.
-
 ## Your pages
 
 The assistant answers only from these six pages of your website: Home, Services, Pricing, Service Area, Hours & FAQ, and Contact. If something isn't on them, it doesn't guess.

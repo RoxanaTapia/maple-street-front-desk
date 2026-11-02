@@ -1,7 +1,5 @@
 # How the assistant works
 
-This page is for the people building the assistant, and for you, Dave, when you want to try it. Use it to start the sample site, run the checks, and follow one customer message from the moment it arrives to the reply. What a customer actually receives is in [How your assistant behaves](behaviour.md). The short picture is the [README](../README.md).
-
 ## Try it yourself
 
 You need Python 3. From the project folder, open a terminal and start the sample site:

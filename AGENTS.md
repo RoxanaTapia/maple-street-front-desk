@@ -1,7 +1,5 @@
 # Project guide
 
-This page is for the agents who build your assistant, and for you, Dave, when you want to see how the project is run. Every agent reads it first, like a briefing for a new team member. It says what we're building, what you've agreed, and how a change is allowed to happen.
-
 ## What we're building
 
 Maple Street Front Desk is a chat assistant for your customers. It answers from your own public web pages. [How your assistant behaves](docs/behaviour.md) is what a customer experiences, and [How the assistant works](docs/how-it-works.md) is how a message gets there.
