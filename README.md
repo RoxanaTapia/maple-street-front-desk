@@ -7,3 +7,5 @@ Automatic checks run on every change. They test the assistant against the 15 que
 To open the sample site, run `python3 scripts/serve_sample_site.py` and visit the address it prints. If it is already running, you'll get a short message instead of an error. Stop it with Ctrl+C.
 
 What a customer experiences is described in [How your assistant behaves](docs/behaviour.md).
+
+How a question moves through the system is in [How the whole system works](docs/how-it-works.md).
