@@ -30,7 +30,7 @@ flowchart LR
 
 - Reads the urgent words in [Urgent messages](agreements.md#urgent-messages), and the reply that goes with them.
 - When one of those words is present, the customer gets only the fixed urgent reply. The pages are not read.
-- A frozen pipe is one of those words, so a message such as "I think I have a frozen pipe" or "Our pipe is frozen" gets only the fixed urgent reply.
+- A frozen pipe is one of those words, so a message such as "I think I have a frozen pipe" gets only the fixed urgent reply.
 - A normal question is left for the next part.
 - A question about after-hours emergency callouts is not urgent. It uses none of the urgent words, so the pages are read and the Hours & FAQ page answers it.
 

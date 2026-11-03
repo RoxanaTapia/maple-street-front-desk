@@ -573,7 +573,7 @@ class ClaudeAnswerChecks(unittest.TestCase):
             called["n"] += 1
             return {"content": [{"type": "text", "text": "No. (Source: Contact page)"}]}
 
-        urgent = front_desk.reply_to("Our pipe is frozen", client=client_urgent)
+        urgent = front_desk.reply_to("I have a frozen pipe", client=client_urgent)
         self.assertEqual(urgent, urgent_reply.fixed_urgent_reply())
         self.assertEqual(called["n"], 0)
 

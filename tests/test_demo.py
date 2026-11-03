@@ -133,12 +133,12 @@ class DemoChatChecks(unittest.TestCase):
         return raw, parsed["reply"]
 
     def test_an_urgent_message_gets_the_urgent_reply(self):
-        """Our pipe is frozen gets the urgent reply."""
+        """I have a frozen pipe gets the urgent reply."""
         expected = urgent_reply.fixed_urgent_reply()
-        self.assertEqual(urgent_reply.reply_if_urgent("Our pipe is frozen"), expected)
-        raw, got = self._reply("Our pipe is frozen")
+        self.assertEqual(urgent_reply.reply_if_urgent("I have a frozen pipe"), expected)
+        raw, got = self._reply("I have a frozen pipe")
         self.assertEqual(got, expected)
-        self.assertEqual(got, front_desk.reply_to("Our pipe is frozen", base_url=self.demo.base))
+        self.assertEqual(got, front_desk.reply_to("I have a frozen pipe", base_url=self.demo.base))
         self.assertNotIn("\n", got)
         self.assertNotIn("<", raw)
 
@@ -212,7 +212,7 @@ class DemoChatChecks(unittest.TestCase):
             self.assertEqual(status, 200, path)
             self.assertNotIn(secret, body, path)
             self.assertNotIn(secret, str(headers), path)
-        for message in ("Our pipe is frozen", "What are your hours?", "Do you sell pizza?"):
+        for message in ("I have a frozen pipe", "What are your hours?", "Do you sell pizza?"):
             status, headers, raw, parsed = self.demo.post(message, extra={"apiKey": secret})
             self.assertEqual(status, 200, message)
             self.assertNotIn(secret, raw, message)
