@@ -53,3 +53,7 @@ Callers often ask these. The business's pages don't cover them yet. Until the ow
 ## Which AI the assistant uses
 
 The assistant uses Claude by default. OpenAI and Grok are the other choices.
+
+## How answers are written
+
+The simpler setup is in place. There are six pages, so the assistant reads all of them for every question. Claude is the AI that writes the answer. A document search engine can be added later if many more documents are added.

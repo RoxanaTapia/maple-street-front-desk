@@ -1,14 +1,18 @@
-"""Write a short answer from your pages.
+"""Write a short answer from the business's pages.
 
 This is part 3 of the path. It takes a customer question and the page
-text from the page reader, and it builds the instructions for the AI:
+text from the page reader, and it builds the instructions for the answer:
 answer only from these pages, keep it short, name the page the answer
-came from, and use the callback sentence from your agreements when the
-pages don't cover the question.
+came from, and use the callback sentence from the agreements when the
+pages don't cover the question. The text of every page is included.
 
-The writer is a small pluggable function. The only writer here is a
-stand-in for the checks. It answers the agreed test questions. This is
-not a real AI, and it does not call one.
+When ANTHROPIC_API_KEY is set, Claude writes the answer through the
+Messages API. A small, fast model is used unless CLAUDE_MODEL names
+another one. If that call fails, the callback reply is used instead of
+an error.
+
+With no key, a stand-in answers the agreed test questions. The stand-in
+is not a real AI, and it does not call one. The checks use that path.
 
 Usage: python3 scripts/answer_reply.py "customer question" [site address]
 
@@ -16,8 +20,11 @@ With no address, reads http://127.0.0.1:8000, the address the sample
 site prints by default.
 """
 
+import json
+import os
 import re
 import sys
+import urllib.request
 from pathlib import Path
 
 import read_pages
@@ -69,10 +76,19 @@ _STOP = frozenset(
         "please",
     }
 )
+KEY_ENV = "ANTHROPIC_API_KEY"
+MODEL_ENV = "CLAUDE_MODEL"
+DEFAULT_MODEL = "claude-haiku-5-5"
+MESSAGES_URL = "https://api.anthropic.com/v1/messages"
+API_VERSION = "2023-06-01"
+# Short on purpose: a failed or hung call must not leave the customer waiting.
+TIMEOUT_SECONDS = 15
+MAX_TOKENS = 1024
 USAGE = (
     'Usage: python3 scripts/answer_reply.py "customer question" [site address]\n'
     "Prints a short answer from your pages, naming the page it came from.\n"
     "When the pages don't cover the question, prints the callback reply.\n"
+    "With ANTHROPIC_API_KEY set, Claude writes the answer. With no key, a stand-in answers.\n"
     f"With no address, reads {read_pages.DEFAULT_SITE}."
 )
 
@@ -292,17 +308,99 @@ def stand_in_writer(question, instructions, pages, text=None):
     return _with_source(sentences, name)
 
 
-def write_answer(question, pages, writer=None, text=None):
+def _api_key():
+    return os.environ.get(KEY_ENV, "").strip()
+
+
+def _model_name():
+    chosen = os.environ.get(MODEL_ENV, "").strip()
+    return chosen or DEFAULT_MODEL
+
+
+def _message_text(body):
+    """Return the text blocks from a Messages API response.
+
+    Thinking blocks are left out. An empty or unexpected body returns "".
+    """
+    if not isinstance(body, dict):
+        return ""
+    content = body.get("content")
+    if not isinstance(content, list):
+        return ""
+    parts = []
+    for block in content:
+        if not isinstance(block, dict) or block.get("type") != "text":
+            continue
+        text = block.get("text")
+        if isinstance(text, str) and text.strip():
+            parts.append(text.strip())
+    return "\n".join(parts).strip()
+
+
+def _post_message(payload, key, timeout):
+    """POST one Messages API request. The key travels in the header only."""
+    request = urllib.request.Request(
+        MESSAGES_URL,
+        data=json.dumps(payload).encode("utf-8"),
+        method="POST",
+        headers={
+            "content-type": "application/json",
+            "x-api-key": key,
+            "anthropic-version": API_VERSION,
+        },
+    )
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+        raw = response.read().decode("utf-8")
+    return json.loads(raw)
+
+
+def _claude_reply(instructions, client=None):
+    """Ask Claude with the instructions already built for this question.
+
+    client, when given, is called as client(payload) and stands in for
+    the HTTP call. The payload does not include the key. An empty reply
+    is a failure.
+    """
+    payload = {
+        "model": _model_name(),
+        "max_tokens": MAX_TOKENS,
+        "output_config": {"effort": "low"},
+        "messages": [{"role": "user", "content": instructions}],
+    }
+    if client is not None:
+        body = client(payload)
+    else:
+        key = _api_key()
+        if not key:
+            raise RuntimeError("missing key")
+        body = _post_message(payload, key, TIMEOUT_SECONDS)
+    text = _message_text(body)
+    if not text:
+        raise ValueError("empty reply")
+    return text
+
+
+def write_answer(question, pages, writer=None, text=None, client=None):
     """Write an answer for question from the page text.
 
     writer, when given, is called as writer(question, instructions, pages)
-    and replaces the stand-in. The instructions are what an AI would be
-    given. With no writer, the stand-in answers the agreed test questions.
+    and replaces both Claude and the stand-in. The instructions are what
+    Claude is given: every page, plus the callback sentence.
+
+    With no writer, Claude writes the answer when ANTHROPIC_API_KEY is
+    set, or when client is given. client is a stand-in for the HTTP call,
+    used by the checks. If the call fails, the callback reply is returned.
+    With no key and no client, the stand-in answers the agreed test questions.
     """
     instructions = build_instructions(question, pages, text=text)
-    if writer is None:
+    if writer is not None:
+        return writer(question, instructions, pages)
+    if client is None and not _api_key():
         return stand_in_writer(question, instructions, pages, text=text)
-    return writer(question, instructions, pages)
+    try:
+        return _claude_reply(instructions, client=client)
+    except Exception:
+        return callback_reply(text)
 
 
 def _split_site(args):

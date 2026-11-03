@@ -37,19 +37,22 @@ def _page_text(pages):
     return "\n".join(parts)
 
 
-def reply_to(message, base_url=None, writer=None):
+def reply_to(message, base_url=None, writer=None, client=None):
     """Return the reply a customer would see.
 
     An urgent message stops at the first part. Your pages are not read
     for it, and the answer writer is not called. Otherwise the pages are
     read, the answer is written, and every price is checked last.
+
+    client, when given, stands in for the Claude call inside the answer
+    step. The price check still runs on whatever comes back.
     """
     urgent = urgent_reply.reply_if_urgent(message)
     if urgent is not None:
         return urgent
     base = read_pages.DEFAULT_SITE if base_url is None else base_url
     pages = read_pages.read_pages(base)
-    answer = answer_reply.write_answer(message, pages, writer=writer)
+    answer = answer_reply.write_answer(message, pages, writer=writer, client=client)
     return price_reply.checked_answer(answer, page_text=_page_text(pages))
 
 
