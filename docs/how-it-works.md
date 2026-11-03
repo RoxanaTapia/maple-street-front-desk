@@ -17,7 +17,7 @@ flowchart LR
 |---|---|---|---|
 | 1 | Spot an emergency | `scripts/urgent_reply.py` | Yes |
 | 2 | Read the pages | `scripts/read_pages.py` | Yes |
-| 3 | Write the answer | `scripts/answer_reply.py` | Shared parts |
+| 3 | Write the answer | `scripts/answer_reply.py` | Yes |
 | 4 | Check every price | `scripts/price_reply.py` | Yes |
 
 `scripts/front_desk.py` runs these four parts in order. Start the sample site first. [Try it yourself](#try-it-yourself) is at the end.
@@ -81,13 +81,15 @@ python3 scripts/read_pages.py
 
 - A question the pages answer gets a short answer that names the page.
 - A question the pages don't cover gets the callback reply from [When the pages don't say](agreements.md#when-the-pages-dont-say).
-- The instructions include the text of the business's pages. They say to answer only from these pages, keep it short, and name the page.
+- The instructions include the text of the business's pages, all six of them, plus the callback reply. They say to answer only from these pages, keep it short, and name the page.
+- Claude writes the answer when `ANTHROPIC_API_KEY` is set, and reads all six pages for every question. With no key, a stand-in answers the agreed test questions. The stand-in is not a real AI.
+- If the call fails, the customer gets the callback reply. An amount the pages don't state is still replaced by the callback reply.
 - The 15 questions in [The 15 test questions](agreements.md#the-15-test-questions) each name a page, use the fixed urgent reply, or offer a callback.
 - The owner's answers on septic systems, being licensed and insured, and after-hours callouts are recorded and marked as waiting for the Hours & FAQ page. Until that page says so, those questions get the callback reply.
 
 **Try it**
 
-*The first command is this step alone. The others run the whole path.*
+*The first command is this step alone. The others run the whole path. These use no key, so the stand-in answers.*
 
 ```
 python3 scripts/answer_reply.py 'Are you open Saturdays?'
@@ -105,11 +107,20 @@ python3 scripts/front_desk.py 'I have a burst pipe'
 | Do you install septic systems? | The callback reply |
 | I have a burst pipe | The fixed urgent reply |
 
-*Good to know.* The real AI call waits until the setup is chosen. Until then, a stand-in answers the agreed test questions. It is not a real AI.
+*With a key, Claude writes the answer. The value below is not a real key. The names are listed in [.env.example](../.env.example).*
+
+```
+export ANTHROPIC_API_KEY='...'
+python3 scripts/answer_reply.py 'Are you open Saturdays?'
+```
+
+The answer is short and names the page. `CLAUDE_MODEL` chooses a different model. The default is a small, fast one.
+
+*Good to know.* Every question is answered from all six pages. A document search engine can be added later if many more documents are added.
 
 You see this check on the pull request as Answers come from your pages.
 
-*Pull request checks:* **Answers come from your pages**. **Recorded answers still get the callback**
+*Pull request checks:* **Answers come from your pages**. **Claude writes the answer**. **Recorded answers still get the callback**.
 
 ## 4 · Check every price
 
@@ -142,7 +153,6 @@ python3 scripts/price_reply.py 'A water heater replacement is $1,200.'
 
 ## Still to come
 
-- **The real AI call**, once the setup is chosen. The instructions, the page name, the callback, and the path a message takes are already in place.
 - **Matching each price to the right service.** A published amount is kept. The check does not yet confirm that the amount belongs to the service in the question.
 - **More ways of writing prices.** Today "99 dollars" and "$149.00" get the callback reply, and "250 bucks" isn't read as a price.
 - **The owner's OK** on the 15 test questions and urgent words, already written in [What we've agreed](agreements.md).
@@ -181,6 +191,7 @@ Each check prints ok, and the run ends with OK. The same checks run on every pul
 - `python3 scripts/run_checks.py tests/test_prices.py:PriceChecks`
 - `python3 scripts/run_checks.py tests/test_prices.py:LongerPriceChecks`
 - `python3 scripts/run_checks.py tests/test_answers.py:AnswerChecks`
+- `python3 scripts/run_checks.py tests/test_answers.py:ClaudeAnswerChecks`
 - `python3 scripts/run_checks.py tests/test_answers.py:RecordedAnswerChecks`
 
 </details>

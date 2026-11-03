@@ -10,7 +10,7 @@ For now it runs on a small practice copy of the business's site. The real site s
 |---|---|---|
 | "I have a burst pipe" | A message to call the owner right away, with the business number | ✅ |
 | "How much is a water heater replacement?" | An offer of a callback, since that price isn't on the business's pages | ✅ |
-| "Are you open Saturdays?" | A short answer from the Hours & FAQ page | ⏳ |
+| "Are you open Saturdays?" | A short answer from the Hours & FAQ page | ✅ |
 
 What each kind of message gets back is in [How the assistant behaves](docs/behaviour.md).
 
@@ -21,7 +21,7 @@ flowchart LR
     msg([Customer message]) --> one["1 · Spot an emergency"]
     one -->|urgent| call([Please call us now])
     one -->|not urgent| two["2 · Read the pages"]
-    two --> three["3 · Write the answer (coming next)"]
+    two --> three["3 · Write the answer"]
     three --> four["4 · Check every price"]
     four -->|prices match| reply([Reply goes out])
     four -->|unknown price| back([We'll call you back])
@@ -34,7 +34,7 @@ An emergency is caught first. A price is checked last, and an unpublished number
 - ✅ **Reads the pages:** all six, with the words a visitor actually sees.
 - ✅ **Spots emergencies:** the urgent words get the fixed reply, right away.
 - ✅ **Guards every price:** an amount that isn't on the business's pages is swapped for the callback reply.
-- ⏳ **Writes the answer:** a short reply from the business's pages.
+- ✅ **Writes the answer:** a short reply from the business's pages.
 - ⏳ **Demo link and handover:** a link to try, then a simple guide for running it.
 
 ## Built with AI, checked by people
@@ -50,4 +50,4 @@ An emergency is caught first. A price is checked last, and an unpublished number
 - [How the assistant behaves](docs/behaviour.md): what a customer gets back.
 - [How the assistant works](docs/how-it-works.md): the path of a message, and how to try the sample site.
 
-**Next up:** the answer step, then a demo link to try.
+**Next up:** a demo link to try.

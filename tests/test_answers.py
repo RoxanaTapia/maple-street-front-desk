@@ -1,6 +1,7 @@
 """Checks that an answer comes from your pages.
 
 AnswerChecks is the "Answers come from your pages" area.
+ClaudeAnswerChecks is the "Claude writes the answer" area.
 RecordedAnswerChecks is the "Recorded answers still get the callback" area.
 The questions, the page each answer comes from, and the callback reply
 are read from your agreements. The page text is what the page reader
@@ -8,16 +9,20 @@ returns. The docstring of each test is what the checklist prints.
 
 Run one area with
 python3 scripts/run_checks.py tests/test_answers.py:AnswerChecks
+or python3 scripts/run_checks.py tests/test_answers.py:ClaudeAnswerChecks
 or python3 scripts/run_checks.py tests/test_answers.py:RecordedAnswerChecks.
 """
 
 import contextlib
 import io
+import json
+import os
 import re
 import sys
 import threading
 import time
 import unittest
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -110,13 +115,33 @@ class RunningSite:
         self.thread.join(timeout=2)
 
 
+class _SavedEnv:
+    """Keep a developer key from turning the checks into a live call."""
+
+    def __init__(self):
+        self.key = os.environ.pop("ANTHROPIC_API_KEY", None)
+        self.model = os.environ.pop("CLAUDE_MODEL", None)
+
+    def restore(self):
+        if self.key is None:
+            os.environ.pop("ANTHROPIC_API_KEY", None)
+        else:
+            os.environ["ANTHROPIC_API_KEY"] = self.key
+        if self.model is None:
+            os.environ.pop("CLAUDE_MODEL", None)
+        else:
+            os.environ["CLAUDE_MODEL"] = self.model
+
+
 class AnswerChecks(unittest.TestCase):
     def setUp(self):
+        self.env = _SavedEnv()
         self.site = RunningSite()
 
     def tearDown(self):
         self.site.close()
         serve_sample_site.pricing_live = True
+        self.env.restore()
 
     def _pages(self):
         return read_pages.read_pages(self.site.base)
@@ -327,8 +352,17 @@ class AnswerChecks(unittest.TestCase):
             source = (SCRIPTS / name).read_text(encoding="utf-8")
             self.assertNotIn(callback, source)
             self.assertNotIn(urgent_reply.fixed_urgent_reply(), source)
-            for banned in ("openai", "anthropic", "grok", "api_key", "API_KEY"):
-                self.assertNotIn(banned, source.lower() if banned == "api_key" else source)
+            lowered = source.lower()
+            self.assertNotIn("openai", lowered)
+            self.assertNotIn("grok", lowered)
+            self.assertNotIn("sk-ant-", lowered)
+        front = (SCRIPTS / "front_desk.py").read_text(encoding="utf-8")
+        self.assertNotIn("anthropic", front.lower())
+        self.assertNotIn("API_KEY", front)
+        writer = (SCRIPTS / "answer_reply.py").read_text(encoding="utf-8")
+        self.assertIn("https://api.anthropic.com/v1/messages", writer)
+        self.assertIn("ANTHROPIC_API_KEY", writer)
+        self.assertIn("CLAUDE_MODEL", writer)
 
     def test_checking_a_message_prints_the_reply(self):
         """Checking a message prints the answer, the callback reply, or the urgent reply."""
@@ -391,23 +425,293 @@ class AnswerChecks(unittest.TestCase):
             "You see this check on the pull request as Answers come from your pages.",
             section,
         )
-        self.assertIn("real AI call", section)
         self.assertIn("not a real AI", section)
+        self.assertIn("ANTHROPIC_API_KEY", section)
+        self.assertIn("Claude", section)
+        self.assertNotIn("real AI call", section)
+        still = how.split("## Still to come", 1)[1]
+        self.assertNotIn("real AI call", still)
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
-        self.assertIn("- ⏳ **Writes the answer:** a short reply from the business's pages.", readme)
+        self.assertIn("- ✅ **Writes the answer:** a short reply from the business's pages.", readme)
         self.assertNotIn("answer_reply.py", readme)
         self.assertNotIn("front_desk.py", readme)
         for name in ("answer_reply.py", "front_desk.py", "tests/test_answers.py"):
             self.assertIn(name, (ROOT / "tests" / "test_checks.py").read_text(encoding="utf-8"))
 
 
+class ClaudeAnswerChecks(unittest.TestCase):
+    def setUp(self):
+        self.env = _SavedEnv()
+        self.site = RunningSite()
+        self._post = answer_reply._post_message
+
+    def tearDown(self):
+        answer_reply._post_message = self._post
+        self.site.close()
+        serve_sample_site.pricing_live = True
+        self.env.restore()
+
+    def _pages(self):
+        return read_pages.read_pages(self.site.base)
+
+    def _callback(self):
+        return answer_reply.callback_reply()
+
+    def _block_network(self):
+        def fail(*_args, **_kwargs):
+            raise AssertionError("the real API was called")
+
+        answer_reply._post_message = fail
+
+    def test_a_page_backed_answer_names_its_page(self):
+        """A page-backed answer from Claude names the page it came from."""
+        pages = self._pages()
+        self.assertEqual(len(pages), 6)
+        callback = self._callback()
+        question = "Are you open Saturdays?"
+        seen = {}
+
+        def client(payload):
+            seen["payload"] = payload
+            return {
+                "content": [
+                    {"type": "thinking", "thinking": "hours page"},
+                    {"type": "text", "text": "Yes, open Saturday morning. From Hours & FAQ."},
+                ]
+            }
+
+        self._block_network()
+        got = front_desk.reply_to(question, base_url=self.site.base, client=client)
+        self.assertEqual(got, "Yes, open Saturday morning. From Hours & FAQ.")
+        self.assertIn("Hours & FAQ", got)
+        self.assertNotEqual(got, callback)
+        self.assertNotIn("hours page", got)
+        payload = seen["payload"]
+        self.assertIn("haiku", answer_reply.DEFAULT_MODEL)
+        self.assertEqual(payload["model"], answer_reply.DEFAULT_MODEL)
+        self.assertEqual(payload["output_config"]["effort"], "low")
+        self.assertNotIn("test-key", json.dumps(payload))
+        instructions = payload["messages"][0]["content"]
+        self.assertIn(callback, instructions)
+        self.assertIn(question, instructions)
+        self.assertIn("Answer the customer's question only from these pages.", instructions)
+        for page in pages:
+            self.assertEqual(page["status"], "read", page["name"])
+            self.assertIn(f"Page: {page['name']}", instructions)
+            self.assertIn(page["text"], instructions)
+        os.environ["CLAUDE_MODEL"] = "claude-haiku-test"
+
+        def client_model(model_payload):
+            seen["model"] = model_payload["model"]
+            return {"content": [{"type": "text", "text": "Yes. From Hours & FAQ."}]}
+
+        renamed = answer_reply.write_answer(question, pages, client=client_model)
+        self.assertEqual(seen["model"], "claude-haiku-test")
+        self.assertIn("Hours & FAQ", renamed)
+
+    def test_a_failed_call_gets_the_callback(self):
+        """A failed Claude call gets the callback reply."""
+        pages = self._pages()
+        callback = self._callback()
+        question = "Are you open Saturdays?"
+        os.environ["ANTHROPIC_API_KEY"] = "test-key"
+
+        def client(_payload):
+            raise TimeoutError("timed out")
+
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr):
+            got = front_desk.reply_to(question, base_url=self.site.base, client=client)
+        self.assertEqual(got, callback)
+        self.assertNotIn("test-key", got)
+        self.assertNotIn("Traceback", got)
+        self.assertNotIn("Traceback", stderr.getvalue())
+        self.assertNotIn("timed out", got)
+
+        def client_down(_payload):
+            raise urllib.error.URLError("network down")
+
+        self.assertEqual(answer_reply.write_answer(question, pages, client=client_down), callback)
+
+        def client_empty(_payload):
+            return {"content": [{"type": "thinking", "thinking": "no text"}]}
+
+        self.assertEqual(answer_reply.write_answer(question, pages, client=client_empty), callback)
+
+        def boom(payload, key, timeout):
+            self.assertEqual(key, "test-key")
+            self.assertEqual(timeout, answer_reply.TIMEOUT_SECONDS)
+            self.assertNotIn("test-key", json.dumps(payload))
+            raise urllib.error.HTTPError(
+                "https://api.anthropic.com/v1/messages",
+                401,
+                "Unauthorized",
+                hdrs=None,
+                fp=io.BytesIO(b""),
+            )
+
+        answer_reply._post_message = boom
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr):
+            got = answer_reply.write_answer(question, pages)
+        self.assertEqual(got, callback)
+        self.assertNotIn("Traceback", stderr.getvalue())
+        self.assertNotIn("Unauthorized", got)
+        self.assertNotIn("test-key", got)
+
+    def test_the_call_uses_a_short_timeout(self):
+        """The Claude call uses a short timeout and keeps the key out of the message."""
+        seen = {}
+
+        class Fake:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *_args):
+                return False
+
+            def read(self):
+                return b'{"content":[{"type":"text","text":"Yes. From Services."}]}'
+
+        def fake_open(request, timeout=None):
+            seen["timeout"] = timeout
+            seen["key"] = request.get_header("X-api-key")
+            seen["body"] = request.data.decode("utf-8")
+            seen["url"] = request.full_url
+            return Fake()
+
+        original = urllib.request.urlopen
+        answer_reply.urllib.request.urlopen = fake_open
+        try:
+            body = answer_reply._post_message(
+                {"model": answer_reply.DEFAULT_MODEL, "messages": []},
+                "test-key",
+                answer_reply.TIMEOUT_SECONDS,
+            )
+        finally:
+            answer_reply.urllib.request.urlopen = original
+        self.assertGreater(answer_reply.TIMEOUT_SECONDS, 0)
+        self.assertLessEqual(answer_reply.TIMEOUT_SECONDS, 20)
+        self.assertEqual(seen["timeout"], answer_reply.TIMEOUT_SECONDS)
+        self.assertEqual(seen["url"], "https://api.anthropic.com/v1/messages")
+        self.assertEqual(seen["key"], "test-key")
+        self.assertNotIn("test-key", seen["body"])
+        self.assertEqual(answer_reply._message_text(body), "Yes. From Services.")
+
+    def test_no_key_uses_the_stand_in(self):
+        """With no key, the stand-in answers and no call is made."""
+        self.assertNotIn("ANTHROPIC_API_KEY", os.environ)
+        pages = self._pages()
+        question = "Are you open Saturdays?"
+        called = {"n": 0}
+
+        def boom(*_args, **_kwargs):
+            called["n"] += 1
+            raise AssertionError("the API was called with no key")
+
+        answer_reply._post_message = boom
+        got = front_desk.reply_to(question, base_url=self.site.base)
+        written = answer_reply.write_answer(question, pages)
+        self.assertEqual(called["n"], 0)
+        self.assertEqual(got, written)
+        self.assertIn("Hours & FAQ", got)
+        self.assertIn("From Hours & FAQ.", got)
+        self.assertIn("8:00 am", got)
+        self.assertNotEqual(got, self._callback())
+        os.environ["ANTHROPIC_API_KEY"] = "   "
+        again = answer_reply.write_answer(question, pages)
+        self.assertEqual(called["n"], 0)
+        self.assertEqual(again, written)
+        os.environ.pop("ANTHROPIC_API_KEY", None)
+        uncovered = answer_reply.write_answer("How long is your warranty?", pages)
+        self.assertEqual(uncovered, self._callback())
+        self.assertEqual(called["n"], 0)
+
+    def test_an_invented_price_is_replaced(self):
+        """An invented price from Claude is replaced by the callback reply."""
+        invented = "$1,200"
+        published = price_reply.published_amounts(self.site.base)
+        self.assertNotIn(invented, published)
+        callback = self._callback()
+        seen = {"n": 0}
+
+        def client(payload):
+            seen["n"] += 1
+            self.assertEqual(len(payload["messages"]), 1)
+            self.assertIn("Page: Pricing", payload["messages"][0]["content"])
+            return {
+                "content": [
+                    {"type": "text", "text": f"A water heater replacement is {invented}."}
+                ]
+            }
+
+        self._block_network()
+        got = front_desk.reply_to(
+            "How much is a water heater replacement?",
+            base_url=self.site.base,
+            client=client,
+        )
+        self.assertEqual(seen["n"], 1)
+        self.assertEqual(got, callback)
+        self.assertNotIn(invented, got)
+
+        def client_urgent(_payload):
+            seen["n"] += 1
+            return {"content": [{"type": "text", "text": "This should not be sent."}]}
+
+        urgent = front_desk.reply_to("I have a burst pipe", client=client_urgent)
+        self.assertEqual(urgent, urgent_reply.fixed_urgent_reply())
+        self.assertEqual(seen["n"], 1)
+        self.assertNotIn("$", urgent)
+
+    def test_the_agreements_record_the_simpler_setup(self):
+        """The agreements record the simpler setup and Claude as the AI."""
+        agreements = AGREEMENTS.read_text(encoding="utf-8")
+        self.assertIn("## How answers are written\n", agreements)
+        section = agreements.split("## How answers are written", 1)[1]
+        self.assertIn("simpler setup", section.lower())
+        self.assertIn("Claude", section)
+        self.assertIn("six pages", section.lower())
+        self.assertIn("document search engine", section.lower())
+        for path in docs():
+            text = path.read_text(encoding="utf-8").lower()
+            self.assertNotIn("ai-doc", text, path.relative_to(ROOT))
+        example = (ROOT / ".env.example").read_text(encoding="utf-8")
+        ignore = (ROOT / ".gitignore").read_text(encoding="utf-8")
+        self.assertIn("ANTHROPIC_API_KEY", example)
+        self.assertIn("CLAUDE_MODEL", example)
+        self.assertNotIn("sk-ant-", example)
+        self.assertNotIn("sk-ant-", ignore)
+        self.assertTrue(any(line.strip() == ".env" for line in ignore.splitlines()))
+
+    def test_you_see_this_check_on_the_pull_request(self):
+        """You see this check on the pull request as Claude writes the answer."""
+        workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+        self.assertIn("name: Claude writes the answer\n", workflow)
+        self.assertIn("tests/test_answers.py:ClaudeAnswerChecks", workflow)
+        how = (ROOT / "docs" / "how-it-works.md").read_text(encoding="utf-8")
+        section = how.split("## 3 · Write the answer", 1)[1].split("## 4 ·", 1)[0]
+        self.assertIn("**Claude writes the answer**", section)
+        self.assertIn("export ANTHROPIC_API_KEY=", section)
+        self.assertIn("tests/test_answers.py:ClaudeAnswerChecks", how)
+
+
+def docs():
+    files = []
+    for pattern in ("*.md", "*.mdc"):
+        files.extend(ROOT.rglob(pattern))
+    return [path for path in files if ".git" not in path.parts]
+
+
 class RecordedAnswerChecks(unittest.TestCase):
     def setUp(self):
+        self.env = _SavedEnv()
         self.site = RunningSite()
 
     def tearDown(self):
         self.site.close()
         serve_sample_site.pricing_live = True
+        self.env.restore()
 
     def test_recorded_answers_still_get_the_callback(self):
         """Questions 13 to 15 still get the callback reply."""
