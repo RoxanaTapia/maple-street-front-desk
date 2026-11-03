@@ -1,12 +1,14 @@
 """Checks that an answer comes from your pages.
 
-AnswerChecks is the "Answers come from your pages" area. The questions,
-the page each answer comes from, and the callback reply are read from
-your agreements. The page text is what the page reader returns. The
-docstring of each test is what the checklist prints.
+AnswerChecks is the "Answers come from your pages" area.
+RecordedAnswerChecks is the "Recorded answers still get the callback" area.
+The questions, the page each answer comes from, and the callback reply
+are read from your agreements. The page text is what the page reader
+returns. The docstring of each test is what the checklist prints.
 
-Run this area with
-python3 scripts/run_checks.py tests/test_answers.py:AnswerChecks.
+Run one area with
+python3 scripts/run_checks.py tests/test_answers.py:AnswerChecks
+or python3 scripts/run_checks.py tests/test_answers.py:RecordedAnswerChecks.
 """
 
 import contextlib
@@ -397,6 +399,44 @@ class AnswerChecks(unittest.TestCase):
         self.assertNotIn("front_desk.py", readme)
         for name in ("answer_reply.py", "front_desk.py", "tests/test_answers.py"):
             self.assertIn(name, (ROOT / "tests" / "test_checks.py").read_text(encoding="utf-8"))
+
+
+class RecordedAnswerChecks(unittest.TestCase):
+    def setUp(self):
+        self.site = RunningSite()
+
+    def tearDown(self):
+        self.site.close()
+        serve_sample_site.pricing_live = True
+
+    def test_recorded_answers_still_get_the_callback(self):
+        """Questions 13 to 15 still get the callback reply."""
+        rows = {row["number"]: row for row in question_rows()}
+        callback = answer_reply.callback_reply()
+        recorded = {
+            13: "doesn't install or service septic systems",
+            14: "fully licensed and insured in New Jersey",
+            15: "through the main line",
+        }
+        pages = read_pages.read_pages(self.site.base)
+        page_text = " ".join(page.get("text", "") for page in pages).lower()
+        self.assertNotIn("septic", page_text)
+        self.assertNotIn("licensed", page_text)
+        self.assertNotIn("insured", page_text)
+        for number, phrase in recorded.items():
+            row = rows[number]
+            self.assertEqual(row["group"], "Yours to decide", number)
+            self.assertIn(phrase, row["detail"], number)
+            self.assertIn("Waiting for the Hours & FAQ page", row["detail"], number)
+            self.assertIsNone(urgent_reply.reply_if_urgent(row["question"]), row["question"])
+            got = front_desk.reply_to(row["question"], base_url=self.site.base)
+            self.assertEqual(got, callback, row["question"])
+            self.assertEqual(
+                answer_reply.write_answer(row["question"], pages),
+                callback,
+                row["question"],
+            )
+            self.assertNotIn(phrase, got, row["question"])
 
 
 if __name__ == "__main__":
