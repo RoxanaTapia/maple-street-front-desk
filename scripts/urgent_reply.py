@@ -75,8 +75,24 @@ def fixed_urgent_reply(text=None):
 
 
 def _contains_word(message, word):
-    pattern = r"(?<!\w)" + re.escape(word.casefold()) + r"(?!\w)"
-    return re.search(pattern, message.casefold()) is not None
+    folded = message.casefold()
+    phrase = word.casefold()
+    pattern = r"(?<!\w)" + re.escape(phrase) + r"(?!\w)"
+    if re.search(pattern, folded):
+        return True
+    # "Our pipe is frozen" names a frozen pipe. "pipe frozen" and a plural
+    # such as "frozen pipes" stay not urgent.
+    parts = phrase.split()
+    if len(parts) == 2 and parts[1] == "pipe":
+        swapped = (
+            r"(?<!\w)"
+            + re.escape(parts[1])
+            + r" is "
+            + re.escape(parts[0])
+            + r"(?!\w)"
+        )
+        return re.search(swapped, folded) is not None
+    return False
 
 
 def reply_if_urgent(message, text=None):

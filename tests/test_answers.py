@@ -509,6 +509,72 @@ class ClaudeAnswerChecks(unittest.TestCase):
         self.assertEqual(seen["model"], "claude-haiku-test")
         self.assertIn("Hours & FAQ", renamed)
 
+    def test_a_mocked_reply_ends_with_the_page_name(self):
+        """A page-based answer ends with From and the page name."""
+        pages = self._pages()
+        callback = self._callback()
+        question = "Are you open Saturdays?"
+        cases = (
+            (
+                "Yes, we service tankless water heaters. (Source: Services page)",
+                "Yes, we service tankless water heaters. From Services.",
+            ),
+            (
+                "Yes. (Source: the Services page)",
+                "Yes. From Services.",
+            ),
+            (
+                "Monday to Friday: 8:00 am to 5:00 pm.\nSource: Hours & FAQ page",
+                "Monday to Friday: 8:00 am to 5:00 pm. From Hours & FAQ.",
+            ),
+            (
+                "Sunday: closed. (Hours & FAQ page)",
+                "Sunday: closed. From Hours & FAQ.",
+            ),
+            (
+                "We are open Saturdays. From the Hours & FAQ page.",
+                "We are open Saturdays. From Hours & FAQ.",
+            ),
+            (
+                "Yes, open Saturday morning. From Hours & FAQ.",
+                "Yes, open Saturday morning. From Hours & FAQ.",
+            ),
+        )
+        seen = {}
+
+        def client(payload):
+            seen["instructions"] = payload["messages"][0]["content"]
+            return {
+                "content": [
+                    {"type": "thinking", "thinking": "pick a page"},
+                    {"type": "text", "text": seen["reply"]},
+                ]
+            }
+
+        self._block_network()
+        for raw, expected in cases:
+            seen["reply"] = raw
+            got = front_desk.reply_to(question, base_url=self.site.base, client=client)
+            self.assertEqual(got, expected, raw)
+            self.assertNotIn("pick a page", got)
+        instructions = seen["instructions"]
+        self.assertIn("End the answer with exactly From <Page name>.", instructions)
+        self.assertIn("For example, From Hours & FAQ.", instructions)
+        self.assertIn("Name the page the answer came from.", instructions)
+        seen["reply"] = callback
+        self.assertEqual(answer_reply.write_answer(question, pages, client=client), callback)
+        seen["reply"] = callback + "\n(Source: Home page)"
+        self.assertEqual(answer_reply.write_answer(question, pages, client=client), callback)
+        called = {"n": 0}
+
+        def client_urgent(_payload):
+            called["n"] += 1
+            return {"content": [{"type": "text", "text": "No. (Source: Contact page)"}]}
+
+        urgent = front_desk.reply_to("Our pipe is frozen", client=client_urgent)
+        self.assertEqual(urgent, urgent_reply.fixed_urgent_reply())
+        self.assertEqual(called["n"], 0)
+
     def test_a_failed_call_gets_the_callback(self):
         """A failed Claude call gets the callback reply."""
         pages = self._pages()

@@ -30,7 +30,7 @@ flowchart LR
 
 - Reads the urgent words in [Urgent messages](agreements.md#urgent-messages), and the reply that goes with them.
 - When one of those words is present, the customer gets only the fixed urgent reply. The pages are not read.
-- A frozen pipe is one of those words, so a message such as "I think I have a frozen pipe" gets only the fixed urgent reply.
+- A frozen pipe is one of those words, so a message such as "I think I have a frozen pipe" or "Our pipe is frozen" gets only the fixed urgent reply.
 - A normal question is left for the next part.
 
 **Try it**
@@ -81,8 +81,9 @@ python3 scripts/read_pages.py
 
 - A question the pages answer gets a short answer that names the page.
 - A question the pages don't cover gets the callback reply from [When the pages don't say](agreements.md#when-the-pages-dont-say).
-- The instructions include the text of the business's pages, all six of them, plus the callback reply. They say to answer only from these pages, keep it short, and name the page.
-- Claude writes the answer when `ANTHROPIC_API_KEY` is set, and reads all six pages for every question. With no key, a stand-in answers the agreed test questions. The stand-in is not a real AI.
+- The instructions include the text of the business's pages, all six of them, plus the callback reply. They say to answer only from these pages, keep it short, and end with From and the page name.
+- Claude writes the answer when `ANTHROPIC_API_KEY` is set, and reads all six pages for every question. With no key, a stand-in answers the agreed test questions, and it answers "What are your hours?" from the Hours & FAQ page. The stand-in is not a real AI.
+- A page-based answer ends with From and the page name, for example From Hours & FAQ. The urgent reply and the callback reply are left as they are.
 - If the call fails, the customer gets the callback reply. An amount the pages don't state is still replaced by the callback reply.
 - The 15 questions in [The 15 test questions](agreements.md#the-15-test-questions) each name a page, use the fixed urgent reply, or offer a callback.
 - The owner's answers on septic systems, being licensed and insured, and after-hours callouts are recorded and marked as waiting for the Hours & FAQ page. Until that page says so, those questions get the callback reply.
@@ -157,7 +158,7 @@ python3 scripts/price_reply.py 'A water heater replacement is $1,200.'
 - **More ways of writing prices.** Today "99 dollars" and "$149.00" get the callback reply, and "250 bucks" isn't read as a price.
 - **The owner's OK** on the 15 test questions and urgent words, already written in [What we've agreed](agreements.md).
 - **The Hours & FAQ page.** The owner's answers on septic systems, being licensed and insured, and after-hours callouts are recorded in the agreements. Those questions get the callback reply until that page says them.
-- **A demo link to try**, then a setup guide and handover notes.
+- **A setup guide and handover notes.**
 
 ## Try it yourself
 
@@ -193,5 +194,20 @@ Each check prints ok, and the run ends with OK. The same checks run on every pul
 - `python3 scripts/run_checks.py tests/test_answers.py:AnswerChecks`
 - `python3 scripts/run_checks.py tests/test_answers.py:ClaudeAnswerChecks`
 - `python3 scripts/run_checks.py tests/test_answers.py:RecordedAnswerChecks`
+- `python3 scripts/run_checks.py tests/test_demo.py:DemoChatChecks`
 
 </details>
+
+## Try the demo
+
+A chat page runs the same steps as the command line. From the project folder:
+
+```
+python3 scripts/demo_chat.py
+```
+
+It prints `Demo chat at http://127.0.0.1:8080`. Open that address. The page says: This is a demo. It answers only from Maple Street's pages. Type a message and the reply comes back. The sample site starts with it, so there is nothing else to run. Stop it with Ctrl+C.
+
+`DEMO_HOST` and `DEMO_PORT` choose the address. The default is local. The names are listed in [.env.example](../.env.example). The Claude key stays in the server's settings. It is not on the page.
+
+*Pull request checks:* **The demo chat gives the same replies**

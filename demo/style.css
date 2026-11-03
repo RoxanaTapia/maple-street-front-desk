@@ -1,0 +1,114 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: #1d1d1d;
+  background: #f7f4ef;
+  font-family: Georgia, "Iowan Old Style", serif;
+  line-height: 1.45;
+}
+
+.wrap {
+  width: 100%;
+  max-width: 40rem;
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+h1 {
+  margin: 0 0 0.75rem;
+  font-size: 1.5rem;
+}
+
+.demo {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  background: #fff3bf;
+  border: 1px solid #e0b400;
+}
+
+.thread {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+}
+
+.thread p {
+  margin: 0 0 0.6rem;
+  padding: 0.65rem 0.8rem;
+  max-width: 85%;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.customer {
+  margin-left: auto;
+  background: #e7f0e4;
+}
+
+.reply {
+  margin-right: auto;
+  background: #fff;
+  border: 1px solid #ddd;
+}
+
+.composer label {
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+.row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+textarea {
+  flex: 1;
+  width: 100%;
+  min-height: 3rem;
+  padding: 0.6rem 0.7rem;
+  font: inherit;
+  font-size: 1rem;
+  border: 1px solid #bbb;
+  border-radius: 0.4rem;
+  background: #fff;
+}
+
+button {
+  min-width: 5.5rem;
+  min-height: 2.75rem;
+  padding: 0.6rem 1rem;
+  font: inherit;
+  font-size: 1rem;
+  color: #fff;
+  background: #245c3a;
+  border: 0;
+  border-radius: 0.4rem;
+}
+
+button:disabled,
+textarea:disabled {
+  opacity: 0.7;
+}
+
+textarea:focus,
+button:focus {
+  outline: 2px solid #245c3a;
+  outline-offset: 2px;
+}
+
+@media (max-width: 40rem) {
+  .row {
+    flex-direction: column;
+  }
+
+  button {
+    width: 100%;
+  }
+}
