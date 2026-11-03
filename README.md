@@ -35,7 +35,8 @@ An emergency is caught first. A price is checked last, and an unpublished number
 - ✅ **Spots emergencies:** the urgent words get the fixed reply, right away.
 - ✅ **Guards every price:** an amount that isn't on the business's pages is swapped for the callback reply.
 - ✅ **Writes the answer:** a short reply from the business's pages.
-- ⏳ **Demo link and handover:** a link to try, then a simple guide for running it.
+- ✅ **Demo chat:** a page to try the same replies, from a link.
+- ⏳ **Handover:** a simple guide for running it.
 
 ## Built with AI, checked by people
 
@@ -50,4 +51,4 @@ An emergency is caught first. A price is checked last, and an unpublished number
 - [How the assistant behaves](docs/behaviour.md): what a customer gets back.
 - [How the assistant works](docs/how-it-works.md): the path of a message, and how to try the sample site.
 
-**Next up:** a demo link to try.
+**Next up:** handover notes.

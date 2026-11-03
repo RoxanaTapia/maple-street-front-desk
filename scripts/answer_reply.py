@@ -2,8 +2,8 @@
 
 This is part 3 of the path. It takes a customer question and the page
 text from the page reader, and it builds the instructions for the answer:
-answer only from these pages, keep it short, name the page the answer
-came from, and use the callback sentence from the agreements when the
+answer only from these pages, keep it short, and end with From and the
+page name. It uses the callback sentence from the agreements when the
 pages don't cover the question. The text of every page is included.
 
 When ANTHROPIC_API_KEY is set, Claude writes the answer through the
@@ -236,23 +236,124 @@ def _supporting(page_text, question, detail):
 def _with_source(sentences, name):
     body = " ".join(sentences).strip()
     tag = f"From {name}."
-    if body.endswith("."):
+    if not body:
+        return tag
+    if body.endswith((".", "!", "?")):
         return f"{body} {tag}"
     return f"{body}. {tag}"
+
+
+def _page_names(pages):
+    names = []
+    seen = set()
+    for page in pages or []:
+        if not isinstance(page, dict):
+            continue
+        name = page.get("name")
+        if not isinstance(name, str):
+            continue
+        name = " ".join(name.split())
+        if not name or name.casefold() in seen:
+            continue
+        seen.add(name.casefold())
+        names.append(name)
+    names.sort(key=len, reverse=True)
+    return names
+
+
+def _canonical_name(raw, names):
+    folded = " ".join(raw.split()).casefold()
+    for name in names:
+        if name.casefold() == folded:
+            return name
+    return None
+
+
+def _source_example(pages):
+    names = _page_names(pages)
+    for name in names:
+        if name.casefold() == "hours & faq":
+            return name
+    if names:
+        return names[0]
+    return "Hours & FAQ"
+
+
+def normalize_source_line(answer, pages, callback=None):
+    """End a page-based answer with exactly 'From <Page name>.'
+
+    A citation such as '(Source: Services page)', a 'Source:' line, or
+    '(Hours & FAQ page)' is rewritten to that form. An answer that
+    already ends correctly is left as it is. The callback reply is
+    returned unchanged, including when a citation was added after it.
+    """
+    if not isinstance(answer, str):
+        return answer
+    text = answer.strip()
+    if not text:
+        return text
+    if isinstance(callback, str) and text == callback.strip():
+        return callback
+    names = _page_names(pages)
+    if not names:
+        return text
+    alternation = "|".join(re.escape(name) for name in names)
+    pattern = re.compile(
+        rf"""
+        ^
+        (?P<body>.*?)
+        (?:
+            \s*
+            \(\s*
+                (?:source\s*:\s*)?
+                (?:from\s+)?
+                (?:the\s+)?
+                (?P<paren>{alternation})
+                (?:\s+page)?
+                \s*\.?
+            \s*\)
+            \s*\.?
+          |
+            \s+
+            (?:source\s*:\s*|from\s+)
+            (?:the\s+)?
+            (?P<marked>{alternation})
+            (?:\s+page)?
+            \s*\.?
+        )
+        \s*$
+        """,
+        re.IGNORECASE | re.DOTALL | re.VERBOSE,
+    )
+    match = pattern.search(text)
+    if not match:
+        return text
+    raw = match.group("paren") or match.group("marked")
+    name = _canonical_name(raw, names)
+    if not name:
+        return text
+    body = (match.group("body") or "").strip()
+    if isinstance(callback, str) and body == callback.strip():
+        return callback
+    return _with_source([body] if body else [], name)
 
 
 def build_instructions(question, pages, text=None):
     """Build the instructions an AI would be given for this question.
 
     The instructions say to answer only from these pages, keep it short,
-    name the page, and use the callback sentence when the pages don't
-    cover the question. The text of every page is included.
+    name the page, end with From and that page name, and use the callback
+    sentence when the pages don't cover the question. The text of every
+    page is included.
     """
     callback = callback_reply(text)
+    example = _source_example(pages)
     lines = [
         "Answer the customer's question only from these pages.",
         "Keep the answer short.",
         "Name the page the answer came from.",
+        "End the answer with exactly From <Page name>.",
+        f"For example, From {example}.",
         "When the pages don't cover the question, reply with exactly this sentence:",
         callback,
         "",
@@ -273,12 +374,38 @@ def build_instructions(question, pages, text=None):
     return "\n".join(lines).rstrip() + "\n"
 
 
+def _hours_answer(question, pages, instructions):
+    """Answer a plain hours question from the Hours page, or return None."""
+    if not _same_question(question, "What are your hours?"):
+        return None
+    page = None
+    for item in pages or []:
+        name = item.get("name") if isinstance(item, dict) else None
+        if isinstance(name, str) and "hours" in name.casefold():
+            page = item
+            break
+    if page is None or page.get("status") != "read":
+        return None
+    page_text = page.get("text") or ""
+    if not page_text or page_text not in instructions:
+        return None
+    lines = []
+    for snippet in _snippets(page_text):
+        if _CLOCK.search(snippet) or re.search(r"\bclosed\b", snippet, re.IGNORECASE):
+            lines.append(snippet)
+    if not lines:
+        return None
+    return _with_source(lines, page.get("name"))
+
+
 def stand_in_writer(question, instructions, pages, text=None):
     """Answer the agreed test questions. This is not a real AI.
 
     It reads those questions from your agreements and answers one only
     when the named page's text is in the instructions and supports the
-    answer. Anything the pages don't cover gets the callback sentence.
+    answer. A plain question about opening hours is answered from the
+    Hours page the same way. Anything the pages don't cover gets the
+    callback sentence.
     """
     callback = callback_reply(text)
     if not isinstance(question, str) or not question.strip():
@@ -287,11 +414,13 @@ def stand_in_writer(question, instructions, pages, text=None):
         return callback
     row = None
     for item in _question_rows(_agreements(text)):
-        if item["group"] == ANSWERED_GROUP and _same_question(item["question"], question):
+        if _same_question(item["question"], question):
             row = item
             break
-    if row is None:
+    if row is not None and row["group"] != ANSWERED_GROUP:
         return callback
+    if row is None:
+        return _hours_answer(question, pages, instructions) or callback
     name = _source_page(row["detail"])
     if not name:
         return callback
@@ -394,16 +523,22 @@ def write_answer(question, pages, writer=None, text=None, client=None):
     set, or when client is given. client is a stand-in for the HTTP call,
     used by the checks. If the call fails, the callback reply is returned.
     With no key and no client, the stand-in answers the agreed test questions.
+
+    A page-based answer is rewritten so it ends with exactly
+    'From <Page name>.'. The callback reply is left as it is.
     """
     instructions = build_instructions(question, pages, text=text)
+    callback = callback_reply(text)
     if writer is not None:
-        return writer(question, instructions, pages)
-    if client is None and not _api_key():
-        return stand_in_writer(question, instructions, pages, text=text)
-    try:
-        return _claude_reply(instructions, client=client)
-    except Exception:
-        return callback_reply(text)
+        reply = writer(question, instructions, pages)
+    elif client is None and not _api_key():
+        reply = stand_in_writer(question, instructions, pages, text=text)
+    else:
+        try:
+            reply = _claude_reply(instructions, client=client)
+        except Exception:
+            return callback
+    return normalize_source_line(reply, pages, callback)
 
 
 def _split_site(args):

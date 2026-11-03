@@ -33,6 +33,8 @@ These never change without the client's OK. The list is in [What we've agreed](d
 | Client-facing | [scripts/price_reply.py](scripts/price_reply.py) | Checks an answer and keeps a price only when the business's pages state it. See [Check every price](docs/how-it-works.md#4-·-check-every-price). |
 | Client-facing | [scripts/answer_reply.py](scripts/answer_reply.py) | Writes a short answer from the pages it was given, and names the page. See [Write the answer](docs/how-it-works.md#3-·-write-the-answer). |
 | Client-facing | [scripts/front_desk.py](scripts/front_desk.py) | Runs one message through the urgent reply, the business's pages, the answer, and the price check. See [How the assistant works](docs/how-it-works.md). |
+| Client-facing | [scripts/demo_chat.py](scripts/demo_chat.py) | Serves a chat page that runs one message through the front desk. See [Try the demo](docs/how-it-works.md#try-the-demo). |
+| Client-facing | [demo/](demo/) | The chat page: the message box, the conversation, and the demo line. |
 | For the agents | [.cursor/rules/](.cursor/rules/) | How the agents are allowed to work |
 | For the agents | [.cursor/team/](.cursor/team/README.md) | The roles they work in |
 | For the agents | [.cursor/commands/](.cursor/commands/run-checks.md) | Shortcuts for the checks and the change summary |
