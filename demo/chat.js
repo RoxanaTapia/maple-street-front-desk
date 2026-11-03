@@ -3,6 +3,27 @@
   var form = document.getElementById("composer");
   var box = document.getElementById("message");
   var button = document.getElementById("send");
+  var composing = false;
+
+  box.addEventListener("compositionstart", function () {
+    composing = true;
+  });
+  box.addEventListener("compositionend", function () {
+    composing = false;
+  });
+  box.addEventListener("keydown", function (event) {
+    if (event.key !== "Enter" || event.shiftKey) {
+      return;
+    }
+    if (composing || event.isComposing || event.keyCode === 229) {
+      return;
+    }
+    event.preventDefault();
+    if (!box.value.trim()) {
+      return;
+    }
+    form.requestSubmit();
+  });
 
   function addLine(kind, text) {
     var line = document.createElement("p");

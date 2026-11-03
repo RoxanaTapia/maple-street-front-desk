@@ -13,8 +13,9 @@
     <div id="thread" class="thread" aria-live="polite"></div>
     <form id="composer" class="composer">
       <label for="message">Message</label>
+      <p id="message-hint" class="hint">Press Enter to send. Shift+Enter adds a new line.</p>
       <div class="row">
-        <textarea id="message" name="message" rows="2" required></textarea>
+        <textarea id="message" name="message" rows="2" aria-describedby="message-hint"></textarea>
         <button id="send" type="submit">Send</button>
       </div>
     </form>

@@ -245,6 +245,21 @@ class DemoChatChecks(unittest.TestCase):
         self.assertIn("DEMO_PORT", source)
         self.assertEqual(demo_chat.DEFAULT_HOST, "127.0.0.1")
 
+    def test_enter_sends_the_message(self):
+        """Press Enter sends the message, and Shift+Enter adds a new line."""
+        page = (ROOT / "demo" / "index.html").read_text(encoding="utf-8")
+        script = (ROOT / "demo" / "chat.js").read_text(encoding="utf-8")
+        self.assertIn("Press Enter to send. Shift+Enter adds a new line.", page)
+        self.assertIn('id="message-hint"', page)
+        self.assertIn("keydown", script)
+        self.assertIn("shiftKey", script)
+        self.assertIn("isComposing", script)
+        self.assertIn("compositionstart", script)
+        self.assertIn("compositionend", script)
+        self.assertIn("keyCode === 229", script)
+        self.assertIn("!box.value.trim()", script)
+        self.assertIn("requestSubmit", script)
+
     def test_the_page_says_it_is_a_demo(self):
         """The page says it is a demo that answers only from Maple Street's pages."""
         status, _headers, body = self.demo.get("/")
