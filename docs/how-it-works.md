@@ -30,23 +30,26 @@ flowchart LR
 
 - Reads the urgent words in [Urgent messages](agreements.md#urgent-messages), and the reply that goes with them.
 - When one of those words is present, the customer gets only the fixed urgent reply. The pages are not read.
+- A frozen pipe is one of those words, so a message such as "I think I have a frozen pipe" gets only the fixed urgent reply.
 - A normal question is left for the next part.
 
 **Try it**
 
 ```
 python3 scripts/urgent_reply.py 'I have a burst pipe'
+python3 scripts/urgent_reply.py 'I think I have a frozen pipe'
 python3 scripts/urgent_reply.py 'Are you open Saturdays?'
 ```
 
 | Message | What you get |
 |---|---|
 | I have a burst pipe | The fixed urgent reply |
+| I think I have a frozen pipe | The fixed urgent reply |
 | Are you open Saturdays? | `This message is not urgent.` |
 
-*Good to know.* The phone number in the fixed urgent reply is not a price.
+*Good to know.* The phone number in the fixed urgent reply is not a price. A plural such as "frozen pipes" is left for the next part. The same is true of "burst pipes".
 
-*Pull request check:* **Urgent messages get the fixed reply**
+*Pull request checks:* **Urgent messages get the fixed reply**. **A frozen pipe gets the urgent reply**
 
 ## 2 · Read the pages
 
@@ -80,6 +83,7 @@ python3 scripts/read_pages.py
 - A question the pages don't cover gets the callback reply from [When the pages don't say](agreements.md#when-the-pages-dont-say).
 - The instructions include the text of the business's pages. They say to answer only from these pages, keep it short, and name the page.
 - The 15 questions in [The 15 test questions](agreements.md#the-15-test-questions) each name a page, use the fixed urgent reply, or offer a callback.
+- The owner's answers on septic systems, being licensed and insured, and after-hours callouts are recorded and marked as waiting for the Hours & FAQ page. Until that page says so, those questions get the callback reply.
 
 **Try it**
 
@@ -89,6 +93,7 @@ python3 scripts/read_pages.py
 python3 scripts/answer_reply.py 'Are you open Saturdays?'
 python3 scripts/front_desk.py 'How much is a drain cleaning?'
 python3 scripts/front_desk.py 'Do you cover Moorestown?'
+python3 scripts/front_desk.py 'Do you install septic systems?'
 python3 scripts/front_desk.py 'I have a burst pipe'
 ```
 
@@ -97,13 +102,14 @@ python3 scripts/front_desk.py 'I have a burst pipe'
 | Are you open Saturdays? | `Saturday: 8:00 am to 12:00 pm. Yes, we are open Saturdays. From Hours & FAQ.` |
 | How much is a drain cleaning? | `A drain cleaning is $149. From Pricing.` |
 | Do you cover Moorestown? | The callback reply |
+| Do you install septic systems? | The callback reply |
 | I have a burst pipe | The fixed urgent reply |
 
 *Good to know.* The real AI call waits until the setup is chosen. Until then, a stand-in answers the agreed test questions. It is not a real AI.
 
 You see this check on the pull request as Answers come from your pages.
 
-*Pull request check:* **Answers come from your pages**
+*Pull request checks:* **Answers come from your pages**. **Recorded answers still get the callback**
 
 ## 4 · Check every price
 
@@ -140,6 +146,7 @@ python3 scripts/price_reply.py 'A water heater replacement is $1,200.'
 - **Matching each price to the right service.** A published amount is kept. The check does not yet confirm that the amount belongs to the service in the question.
 - **More ways of writing prices.** Today "99 dollars" and "$149.00" get the callback reply, and "250 bucks" isn't read as a price.
 - **The owner's OK** on the 15 test questions and urgent words, already written in [What we've agreed](agreements.md).
+- **The Hours & FAQ page.** The owner's answers on septic systems, being licensed and insured, and after-hours callouts are recorded in the agreements. Those questions get the callback reply until that page says them.
 - **A demo link to try**, then a setup guide and handover notes.
 
 ## Try it yourself
@@ -170,8 +177,10 @@ Each check prints ok, and the run ends with OK. The same checks run on every pul
 - `python3 scripts/run_checks.py tests/test_pages.py:PageListChecks`
 - `python3 scripts/run_checks.py tests/test_pages.py:QuestionCoverageChecks`
 - `python3 scripts/run_checks.py tests/test_urgent.py:UrgentReplyChecks`
+- `python3 scripts/run_checks.py tests/test_urgent.py:FrozenPipeChecks`
 - `python3 scripts/run_checks.py tests/test_prices.py:PriceChecks`
 - `python3 scripts/run_checks.py tests/test_prices.py:LongerPriceChecks`
 - `python3 scripts/run_checks.py tests/test_answers.py:AnswerChecks`
+- `python3 scripts/run_checks.py tests/test_answers.py:RecordedAnswerChecks`
 
 </details>
