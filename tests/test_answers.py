@@ -2,7 +2,7 @@
 
 AnswerChecks is the "Answers come from your pages" area.
 ClaudeAnswerChecks is the "Claude writes the answer" area.
-RecordedAnswerChecks is the "Recorded answers still get the callback" area.
+HoursFaqAnswerChecks is the "Questions 13 to 15 come from Hours and FAQ" area.
 The questions, the page each answer comes from, and the callback reply
 are read from your agreements. The page text is what the page reader
 returns. The docstring of each test is what the checklist prints.
@@ -10,7 +10,7 @@ returns. The docstring of each test is what the checklist prints.
 Run one area with
 python3 scripts/run_checks.py tests/test_answers.py:AnswerChecks
 or python3 scripts/run_checks.py tests/test_answers.py:ClaudeAnswerChecks
-or python3 scripts/run_checks.py tests/test_answers.py:RecordedAnswerChecks.
+or python3 scripts/run_checks.py tests/test_answers.py:HoursFaqAnswerChecks.
 """
 
 import contextlib
@@ -156,7 +156,10 @@ class AnswerChecks(unittest.TestCase):
         pages = self._pages()
         by_name = {page["name"]: page for page in pages}
         answered = [row for row in rows if row["group"] == "Answered by your pages"]
-        self.assertEqual(len(answered), 9)
+        self.assertEqual(
+            [row["number"] for row in answered],
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 14, 15],
+        )
         for row in answered:
             self.assertIsNone(urgent_reply.reply_if_urgent(row["question"]), row["question"])
             name = page_named(row["detail"])
@@ -199,8 +202,7 @@ class AnswerChecks(unittest.TestCase):
             if urgent_reply.reply_if_urgent(row["question"]) is not None:
                 continue
             uncovered.append(row)
-        self.assertGreaterEqual(len(uncovered), 1)
-        self.assertEqual(len(uncovered), 5)
+        self.assertEqual([row["number"] for row in uncovered], [11, 12])
         for row in uncovered:
             self.assertIsNone(page_named(row["detail"]), row["question"])
             got = front_desk.reply_to(row["question"], base_url=self.site.base)
@@ -769,7 +771,7 @@ def docs():
     return [path for path in files if ".git" not in path.parts]
 
 
-class RecordedAnswerChecks(unittest.TestCase):
+class HoursFaqAnswerChecks(unittest.TestCase):
     def setUp(self):
         self.env = _SavedEnv()
         self.site = RunningSite()
@@ -779,34 +781,49 @@ class RecordedAnswerChecks(unittest.TestCase):
         serve_sample_site.pricing_live = True
         self.env.restore()
 
-    def test_recorded_answers_still_get_the_callback(self):
-        """Questions 13 to 15 still get the callback reply."""
+    def test_questions_13_to_15_come_from_hours_and_faq(self):
+        """Questions 13 to 15 are answered from the Hours & FAQ page, and the after-hours question is not urgent."""
         rows = {row["number"]: row for row in question_rows()}
         callback = answer_reply.callback_reply()
-        recorded = {
-            13: "doesn't install or service septic systems",
-            14: "fully licensed and insured in New Jersey",
-            15: "through the main line",
+        urgent = urgent_reply.fixed_urgent_reply()
+        expected = {
+            13: "No, we don't install or service septic systems. From Hours & FAQ.",
+            14: "Yes, we're fully licensed and insured in New Jersey. From Hours & FAQ.",
+            15: (
+                "Yes, we handle emergencies after hours too. "
+                "Just call our main line at (856) 555-0142. From Hours & FAQ."
+            ),
         }
+        agreements = AGREEMENTS.read_text(encoding="utf-8")
+        self.assertNotIn("Yours to decide", agreements)
+        self.assertNotIn("Waiting for the Hours & FAQ page", agreements)
         pages = read_pages.read_pages(self.site.base)
-        page_text = " ".join(page.get("text", "") for page in pages).lower()
-        self.assertNotIn("septic", page_text)
-        self.assertNotIn("licensed", page_text)
-        self.assertNotIn("insured", page_text)
-        for number, phrase in recorded.items():
+        hours = next(page for page in pages if page["name"] == "Hours & FAQ")
+        self.assertEqual(hours["status"], "read")
+        page_html = (ROOT / "sample-site" / "hours.html").read_text(encoding="utf-8")
+        self.assertIn("Do you install septic systems?", page_html)
+        self.assertIn("Are you licensed and insured?", page_html)
+        self.assertIn("Do you do after-hours emergency callouts?", page_html)
+        self.assertIn("emergency", rows[15]["question"].lower())
+        self.assertNotIn("ANTHROPIC_API_KEY", os.environ)
+        for number, reply in expected.items():
             row = rows[number]
-            self.assertEqual(row["group"], "Yours to decide", number)
-            self.assertIn(phrase, row["detail"], number)
-            self.assertIn("Waiting for the Hours & FAQ page", row["detail"], number)
+            sentence = reply.split(" From Hours & FAQ.", 1)[0]
+            self.assertEqual(row["group"], "Answered by your pages", number)
+            self.assertEqual(page_named(row["detail"]), "Hours & FAQ", number)
+            self.assertIn(sentence, hours["text"], number)
+            self.assertIn(sentence, page_html, number)
             self.assertIsNone(urgent_reply.reply_if_urgent(row["question"]), row["question"])
             got = front_desk.reply_to(row["question"], base_url=self.site.base)
-            self.assertEqual(got, callback, row["question"])
+            self.assertEqual(got, reply, row["question"])
             self.assertEqual(
                 answer_reply.write_answer(row["question"], pages),
-                callback,
+                reply,
                 row["question"],
             )
-            self.assertNotIn(phrase, got, row["question"])
+            self.assertNotEqual(got, callback, row["question"])
+            self.assertNotEqual(got, urgent, row["question"])
+            self.assertTrue(got.endswith("From Hours & FAQ."), row["question"])
 
 
 if __name__ == "__main__":

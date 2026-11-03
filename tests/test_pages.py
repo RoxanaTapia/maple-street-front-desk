@@ -4,8 +4,8 @@ PageListChecks is the "Your pages are read" area: the page list, Pricing
 live, a page that can't be fetched, the fictional banner, and the words
 on the pages.
 QuestionCoverageChecks is the "Every test question has an answer plan"
-area: every test question sits in one of the three groups, and an
-answered question names one of your pages.
+area: every test question is answered from a page or handled by a set
+reply, and an answered question names one of your pages.
 
 The docstring of each test is what the CI checklist prints.
 
@@ -208,6 +208,10 @@ class PageListChecks(unittest.TestCase):
         self.assertIn("call-out fee", text_by_name["Services"].lower())
         self.assertIn("saturday", text_by_name["Hours & FAQ"].lower())
         self.assertIn("financing", text_by_name["Hours & FAQ"].lower())
+        self.assertIn("don't install or service septic systems", text_by_name["Hours & FAQ"].lower())
+        self.assertIn("fully licensed and insured in new jersey", text_by_name["Hours & FAQ"].lower())
+        self.assertIn("emergencies after hours too", text_by_name["Hours & FAQ"].lower())
+        self.assertIn("(856) 555-0142", text_by_name["Hours & FAQ"])
         self.assertIn("cherry hill", text_by_name["Service Area"].lower())
         self.assertIn("drain cleaning", text_by_name["Pricing"].lower())
         for name, text in text_by_name.items():
@@ -228,7 +232,7 @@ class PageListChecks(unittest.TestCase):
             if path.suffix in {".html", ".css"}:
                 blobs.append(path.read_text(encoding="utf-8"))
         combined = "\n".join(blobs)
-        self.assertEqual(PHONE.findall(combined), ["(856) 555-0142"])
+        self.assertEqual(PHONE.findall(combined), ["(856) 555-0142", "(856) 555-0142"])
         self.assertEqual(EMAIL.findall(combined), [])
         self.assertIn("Carla", combined)
         _status, _html, text, _title = fetch_page(read_pages.page_address(self.site.base, "/contact.html"))
@@ -386,15 +390,18 @@ class QuestionCoverageChecks(unittest.TestCase):
             [
                 "Answered by your pages",
                 "Handled by a set reply",
-                "Yours to decide",
+                "Answered by your pages",
             ],
         )
         by_group = {}
         for row in rows:
             by_group.setdefault(row["group"], []).append(row)
-        self.assertEqual(len(by_group["Answered by your pages"]), 9)
+        self.assertEqual(
+            [row["number"] for row in by_group["Answered by your pages"]],
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 14, 15],
+        )
         self.assertEqual(len(by_group["Handled by a set reply"]), 3)
-        self.assertEqual(len(by_group["Yours to decide"]), 3)
+        self.assertNotIn("Yours to decide", _agreements_text())
 
         for row in by_group["Answered by your pages"]:
             name = page_named(row["detail"])
@@ -457,12 +464,21 @@ class QuestionCoverageChecks(unittest.TestCase):
         self.assertNotIn("moorestown", area)
         self.assertNotIn("water heater", pricing_page.lower())
         self.assertNotIn("How long is your warranty?", [row["question"] for row in rows])
-        yours = " ".join(row["question"].lower() for row in by_group["Yours to decide"])
-        self.assertIn("septic", yours)
-        self.assertIn("licensed", yours)
-        self.assertIn("after-hours", yours)
-        yours_block = _agreements_text().split("**Yours to decide**", 1)[1]
-        self.assertIn("offers a callback", yours_block.lower())
+        faq_answers = {
+            13: "No, we don't install or service septic systems.",
+            14: "Yes, we're fully licensed and insured in New Jersey.",
+            15: "Yes, we handle emergencies after hours too. Just call our main line at (856) 555-0142.",
+        }
+        self.assertNotIn("Waiting for the Hours & FAQ page", _agreements_text())
+        for number, sentence in faq_answers.items():
+            row = next(item for item in rows if item["number"] == number)
+            self.assertEqual(row["group"], "Answered by your pages", number)
+            self.assertEqual(page_named(row["detail"]), "Hours & FAQ", number)
+            self.assertIn(sentence, hours, number)
+        questions = {item["number"]: item["question"].lower() for item in rows}
+        self.assertIn("septic", questions[13])
+        self.assertIn("licensed", questions[14])
+        self.assertIn("after-hours", questions[15])
 
 
 def _sample_file(path):

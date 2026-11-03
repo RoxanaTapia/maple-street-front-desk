@@ -42,13 +42,13 @@ Every change is checked against these 15 questions.
 11. Do you cover Moorestown? The business's pages don't list it, so the assistant offers a callback.
 12. How much is a water heater replacement? Pricing doesn't list it, so the assistant offers a callback.
 
-**Yours to decide**
+**Answered by your pages**
 
-The owner has answered these. The business's pages do not say so yet. Each answer is waiting for the Hours & FAQ page. Until that page says it, the assistant offers a callback.
+These answers are on the Hours & FAQ page.
 
-13. Do you install septic systems? No. The business doesn't install or service septic systems. Waiting for the Hours & FAQ page.
-14. Are you licensed and insured? Yes. The business is fully licensed and insured in New Jersey. Waiting for the Hours & FAQ page.
-15. Do you offer after-hours emergency callouts? Yes. Emergency callouts after hours go through the main line, the same as an urgent message. Waiting for the Hours & FAQ page.
+13. Do you install septic systems? No, we don't install or service septic systems, from Hours & FAQ.
+14. Are you licensed and insured? Yes, we're fully licensed and insured in New Jersey, from Hours & FAQ.
+15. Do you offer after-hours emergency callouts? Yes, we handle emergencies after hours too. Just call our main line at (856) 555-0142, from Hours & FAQ.
 
 ## Which AI the assistant uses
 

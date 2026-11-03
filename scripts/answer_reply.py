@@ -40,9 +40,12 @@ _MONEY = re.compile(r"\$(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?")
 _WORD = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
 # The page reader keeps the navigation in the visible text, glued to the
 # first sentence. These openings are the short lines a customer can read.
+# A following "Just ..." sentence stays with that line, so the after-hours
+# answer keeps the phone number written beside it.
 _SNIPPET = re.compile(
     r"\b(?:Yes|No|The|A|An|To|We|Sunday|Saturday|Monday|Tuesday|Wednesday|Thursday|Friday|Main line)\b"
     r"[^.!?]*(?:[.!?]|$)"
+    r"(?:\s+Just [^.!?]*[.!?])?"
 )
 _STOP = frozenset(
     {
