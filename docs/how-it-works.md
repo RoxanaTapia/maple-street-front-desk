@@ -24,7 +24,7 @@ flowchart LR
 
 ## 1 · Spot an emergency
 
-*An emergency should reach the phone, not a paragraph about opening hours.*
+*An urgent problem gets a reply that tells the customer to call right away, with the business number, not a paragraph about opening hours.*
 
 **What it does**
 
