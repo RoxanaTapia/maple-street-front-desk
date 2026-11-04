@@ -62,6 +62,24 @@ python3 scripts/run_checks.py
 - A failure ends with FAILED and names the check that did not match.
 - Fix your pages, the agreements, or the assistant, then run the command again.
 
+## Questions
+
+**Where are the rules kept?**
+The code reads `docs/agreements.md` on every message: the urgent words and fixed urgent reply, the callback sentence, and the test questions.
+You can edit it as plain text. Keep the headings, and run the checks after any change. Other files in docs/ are for reading only.
+
+**Can it make up a price?**
+No. Plain code, not AI (`scripts/price_reply.py`), checks every amount in an answer against the amounts on your pages, and they must match exactly.
+If one doesn't match, the whole answer becomes the callback. It does not yet check that a price belongs to the service asked about.
+
+**What does it cost to run?**
+Each question sends your pages to Claude. With the default small model that's a fraction of a cent per question, roughly a few cents a month for a few hundred questions.
+Urgent messages use no AI. See your exact costs on your Anthropic usage page. Hosting is separate.
+
+**What if Claude is down or the key expires?**
+The customer gets the callback reply, so they're never left without an answer.
+A note so you hear about it is planned as a next step (#31).
+
 ## Handing over the code
 
 The code is handed over once the work is approved and paid.
