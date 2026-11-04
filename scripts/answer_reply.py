@@ -89,7 +89,7 @@ TIMEOUT_SECONDS = 15
 MAX_TOKENS = 1024
 USAGE = (
     'Usage: python3 scripts/answer_reply.py "customer question" [site address]\n'
-    "Prints a short answer from your pages, naming the page it came from.\n"
+    "Prints a short answer from your pages, ending with the page it used.\n"
     "When the pages don't cover the question, prints the callback reply.\n"
     "With ANTHROPIC_API_KEY set, Claude writes the answer. With no key, a stand-in answers.\n"
     f"With no address, reads {read_pages.DEFAULT_SITE}."

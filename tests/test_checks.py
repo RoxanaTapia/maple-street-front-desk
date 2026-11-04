@@ -56,6 +56,28 @@ class ProjectChecks(unittest.TestCase):
         running = f"{sys.version_info.major}.{sys.version_info.minor}"
         self.assertTrue(version == running or version.startswith(running + "."))
 
+    def test_a_proposed_change_runs_the_checks(self):
+        """A proposed change runs the checks for the pages, urgent words, prices, answers, and the demo chat."""
+        workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+        for command in (
+            "tests/test_checks.py",
+            "tests/test_links.py",
+            "tests/test_pages.py:PageListChecks",
+            "tests/test_pages.py:QuestionCoverageChecks",
+            "tests/test_urgent.py:UrgentReplyChecks",
+            "tests/test_prices.py:PriceChecks",
+            "tests/test_prices.py:LongerPriceChecks",
+            "tests/test_answers.py:AnswerChecks",
+            "tests/test_answers.py:ClaudeAnswerChecks",
+            "tests/test_answers.py:HoursFaqAnswerChecks",
+            "tests/test_demo.py:DemoChatChecks",
+        ):
+            self.assertIn(command, workflow)
+        behaviour = (ROOT / "docs" / "behaviour.md").read_text(encoding="utf-8")
+        self.assertIn("fixed urgent reply", behaviour)
+        self.assertIn("A price", behaviour)
+        self.assertIn("ends by naming the page it used (From `<Page>`.)", behaviour)
+
 
 if __name__ == "__main__":
     unittest.main()

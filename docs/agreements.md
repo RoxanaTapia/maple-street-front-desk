@@ -52,7 +52,7 @@ These answers are on the Hours & FAQ page.
 
 ## Which AI the assistant uses
 
-The assistant uses Claude by default. OpenAI and Grok are the other choices.
+This build uses Claude.
 
 ## How answers are written
 

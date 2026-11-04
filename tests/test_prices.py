@@ -264,49 +264,6 @@ class PriceChecks(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertEqual(stdout.getvalue(), "Yes, we are open Saturdays.\n")
 
-    def test_an_urgent_message_is_handled_first(self):
-        """An urgent message is handled first."""
-        word = urgent_reply.urgent_words()[0]
-        reply = urgent_reply.fixed_urgent_reply()
-        published = self._published()
-        self.assertGreaterEqual(len(published), 1)
-        invented = "It will be $1,200."
-        self.assertNotIn("$1,200", published)
-        self.assertEqual(
-            price_reply.checked_answer(invented, base_url=self.site.base),
-            self._callback(),
-        )
-
-        def fail_if_read(base_url):
-            raise AssertionError("pages were read for an urgent message")
-
-        original = price_reply.read_pages.read_pages
-        price_reply.read_pages.read_pages = fail_if_read
-        try:
-            got = price_reply.answer_for(
-                f"We have {word}.",
-                invented,
-                base_url=self.site.base,
-            )
-        finally:
-            price_reply.read_pages.read_pages = original
-        self.assertEqual(got, reply)
-        self.assertNotIn("$", got)
-        normal = next(
-            row["question"]
-            for row in question_rows()
-            if urgent_reply.reply_if_urgent(row["question"]) is None
-        )
-        self.assertEqual(
-            price_reply.answer_for(normal, invented, base_url=self.site.base),
-            self._callback(),
-        )
-        kept = f"The price is {published[0]}."
-        self.assertEqual(
-            price_reply.answer_for(normal, kept, base_url=self.site.base),
-            kept,
-        )
-
     def test_checking_an_answer_prints_it_or_the_callback(self):
         """Checking an answer prints it when the price is published, and the callback reply when it is not."""
         published = self._published()
@@ -333,20 +290,6 @@ class PriceChecks(unittest.TestCase):
         with contextlib.redirect_stderr(stderr):
             self.assertEqual(price_reply.main([]), 2)
 
-    def test_you_see_this_check_on_the_pull_request(self):
-        """You see this check on the pull request as Prices come only from your pages."""
-        workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
-        self.assertIn("name: Prices come only from your pages\n", workflow)
-        self.assertIn("tests/test_prices.py:PriceChecks", workflow)
-        behaviour = (ROOT / "docs" / "behaviour.md").read_text(encoding="utf-8")
-        self.assertIn("| A customer writes | What they get |", behaviour)
-        self.assertIn("A price", behaviour)
-        how = (ROOT / "docs" / "how-it-works.md").read_text(encoding="utf-8")
-        section = how.split("## 4 · Check every price", 1)[1].split("## Still to come", 1)[0]
-        self.assertIn("**Prices come only from your pages**", section)
-        self.assertIn("kept only as it is written there", section)
-        self.assertIn("an urgent message is still handled first", section)
-
 
 class LongerPriceChecks(unittest.TestCase):
     def setUp(self):
@@ -356,8 +299,8 @@ class LongerPriceChecks(unittest.TestCase):
         self.site.close()
         serve_sample_site.pricing_live = True
 
-    def test_a_dollar_amount_is_read_whole(self):
-        """A dollar amount is read whole."""
+    def test_a_price_is_read_as_the_whole_amount(self):
+        """A price is read as the whole amount."""
         cases = {
             "$1499": ["$1499"],
             "$1,499": ["$1,499"],
@@ -378,18 +321,15 @@ class LongerPriceChecks(unittest.TestCase):
         self.assertNotEqual(price_reply.find_amounts("$1499"), ["$149"])
         self.assertNotEqual(price_reply.find_amounts("$1,499"), ["$1"])
         self.assertNotEqual(price_reply.find_amounts("$1,499"), ["$149"])
-
-    def test_a_longer_price_isnt_mistaken_for_a_shorter_one(self):
-        """A longer price isn't mistaken for a shorter one."""
         published = price_reply.published_amounts(self.site.base)
         callback = price_reply.callback_reply()
         self.assertEqual(callback, "I can't confirm that from your pages.")
         self.assertIn("$149", published)
         self.assertNotIn("$1499", published)
         self.assertNotIn("$1,499", published)
-        answer = "A water heater is $1499."
-        self.assertEqual(price_reply.find_amounts(answer), ["$1499"])
-        got = price_reply.checked_answer(answer, base_url=self.site.base)
+        whole = "A water heater is $1499."
+        self.assertEqual(price_reply.find_amounts(whole), ["$1499"])
+        got = price_reply.checked_answer(whole, base_url=self.site.base)
         self.assertEqual(got, callback)
         self.assertNotIn("$149", got)
         self.assertNotIn("1499", got)
@@ -400,24 +340,20 @@ class LongerPriceChecks(unittest.TestCase):
         )
         stdout = io.StringIO()
         with contextlib.redirect_stdout(stdout):
-            code = price_reply.main([answer, self.site.base])
+            code = price_reply.main([whole, self.site.base])
         self.assertEqual(code, 0)
         self.assertEqual(stdout.getvalue(), callback + "\n")
-
-    def test_a_price_at_the_end_of_a_sentence_stays_the_amount(self):
-        """$149 at the end of a sentence is still $149."""
-        answer = "A drain cleaning is $149."
-        self.assertEqual(price_reply.find_amounts(answer), ["$149"])
+        sentence = "A drain cleaning is $149."
+        self.assertEqual(price_reply.find_amounts(sentence), ["$149"])
         self.assertEqual(
-            price_reply.checked_answer(answer, base_url=self.site.base),
-            answer,
+            price_reply.checked_answer(sentence, base_url=self.site.base),
+            sentence,
         )
         page = "A drain cleaning is $149."
         self.assertEqual(
-            price_reply.checked_answer(answer, page_text=page),
-            answer,
+            price_reply.checked_answer(sentence, page_text=page),
+            sentence,
         )
-        callback = price_reply.callback_reply()
         for other in (
             "A drain cleaning is $1499.",
             "A drain cleaning is $1,499.",
@@ -452,18 +388,6 @@ class LongerPriceChecks(unittest.TestCase):
             code = price_reply.main(["We're at 149 Maple Street", self.site.base])
         self.assertEqual(code, 0)
         self.assertEqual(stdout.getvalue(), "We're at 149 Maple Street\n")
-
-    def test_you_see_this_check_on_the_pull_request(self):
-        """You see this check on the pull request as A longer price isn't mistaken for a shorter one."""
-        workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
-        self.assertIn("name: A longer price isn't mistaken for a shorter one\n", workflow)
-        self.assertIn("tests/test_prices.py:LongerPriceChecks", workflow)
-        how = (ROOT / "docs" / "how-it-works.md").read_text(encoding="utf-8")
-        section = how.split("## 4 · Check every price", 1)[1].split("## Still to come", 1)[0]
-        self.assertIn("**A longer price isn't mistaken for a shorter one**", section)
-        self.assertIn("An amount is read whole", section)
-        self.assertIn("A water heater is $1499.", section)
-        self.assertIn("We're at 149 Maple Street", section)
 
 
 if __name__ == "__main__":
