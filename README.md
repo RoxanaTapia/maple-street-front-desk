@@ -1,6 +1,6 @@
 # Maple Street Front Desk
 
-Maple Street Front Desk is an AI front-desk assistant for a small plumbing business. It answers customer questions only from the business's own pages, sends urgent problems straight to the phone, and never invents a price.
+Maple Street Front Desk is an AI front-desk assistant for a small plumbing business. It answers customer questions only from the business's own pages, tells customers with an urgent problem to call right away, with the business number, and never invents a price.
 
 For now it runs on a small practice copy of the business's site. The real site stays untouched.
 
