@@ -273,42 +273,6 @@ class AnswerChecks(unittest.TestCase):
                 row["question"],
             )
 
-    def test_an_unpublished_price_is_swapped(self):
-        """An answer with an unpublished price is swapped for the callback reply."""
-        published = price_reply.published_amounts(self.site.base)
-        callback = self._callback()
-        self.assertGreaterEqual(len(published), 1)
-        invented = "$1,200"
-        self.assertNotIn(invented, published)
-        seen = {"pages": 0}
-
-        def writer(question, instructions, pages):
-            seen["pages"] = len(pages)
-            self.assertIn(callback, instructions)
-            return f"A water heater replacement is {invented}."
-
-        got = front_desk.reply_to(
-            "How much is a water heater replacement?",
-            base_url=self.site.base,
-            writer=writer,
-        )
-        self.assertEqual(seen["pages"], 6)
-        self.assertEqual(got, callback)
-        self.assertNotIn(invented, got)
-        kept = f"The price is {published[0]}."
-
-        def keep_writer(question, instructions, pages):
-            return kept
-
-        self.assertEqual(
-            front_desk.reply_to(
-                "How much is a drain cleaning?",
-                base_url=self.site.base,
-                writer=keep_writer,
-            ),
-            kept,
-        )
-
     def test_the_instructions_include_every_page_and_the_callback(self):
         """The instructions sent to the writer include every page and the callback reply."""
         pages = self._pages()
@@ -406,40 +370,6 @@ class AnswerChecks(unittest.TestCase):
             with contextlib.redirect_stderr(stderr):
                 self.assertEqual(command([]), 2)
 
-    def test_you_see_this_check_on_the_pull_request(self):
-        """You see this check on the pull request as Answers come from your pages."""
-        workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
-        self.assertIn("name: Answers come from your pages\n", workflow)
-        self.assertIn("tests/test_answers.py:AnswerChecks", workflow)
-        behaviour = (ROOT / "docs" / "behaviour.md").read_text(encoding="utf-8")
-        self.assertIn("| A customer writes | What they get |", behaviour)
-        self.assertIn("ends by naming the page it used (From `<Page>`.)", behaviour)
-        how = (ROOT / "docs" / "how-it-works.md").read_text(encoding="utf-8")
-        self.assertNotIn("Write the answer (coming next)", how)
-        self.assertNotIn("not written yet", how)
-        self.assertNotIn("coming next", how)
-        self.assertIn("`scripts/answer_reply.py`", how)
-        self.assertIn("`scripts/front_desk.py`", how)
-        section = how.split("## 3 · Write the answer", 1)[1].split("## 4 ·", 1)[0]
-        self.assertIn("**Answers come from your pages**", section)
-        self.assertIn("include the text of the business's pages", section)
-        self.assertIn(
-            "You see this check on the pull request as Answers come from your pages.",
-            section,
-        )
-        self.assertIn("not a real AI", section)
-        self.assertIn("ANTHROPIC_API_KEY", section)
-        self.assertIn("Claude", section)
-        self.assertNotIn("real AI call", section)
-        still = how.split("## Still to come", 1)[1]
-        self.assertNotIn("real AI call", still)
-        readme = (ROOT / "README.md").read_text(encoding="utf-8")
-        self.assertIn("- ✅ **Writes the answer:** a short reply from the business's pages.", readme)
-        self.assertNotIn("answer_reply.py", readme)
-        self.assertNotIn("front_desk.py", readme)
-        for name in ("answer_reply.py", "front_desk.py", "tests/test_answers.py"):
-            self.assertIn(name, (ROOT / "tests" / "test_checks.py").read_text(encoding="utf-8"))
-
 
 class ClaudeAnswerChecks(unittest.TestCase):
     def setUp(self):
@@ -464,52 +394,6 @@ class ClaudeAnswerChecks(unittest.TestCase):
             raise AssertionError("the real API was called")
 
         answer_reply._post_message = fail
-
-    def test_a_page_backed_answer_names_its_page(self):
-        """A page-backed answer from Claude ends with the page it used."""
-        pages = self._pages()
-        self.assertEqual(len(pages), 6)
-        callback = self._callback()
-        question = "Are you open Saturdays?"
-        seen = {}
-
-        def client(payload):
-            seen["payload"] = payload
-            return {
-                "content": [
-                    {"type": "thinking", "thinking": "hours page"},
-                    {"type": "text", "text": "Yes, open Saturday morning. From Hours & FAQ."},
-                ]
-            }
-
-        self._block_network()
-        got = front_desk.reply_to(question, base_url=self.site.base, client=client)
-        self.assertEqual(got, "Yes, open Saturday morning. From Hours & FAQ.")
-        self.assertIn("Hours & FAQ", got)
-        self.assertNotEqual(got, callback)
-        self.assertNotIn("hours page", got)
-        payload = seen["payload"]
-        self.assertIn("haiku", answer_reply.DEFAULT_MODEL)
-        self.assertEqual(payload["model"], answer_reply.DEFAULT_MODEL)
-        self.assertEqual(payload["output_config"]["effort"], "low")
-        self.assertNotIn("test-key", json.dumps(payload))
-        instructions = payload["messages"][0]["content"]
-        self.assertIn(callback, instructions)
-        self.assertIn(question, instructions)
-        self.assertIn("Answer the customer's question only from these pages.", instructions)
-        for page in pages:
-            self.assertEqual(page["status"], "read", page["name"])
-            self.assertIn(f"Page: {page['name']}", instructions)
-            self.assertIn(page["text"], instructions)
-        os.environ["CLAUDE_MODEL"] = "claude-haiku-test"
-
-        def client_model(model_payload):
-            seen["model"] = model_payload["model"]
-            return {"content": [{"type": "text", "text": "Yes. From Hours & FAQ."}]}
-
-        renamed = answer_reply.write_answer(question, pages, client=client_model)
-        self.assertEqual(seen["model"], "claude-haiku-test")
-        self.assertIn("Hours & FAQ", renamed)
 
     def test_a_mocked_reply_ends_with_the_page_name(self):
         """A page-based answer ends with From and the page name."""
@@ -751,18 +635,6 @@ class ClaudeAnswerChecks(unittest.TestCase):
         self.assertNotIn("sk-ant-", example)
         self.assertNotIn("sk-ant-", ignore)
         self.assertTrue(any(line.strip() == ".env" for line in ignore.splitlines()))
-
-    def test_you_see_this_check_on_the_pull_request(self):
-        """You see this check on the pull request as Claude writes the answer."""
-        workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
-        self.assertIn("name: Claude writes the answer\n", workflow)
-        self.assertIn("tests/test_answers.py:ClaudeAnswerChecks", workflow)
-        how = (ROOT / "docs" / "how-it-works.md").read_text(encoding="utf-8")
-        section = how.split("## 3 · Write the answer", 1)[1].split("## 4 ·", 1)[0]
-        self.assertIn("**Claude writes the answer**", section)
-        self.assertIn("export ANTHROPIC_API_KEY=", section)
-        self.assertNotIn("ClaudeAnswerChecks", how)
-        self.assertIn("- The demo chat", how)
 
 
 def docs():

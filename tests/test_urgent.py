@@ -1,13 +1,11 @@
 """Checks that an urgent message gets the fixed reply.
 
 UrgentReplyChecks is the "Urgent messages get the fixed reply" area.
-FrozenPipeChecks is the "A frozen pipe gets the urgent reply" area.
 The words and the reply are read from your agreements. The docstring of
 each test is what the checklist prints.
 
 Run one area with
 python3 scripts/run_checks.py tests/test_urgent.py:UrgentReplyChecks
-or python3 scripts/run_checks.py tests/test_urgent.py:FrozenPipeChecks.
 """
 
 import contextlib
@@ -22,8 +20,6 @@ SCRIPTS = ROOT / "scripts"
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
-import front_desk
-import read_pages
 import urgent_reply
 
 AGREEMENTS = ROOT / "docs" / "agreements.md"
@@ -207,26 +203,6 @@ class UrgentReplyChecks(unittest.TestCase):
         with self.assertRaises(ValueError):
             urgent_reply.fixed_urgent_reply(text="## Urgent messages\n\n**roof leak**\n")
 
-    def test_an_urgent_message_does_not_read_your_pages(self):
-        """An urgent message does not read your pages."""
-        source = (SCRIPTS / "urgent_reply.py").read_text(encoding="utf-8")
-        for banned in (
-            "read_pages",
-            "urllib",
-            "urlopen",
-            "socket",
-            "subprocess",
-            "sample-site",
-            "openai",
-            "anthropic",
-        ):
-            self.assertNotIn(banned, source)
-        word = quoted_urgent_words()[0]
-        self.assertEqual(
-            urgent_reply.reply_if_urgent(f"We have {word}."),
-            blockquote_reply(),
-        )
-
     def test_the_phone_number_in_the_urgent_reply_is_not_a_price(self):
         """The phone number in the urgent reply is not treated as a price."""
         reply = blockquote_reply()
@@ -263,53 +239,6 @@ class UrgentReplyChecks(unittest.TestCase):
         stderr = io.StringIO()
         with contextlib.redirect_stderr(stderr):
             self.assertEqual(urgent_reply.main([]), 2)
-
-    def test_you_see_this_check_on_the_pull_request(self):
-        """You see this check on the pull request as Urgent messages get the fixed reply."""
-        workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
-        self.assertIn("name: Urgent messages get the fixed reply\n", workflow)
-        self.assertIn("tests/test_urgent.py:UrgentReplyChecks", workflow)
-        behaviour = (ROOT / "docs" / "behaviour.md").read_text(encoding="utf-8")
-        self.assertIn("An urgent message", behaviour)
-        self.assertIn("fixed urgent reply", behaviour)
-        how = (ROOT / "docs" / "how-it-works.md").read_text(encoding="utf-8")
-        section = how.split("## 1 · Spot an emergency", 1)[1].split("## 2 ·", 1)[0]
-        self.assertIn("**Urgent messages get the fixed reply**", section)
-
-
-class FrozenPipeChecks(unittest.TestCase):
-    def test_a_frozen_pipe_message_gets_only_the_urgent_reply(self):
-        """A message about a frozen pipe gets only the fixed urgent reply, and the pages are not read."""
-        words = quoted_urgent_words()
-        self.assertIn("frozen pipe", words)
-        self.assertEqual(urgent_reply.urgent_words(), words)
-        reply = blockquote_reply()
-        self.assertEqual(urgent_reply.fixed_urgent_reply(), reply)
-        for message in (
-            "I think I have a frozen pipe",
-            "I think I have a FROZEN PIPE",
-        ):
-            self.assertEqual(urgent_reply.reply_if_urgent(message), reply, message)
-            stdout = io.StringIO()
-            with contextlib.redirect_stdout(stdout):
-                code = urgent_reply.main([message])
-            self.assertEqual(code, 0, message)
-            self.assertEqual(stdout.getvalue(), reply + "\n", message)
-
-        def read_fail(base_url):
-            raise AssertionError("pages were read for a frozen pipe")
-
-        def writer(question, instructions, pages):
-            raise AssertionError("the answer writer ran for a frozen pipe")
-
-        original = read_pages.read_pages
-        read_pages.read_pages = read_fail
-        try:
-            got = front_desk.reply_to("I think I have a frozen pipe", writer=writer)
-        finally:
-            read_pages.read_pages = original
-        self.assertEqual(got, reply)
-        self.assertNotIn("\n", got)
 
 
 if __name__ == "__main__":

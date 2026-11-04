@@ -50,7 +50,7 @@ python3 scripts/urgent_reply.py 'Are you open Saturdays?'
 
 *Good to know.* The phone number in the fixed urgent reply is not a price. A plural such as "frozen pipes" is left for the next part. The same is true of "burst pipes".
 
-*Pull request checks:* **Urgent messages get the fixed reply**. **A frozen pipe gets the urgent reply**
+*Pull request checks:* **Urgent messages get the fixed reply**
 
 ## 2 · Read the pages
 

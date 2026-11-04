@@ -100,21 +100,6 @@ class PageListChecks(unittest.TestCase):
         self.site.close()
         serve_sample_site.pricing_live = True
 
-    def test_pricing_is_live_and_all_six_pages_are_read(self):
-        """Pricing is live, so all six pages are read. Each title matches the page and includes the page's name."""
-        source = (SCRIPTS / "serve_sample_site.py").read_text(encoding="utf-8")
-        self.assertRegex(source, r"(?m)^pricing_live = True\b")
-        pages = read_pages.read_pages(self.site.base)
-        self.assertEqual(len(pages), 6)
-        for page in pages:
-            self.assertEqual(page["status"], "read", page["name"])
-            self.assertEqual(page["reason"], "")
-            status, _html, _text, title = fetch_page(page["address"])
-            self.assertEqual(status, 200)
-            self.assertEqual(page["title"], title)
-            self.assertTrue(page["title"])
-            self.assertIn(page["name"], page["title"])
-
     def test_unreadable_page_stays_on_the_list(self):
         """A page that can't be fetched stays on the list as unreadable, with the reason, and with no title. The other pages are still read."""
         serve_sample_site.pricing_live = False
@@ -173,6 +158,8 @@ class PageListChecks(unittest.TestCase):
 
     def test_every_agreed_page_appears_on_the_page_list(self):
         """Every agreed page appears on the page list with its title, address, and status."""
+        source = (SCRIPTS / "serve_sample_site.py").read_text(encoding="utf-8")
+        self.assertRegex(source, r"(?m)^pricing_live = True\b")
         agreed = read_pages.agreed_pages()
         self.assertEqual([page["name"] for page in agreed], AGREED_NAMES)
         for item in agreed:
@@ -192,6 +179,13 @@ class PageListChecks(unittest.TestCase):
         self.assertEqual([page["name"] for page in pages], [page["name"] for page in agreed])
         for item, page in zip(agreed, pages):
             self.assertEqual(page["address"], read_pages.page_address(self.site.base, item["path"]))
+            self.assertEqual(page["status"], "read", page["name"])
+            self.assertEqual(page["reason"], "")
+            status, _html, _text, title = fetch_page(page["address"])
+            self.assertEqual(status, 200)
+            self.assertEqual(page["title"], title)
+            self.assertTrue(page["title"])
+            self.assertIn(page["name"], page["title"])
             self.assertIn("Title:", read_pages.format_page_list([page]))
             self.assertIn("Address:", read_pages.format_page_list([page]))
             self.assertIn("Status:", read_pages.format_page_list([page]))

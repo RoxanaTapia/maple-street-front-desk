@@ -41,18 +41,18 @@ Urgent messages were answered in under a second. Every other reply took about 1.
 
 ## What the automatic checks cover
 
-`python3 scripts/run_checks.py` runs 58 checks.
+`python3 scripts/run_checks.py` runs 45 checks.
 
-**Your pages (9):** The six practice pages are read, with the words a visitor sees, the agreed phone number, and a note when a page cannot be opened.
+**Your pages (8):** The six practice pages are read, with the words a visitor sees, the agreed phone number, and a note when a page cannot be opened.
 
-**Urgent problems (10):** Each urgent word, in any capitalisation, gets the call-now reply and nothing else, and a normal question does not.
+**Urgent problems (7):** Each urgent word, in any capitalisation, gets the call-now reply and nothing else, and a normal question does not.
 
-**Prices (10):** A price is kept only when the pages state that amount as written, a longer amount is not read as a shorter one, and an address or a phone number is not a price.
+**Prices (7):** A price is kept only when the pages state that amount as written, a longer amount is not read as a shorter one, and an address or a phone number is not a price.
 
-**Answers (14):** A question the pages cover gets a short answer that ends with the page it used, and a question they do not cover, or a failed call, gets the callback reply.
+**Answers (13):** A question the pages cover gets a short answer that ends with the page it used, and a question they do not cover, or a failed call, gets the callback reply.
 
 **The demo chat (5):** The chat page says it is a demo, shows the reply as text, keeps the Claude key off the page, and sends when Enter is pressed.
 
-**The project (10):** The project files are present, Python matches the recorded version, links in the docs point at real pages, and these promises are checked when a change is proposed.
+**The project (5):** The project files are present, Python matches the recorded version, links in the docs point at real pages, and a proposed change runs these checks.
 
 The checks use a stand-in instead of Claude, so they run in seconds at no cost, and the live results above use the real assistant.

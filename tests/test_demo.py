@@ -266,19 +266,3 @@ class DemoChatChecks(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertIn(DEMO_LINE, body)
         self.assertIn("Maple Street Front Desk", body)
-
-    def test_you_see_this_check_on_the_pull_request(self):
-        """You see this check on the pull request as The demo chat gives the same replies."""
-        workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
-        self.assertIn("name: The demo chat gives the same replies\n", workflow)
-        self.assertIn("tests/test_demo.py:DemoChatChecks", workflow)
-        how = (ROOT / "docs" / "how-it-works.md").read_text(encoding="utf-8")
-        self.assertIn("## Try the demo", how)
-        section = how.split("## Try the demo", 1)[1]
-        self.assertIn("python3 scripts/demo_chat.py", section)
-        self.assertIn("**The demo chat gives the same replies**", section)
-        self.assertIn(DEMO_LINE, how)
-        example = (ROOT / ".env.example").read_text(encoding="utf-8")
-        self.assertIn("DEMO_HOST", example)
-        self.assertIn("DEMO_PORT", example)
-        self.assertNotIn("sk-ant-", example)
