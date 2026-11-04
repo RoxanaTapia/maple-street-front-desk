@@ -162,7 +162,6 @@ python3 scripts/price_reply.py 'A water heater replacement is $1,200.'
 - **Matching each price to the right service.** A published amount is kept. The check does not yet confirm that the amount belongs to the service in the question.
 - **More ways of writing prices.** Today "99 dollars" and "$149.00" get the callback reply, and "250 bucks" isn't read as a price.
 - **The owner's OK** on the 15 test questions and urgent words, already written in [What we've agreed](agreements.md).
-- **A setup guide and handover notes.**
 
 ## Try it yourself
 

@@ -150,7 +150,7 @@ class AnswerChecks(unittest.TestCase):
         return answer_reply.callback_reply()
 
     def test_every_answered_question_names_the_right_page(self):
-        """Every question your pages answer names the page it came from."""
+        """Every question your pages answer ends with the page it used."""
         rows = question_rows()
         self.assertEqual(len(rows), 15)
         pages = self._pages()
@@ -466,7 +466,7 @@ class ClaudeAnswerChecks(unittest.TestCase):
         answer_reply._post_message = fail
 
     def test_a_page_backed_answer_names_its_page(self):
-        """A page-backed answer from Claude names the page it came from."""
+        """A page-backed answer from Claude ends with the page it used."""
         pages = self._pages()
         self.assertEqual(len(pages), 6)
         callback = self._callback()
