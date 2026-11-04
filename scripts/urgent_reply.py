@@ -1,6 +1,7 @@
 """Check a customer message for urgent words before any answer.
 
 Reads the urgent words and the fixed urgent reply from your agreements.
+A spelling named beside a word, written as (also ...), counts as that word.
 When the message contains one of those words, that reply is used on its
 own and your pages are not read. Anything else is not urgent, and an
 answer can come in a later step.
@@ -16,9 +17,14 @@ ROOT = Path(__file__).resolve().parents[1]
 AGREEMENTS = ROOT / "docs" / "agreements.md"
 URGENT_HEADING = "Urgent messages"
 NOT_URGENT = "This message is not urgent."
+_BESIDE = re.compile(
+    r"\*\*([^*]+)\*\*\s*\(also\s+([^)]+)\)",
+    re.IGNORECASE,
+)
 USAGE = (
     'Usage: python3 scripts/urgent_reply.py "customer message"\n'
     "Prints the fixed urgent reply when the message contains an urgent word.\n"
+    "A spelling named beside that word counts too.\n"
     "Otherwise prints that the message is not urgent."
 )
 
@@ -79,16 +85,38 @@ def _contains_word(message, word):
     return re.search(pattern, message.casefold()) is not None
 
 
+def _spellings(body, word):
+    """Return this urgent word and any spelling named beside it.
+
+    Your agreements write that as (also ...) right after the word.
+    """
+    forms = [word]
+    seen = {word.casefold()}
+    for line in _section(body, URGENT_HEADING):
+        for match in _BESIDE.finditer(line):
+            if match.group(1).strip().casefold() != word.casefold():
+                continue
+            for part in match.group(2).split(","):
+                spelling = part.strip()
+                folded = spelling.casefold()
+                if spelling and folded not in seen:
+                    seen.add(folded)
+                    forms.append(spelling)
+    return forms
+
+
 def reply_if_urgent(message, text=None):
     """Return the fixed urgent reply, or None when the message is not urgent.
 
     Call this before any answer. It does not read your pages.
+    A spelling named beside an urgent word counts as that word.
     """
     if not isinstance(message, str) or not message.strip():
         return None
     body = _body(text)
-    if any(_contains_word(message, word) for word in urgent_words(body)):
-        return fixed_urgent_reply(body)
+    for word in urgent_words(body):
+        if any(_contains_word(message, form) for form in _spellings(body, word)):
+            return fixed_urgent_reply(body)
     return None
 
 

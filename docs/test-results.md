@@ -2,7 +2,9 @@
 
 Wednesday, Nov 4, 2026. Live demo: <https://maple-demo.roxanatapia.dev>. Version: main at commit e0a24d6.
 
-**15 of 15 questions and 4 of 4 urgent words pass.**
+**15 of 15 questions and 4 of 4 urgent words from that live demo pass.**
+
+Water everywhere, basement, and leak were added after the demo. The automatic checks pass for those three words, and for leaking. "I have a leaky faucet" is not urgent.
 
 We sent each question to the live demo one at a time, as a customer would, and checked every reply against what we agreed. Replies came back in under 2.2 seconds each.
 
@@ -39,13 +41,26 @@ Each of these got exactly the urgent reply: "This sounds urgent. Please call us 
 
 Urgent messages were answered in under a second. Every other reply took about 1.5 to 2 seconds.
 
+## Urgent words added after the demo
+
+These were not sent to the live demo. The automatic checks ran them with the stand-in, so no key was used. Water everywhere, a basement, a leak, and leaking each got the urgent reply named above. "I have a leaky faucet" is not urgent. Sent through the demo with the stand-in, that message gets the callback reply.
+
+| Message | Result | Pass |
+|---|---|---|
+| There is water everywhere in the kitchen | The urgent reply | ✅ |
+| The basement is filling up | The urgent reply | ✅ |
+| My basement has water everywhere | The urgent reply | ✅ |
+| I have a leak under the sink | The urgent reply | ✅ |
+| The pipe is leaking | The urgent reply | ✅ |
+| I have a leaky faucet | Not urgent | ✅ |
+
 ## What the automatic checks cover
 
-`python3 scripts/run_checks.py` runs 45 checks.
+`python3 scripts/run_checks.py` runs 47 checks.
 
 **Your pages (8):** The six practice pages are read, with the words a visitor sees, the agreed phone number, and a note when a page cannot be opened.
 
-**Urgent problems (7):** Each urgent word, in any capitalisation, gets the call-now reply and nothing else, and a normal question does not.
+**Urgent problems (9):** Each urgent word, in any capitalisation, gets the call-now reply and nothing else. Water everywhere, a basement, and a leak are included. Leaking gets that reply. "I have a leaky faucet" does not. A normal question does not.
 
 **Prices (7):** A price is kept only when the pages state that amount as written, a longer amount is not read as a shorter one, and an address or a phone number is not a price.
 
