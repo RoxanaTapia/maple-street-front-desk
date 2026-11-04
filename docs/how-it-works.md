@@ -120,7 +120,7 @@ export ANTHROPIC_API_KEY='...'
 python3 scripts/answer_reply.py 'Are you open Saturdays?'
 ```
 
-The answer is short and names the page. `CLAUDE_MODEL` chooses a different model. The default is a small, fast one.
+The answer is short and names the page. `CLAUDE_MODEL` is optional, and the default is set in the code.
 
 *Good to know.* Every question is answered from all six pages. A document search engine can be added later if many more documents are added.
 
@@ -189,16 +189,13 @@ Each check prints ok, and the run ends with OK. The same checks run on every pul
 
 - `python3 scripts/run_checks.py tests/test_checks.py`
 - `python3 scripts/run_checks.py tests/test_links.py`
-- `python3 scripts/run_checks.py tests/test_pages.py:PageListChecks`
-- `python3 scripts/run_checks.py tests/test_pages.py:QuestionCoverageChecks`
-- `python3 scripts/run_checks.py tests/test_urgent.py:UrgentReplyChecks`
-- `python3 scripts/run_checks.py tests/test_urgent.py:FrozenPipeChecks`
-- `python3 scripts/run_checks.py tests/test_prices.py:PriceChecks`
-- `python3 scripts/run_checks.py tests/test_prices.py:LongerPriceChecks`
-- `python3 scripts/run_checks.py tests/test_answers.py:AnswerChecks`
-- `python3 scripts/run_checks.py tests/test_answers.py:ClaudeAnswerChecks`
-- `python3 scripts/run_checks.py tests/test_answers.py:HoursFaqAnswerChecks`
-- `python3 scripts/run_checks.py tests/test_demo.py:DemoChatChecks`
+- Pages are read
+- The 15 questions
+- Urgent words
+- A frozen pipe
+- Prices
+- Answers
+- The demo chat
 
 </details>
 
@@ -212,6 +209,6 @@ python3 scripts/demo_chat.py
 
 It prints `Demo chat at http://127.0.0.1:8080`. Open that address. The page says: This is a demo. It answers only from Maple Street's pages. Type a message and the reply comes back. The sample site starts with it, so there is nothing else to run. Stop it with Ctrl+C.
 
-`DEMO_HOST` and `DEMO_PORT` choose the address. The default is local. The names are listed in [.env.example](../.env.example). The Claude key stays in the server's settings. It is not on the page.
+`DEMO_HOST` and `DEMO_PORT` choose the address. The default is local. The names are listed in [.env.example](../.env.example). The Claude key is set on the machine that runs the assistant. It isn't written into the repo or shown in replies.
 
 *Pull request checks:* **The demo chat gives the same replies**

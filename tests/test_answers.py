@@ -413,7 +413,7 @@ class AnswerChecks(unittest.TestCase):
         self.assertIn("tests/test_answers.py:AnswerChecks", workflow)
         behaviour = (ROOT / "docs" / "behaviour.md").read_text(encoding="utf-8")
         self.assertIn("| A customer writes | What they get |", behaviour)
-        self.assertIn("names the page it came from", behaviour)
+        self.assertIn("ends by naming the page it used (From `<Page>`.)", behaviour)
         how = (ROOT / "docs" / "how-it-works.md").read_text(encoding="utf-8")
         self.assertNotIn("Write the answer (coming next)", how)
         self.assertNotIn("not written yet", how)
@@ -761,7 +761,8 @@ class ClaudeAnswerChecks(unittest.TestCase):
         section = how.split("## 3 · Write the answer", 1)[1].split("## 4 ·", 1)[0]
         self.assertIn("**Claude writes the answer**", section)
         self.assertIn("export ANTHROPIC_API_KEY=", section)
-        self.assertIn("tests/test_answers.py:ClaudeAnswerChecks", how)
+        self.assertNotIn("ClaudeAnswerChecks", how)
+        self.assertIn("- The demo chat", how)
 
 
 def docs():
