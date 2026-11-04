@@ -69,8 +69,8 @@ The code reads `docs/agreements.md` on every message: the urgent words and fixed
 You can edit it as plain text. Keep the headings, and run the checks after any change. Other files in docs/ are for reading only.
 
 **Can it make up a price?**
-No. Plain code, not AI (`scripts/price_reply.py`), checks every amount in an answer against the amounts on your pages, and they must match exactly.
-If one doesn't match, the whole answer becomes the callback. It does not yet check that a price belongs to the service asked about.
+No. Plain code, not AI (`scripts/price_reply.py`), checks every amount in an answer against your pages. The amount has to be written there, exactly as written, on the same page and near the service the customer asked about.
+If it isn't, the whole answer becomes the callback.
 
 **What does it cost to run?**
 Each question sends your pages to Claude. With the default small model that's a fraction of a cent per question, roughly a few cents a month for a few hundred questions.

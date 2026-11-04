@@ -41,13 +41,13 @@ Urgent messages were answered in under a second. Every other reply took about 1.
 
 ## What the automatic checks cover
 
-`python3 scripts/run_checks.py` runs 45 checks.
+`python3 scripts/run_checks.py` runs 48 checks.
 
 **Your pages (8):** The six practice pages are read, with the words a visitor sees, the agreed phone number, and a note when a page cannot be opened.
 
 **Urgent problems (7):** Each urgent word, in any capitalisation, gets the call-now reply and nothing else, and a normal question does not.
 
-**Prices (7):** A price is kept only when the pages state that amount as written, a longer amount is not read as a shorter one, and an address or a phone number is not a price.
+**Prices (10):** A price is kept only when the pages state that amount, on the same page and near the service the customer asked about. A price for a different service, or a made-up price, is replaced with the callback reply. A longer amount is not read as a shorter one, and an address or a phone number is not a price.
 
 **Answers (13):** A question the pages cover gets a short answer that ends with the page it used, and a question they do not cover, or a failed call, gets the callback reply.
 

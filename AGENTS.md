@@ -30,7 +30,7 @@ These never change without the client's OK. The list is in [What we've agreed](d
 | Client-facing | [scripts/serve_sample_site.py](scripts/serve_sample_site.py) | Serves that sample like a website |
 | Client-facing | [scripts/read_pages.py](scripts/read_pages.py) | Reads the agreed pages and prints the page list. See [Read the pages](docs/how-it-works.md#2-·-read-the-pages). |
 | Client-facing | [scripts/urgent_reply.py](scripts/urgent_reply.py) | Checks a customer message for the urgent words and prints the fixed reply. See [Spot an emergency](docs/how-it-works.md#1-·-spot-an-emergency). |
-| Client-facing | [scripts/price_reply.py](scripts/price_reply.py) | Checks an answer and keeps a price only when the business's pages state it. See [Check every price](docs/how-it-works.md#4-·-check-every-price). |
+| Client-facing | [scripts/price_reply.py](scripts/price_reply.py) | Checks an answer and keeps a price only when the business's pages state it, near the service asked about. See [Check every price](docs/how-it-works.md#4-·-check-every-price). |
 | Client-facing | [scripts/answer_reply.py](scripts/answer_reply.py) | Writes a short answer from the pages it was given, and names the page. See [Write the answer](docs/how-it-works.md#3-·-write-the-answer). |
 | Client-facing | [scripts/front_desk.py](scripts/front_desk.py) | Runs one message through the urgent reply, the business's pages, the answer, and the price check. See [How the assistant works](docs/how-it-works.md). |
 | Client-facing | [scripts/demo_chat.py](scripts/demo_chat.py) | Serves a chat page that runs one message through the front desk. See [Try the demo](docs/how-it-works.md#try-the-demo). |

@@ -1,6 +1,6 @@
 # How the assistant works
 
-The assistant checks a message for an emergency, answers from the business's pages, and sends the reply only when every price matches those pages.
+The assistant checks a message for an emergency, answers from the business's pages, and sends the reply only when every price matches those pages and belongs to the service the customer asked about.
 
 ```mermaid
 flowchart LR
@@ -130,12 +130,13 @@ You see this check on the pull request as Answers come from your pages.
 
 ## 4 · Check every price
 
-*A price goes out only when the business's pages state that amount.*
+*A price goes out only when the business's pages state that amount, on the same page and near the service the customer asked about.*
 
 **What it does**
 
-- A price the pages state is kept only as it is written there.
-- Any other amount is replaced with the callback reply. An answer with no amount is left as it is, and an urgent message is still handled first.
+- A price is kept only as the pages write it, and only when it sits near that service on the same page.
+- Any other amount is replaced with the callback reply. That includes a price for a different service, and a price the pages don't state. An answer with no amount is left as it is, and an urgent message is still handled first.
+- Pass what the customer asked with `--asked`. Without it, the check only confirms that the amount is written on the pages.
 - An amount is read whole, so $1499 is not treated as $149. An answer of "A water heater is $1499." is replaced with the callback reply.
 - "We're at 149 Maple Street" is left as it is, because an address is not a price.
 
@@ -143,23 +144,24 @@ You see this check on the pull request as Answers come from your pages.
 
 ```
 python3 scripts/price_reply.py 'A drain cleaning is $149.'
-python3 scripts/price_reply.py 'The call-out fee is 99 dollars.'
+python3 scripts/price_reply.py --asked 'How much is a drain cleaning?' 'A drain cleaning is $149.'
+python3 scripts/price_reply.py --asked 'How much is a drain cleaning?' 'The call-out fee is $99.'
 python3 scripts/price_reply.py 'A water heater replacement is $1,200.'
 ```
 
 | Answer | What you get |
 |---|---|
 | A drain cleaning is $149. | `A drain cleaning is $149.` |
-| The call-out fee is 99 dollars. | The callback reply |
+| A drain cleaning is $149, asked about a drain cleaning. | `A drain cleaning is $149.` |
+| The call-out fee is $99, asked about a drain cleaning. | The callback reply |
 | A water heater replacement is $1,200. | The callback reply |
 
-*Good to know.* "99 dollars" does not match "$99". Pricing does not list a water heater replacement.
+*Good to know.* "99 dollars" does not match "$99". The call-out fee is a real price, and it still gets the callback reply when the customer asked about a drain cleaning. Pricing does not list a water heater replacement.
 
-*Pull request checks:* **Prices come only from your pages**. **A longer price isn't mistaken for a shorter one**.
+*Pull request checks:* **Prices come only from your pages**. **A longer price isn't mistaken for a shorter one**. **A price belongs to the service asked about**.
 
 ## Still to come
 
-- **Matching each price to the right service.** A published amount is kept. The check does not yet confirm that the amount belongs to the service in the question.
 - **More ways of writing prices.** Today "99 dollars" and "$149.00" get the callback reply, and "250 bucks" isn't read as a price.
 - **The owner's OK** on the 15 test questions and urgent words, already written in [What we've agreed](agreements.md).
 
@@ -193,6 +195,7 @@ Each check prints ok, and the run ends with OK. The same checks run on every pul
 - Urgent words
 - A frozen pipe
 - Prices
+- A price belongs to the service
 - Answers
 - The demo chat
 
