@@ -20,6 +20,7 @@ SCRIPTS = ROOT / "scripts"
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
+import front_desk
 import urgent_reply
 
 AGREEMENTS = ROOT / "docs" / "agreements.md"
@@ -239,6 +240,71 @@ class UrgentReplyChecks(unittest.TestCase):
         stderr = io.StringIO()
         with contextlib.redirect_stderr(stderr):
             self.assertEqual(urgent_reply.main([]), 2)
+
+    def test_water_everywhere_basement_and_leak_get_the_fixed_reply(self):
+        """Water everywhere, a basement, and a leak each get the fixed reply."""
+        reply = blockquote_reply()
+        listed = [word.casefold() for word in quoted_urgent_words()]
+        messages = {
+            "water everywhere": "There is water everywhere in the kitchen",
+            "basement": "The basement is filling up",
+            "leak": "I have a leak under the sink",
+        }
+        for word, message in messages.items():
+            self.assertIn(word, listed, word)
+            self.assertEqual(urgent_reply.reply_if_urgent(message), reply, message)
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                code = urgent_reply.main([message])
+            self.assertEqual(code, 0, message)
+            self.assertEqual(stdout.getvalue(), reply + "\n", message)
+        self.assertEqual(
+            urgent_reply.reply_if_urgent("My basement has water everywhere"),
+            reply,
+        )
+        self.assertEqual(
+            front_desk.reply_to("My basement has water everywhere"),
+            reply,
+        )
+
+    def test_leaking_gets_the_call_now_reply_and_a_leaky_faucet_does_not(self):
+        """Leaking gets the call-now reply. I have a leaky faucet does not."""
+        reply = blockquote_reply()
+        for message in ("leaking", "The pipe is leaking", "It is LEAKING!"):
+            self.assertEqual(urgent_reply.reply_if_urgent(message), reply, message)
+            self.assertEqual(front_desk.reply_to(message), reply, message)
+            stdout = io.StringIO()
+            with contextlib.redirect_stdout(stdout):
+                code = urgent_reply.main([message])
+            self.assertEqual(code, 0, message)
+            self.assertEqual(stdout.getvalue(), reply + "\n", message)
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            code = urgent_reply.main(["I have a leaky faucet"])
+        self.assertEqual(code, 0)
+        self.assertEqual(stdout.getvalue(), urgent_reply.NOT_URGENT + "\n")
+        self.assertIsNone(urgent_reply.reply_if_urgent("I have a leaky faucet"))
+        self.assertIsNone(urgent_reply.reply_if_urgent("a leaky faucet"))
+        named = (
+            "## Urgent messages\n\n"
+            "A message that mentions a **drip** (also dripping) gets exactly this:\n\n"
+            "> Please call the owner.\n"
+        )
+        self.assertEqual(
+            urgent_reply.reply_if_urgent("The tap is dripping", text=named),
+            "Please call the owner.",
+        )
+        self.assertIsNone(urgent_reply.reply_if_urgent("The tap is drippy", text=named))
+        plain = (
+            "## Urgent messages\n\n"
+            "A message that mentions a **drip** gets exactly this:\n\n"
+            "> Please call the owner.\n"
+        )
+        self.assertEqual(
+            urgent_reply.reply_if_urgent("I have a drip", text=plain),
+            "Please call the owner.",
+        )
+        self.assertIsNone(urgent_reply.reply_if_urgent("The tap is dripping", text=plain))
 
 
 if __name__ == "__main__":
