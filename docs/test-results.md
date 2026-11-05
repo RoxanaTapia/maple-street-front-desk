@@ -56,7 +56,7 @@ These were not sent to the live demo. The automatic checks ran them with the sta
 
 ## What the automatic checks cover
 
-`python3 scripts/run_checks.py` runs 50 checks.
+`python3 scripts/run_checks.py` runs 51 checks.
 
 **Your pages (8):** The six practice pages are read, with the words a visitor sees, the agreed phone number, and a note when a page cannot be opened.
 
@@ -65,6 +65,8 @@ These were not sent to the live demo. The automatic checks ran them with the sta
 **Prices (10):** A price is kept only when the pages state that amount, on the same page and near the service the customer asked about. A price for a different service, or a made-up price, is replaced with the callback reply. A longer amount is not read as a shorter one, and an address or a phone number is not a price.
 
 **Answers (13):** A question the pages cover gets a short answer that ends with the page it used, and a question they do not cover, or a failed call, gets the callback reply.
+
+**Failed calls (1):** A failed call still gets the callback reply, and a note records the time and the kind of error, with no message and no key.
 
 **The demo chat (5):** The chat page says it is a demo, shows the reply as text, keeps the Claude key off the page, and sends when Enter is pressed.
 

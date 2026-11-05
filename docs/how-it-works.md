@@ -92,7 +92,7 @@ python3 scripts/read_pages.py
 - The instructions include the text of the business's pages, all six of them, plus the callback reply. They say to answer only from these pages, keep it short, and end with From and the page name.
 - Claude writes the answer when `ANTHROPIC_API_KEY` is set, and reads all six pages for every question. With no key, a stand-in answers the agreed test questions, and it answers "What are your hours?" from the Hours & FAQ page. The stand-in is not a real AI.
 - A page-based answer ends with From and the page name, for example From Hours & FAQ. The urgent reply and the callback reply are left as they are.
-- If the call fails, the customer gets the callback reply. An amount the pages don't state is still replaced by the callback reply.
+- If the call fails, the customer still gets the callback reply, and a short note is kept for the owner. Where to find it is in the [setup guide](setup-guide.md#questions). An amount the pages don't state is still replaced by the callback reply.
 - The 15 questions in [The 15 test questions](agreements.md#the-15-test-questions) each name a page, use the fixed urgent reply, or offer a callback.
 - Septic systems, being licensed and insured, and after-hours callouts are answered from the Hours & FAQ page. The after-hours question is not urgent, so it gets that page's answer.
 
@@ -133,7 +133,7 @@ The answer is short and names the page. `CLAUDE_MODEL` is optional, and the defa
 
 You see this check on the pull request as Answers come from your pages.
 
-*Pull request checks:* **Answers come from your pages**. **Claude writes the answer**. **Questions 13 to 15 come from Hours and FAQ**.
+*Pull request checks:* **Answers come from your pages**. **Claude writes the answer**. **A failed call is noted for the owner**. **Questions 13 to 15 come from Hours and FAQ**.
 
 ## 4 · Check every price
 
@@ -204,6 +204,7 @@ Each check prints ok, and the run ends with OK. The same checks run on every pul
 - Prices
 - A price belongs to the service
 - Answers
+- A failed call is noted
 - The demo chat
 
 </details>
