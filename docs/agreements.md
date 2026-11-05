@@ -10,7 +10,7 @@ The main line is **(856) 555-0142**. Carla is the person to reach with questions
 
 ## Urgent messages
 
-A message that mentions **no heat**, a **burst pipe**, **flooding**, or a **frozen pipe** gets exactly this reply, and nothing else:
+A message that mentions **no heat**, a **burst pipe**, **flooding**, a **frozen pipe**, **water everywhere**, a **basement**, or a **leak** (also leaking) gets exactly this reply, and nothing else:
 
 > This sounds urgent. Please call us now on (856) 555-0142.
 

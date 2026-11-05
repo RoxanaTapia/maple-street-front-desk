@@ -31,6 +31,9 @@ flowchart LR
 - Reads the urgent words in [Urgent messages](agreements.md#urgent-messages), and the reply that goes with them.
 - When one of those words is present, the customer gets only the fixed urgent reply. The pages are not read.
 - A frozen pipe is one of those words, so a message such as "I think I have a frozen pipe" gets only the fixed urgent reply.
+- Water everywhere, a basement, and a leak are urgent words too. "My basement has water everywhere" gets only the fixed urgent reply.
+- A spelling named beside a word counts as that word. Leak also covers leaking, so "The pipe is leaking" gets only the fixed urgent reply.
+- "I have a leaky faucet" does not use an urgent word, so it is left for the next part.
 - A normal question is left for the next part.
 - A question about after-hours emergency callouts is not urgent. It uses none of the urgent words, so the pages are read and the Hours & FAQ page answers it.
 
@@ -38,17 +41,21 @@ flowchart LR
 
 ```
 python3 scripts/urgent_reply.py 'I have a burst pipe'
-python3 scripts/urgent_reply.py 'I think I have a frozen pipe'
+python3 scripts/urgent_reply.py 'My basement has water everywhere'
+python3 scripts/urgent_reply.py 'The pipe is leaking'
+python3 scripts/urgent_reply.py 'I have a leaky faucet'
 python3 scripts/urgent_reply.py 'Are you open Saturdays?'
 ```
 
 | Message | What you get |
 |---|---|
 | I have a burst pipe | The fixed urgent reply |
-| I think I have a frozen pipe | The fixed urgent reply |
+| My basement has water everywhere | The fixed urgent reply |
+| The pipe is leaking | The fixed urgent reply |
+| I have a leaky faucet | `This message is not urgent.` |
 | Are you open Saturdays? | `This message is not urgent.` |
 
-*Good to know.* The phone number in the fixed urgent reply is not a price. A plural such as "frozen pipes" is left for the next part. The same is true of "burst pipes".
+*Good to know.* The phone number in the fixed urgent reply is not a price. A plural such as "frozen pipes" is left for the next part. The same is true of "burst pipes". "I have a leaky faucet" is not urgent. The owner can decide whether that should stay as it is.
 
 *Pull request checks:* **Urgent messages get the fixed reply**
 
