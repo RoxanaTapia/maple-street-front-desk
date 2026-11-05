@@ -545,6 +545,88 @@ class ServicePriceChecks(unittest.TestCase):
         self.assertEqual(stdout.getvalue(), callback + "\n")
         self.assertNotIn(invented, stdout.getvalue())
 
+    def test_a_wrong_price_from_the_customer_is_corrected(self):
+        """A drain cleaning is 200 gets the price written on the page."""
+        question = "A drain cleaning is 200?"
+        correct = "A drain cleaning is $149. From Pricing."
+        self.assertEqual(price_reply.service_words(question), ["drain", "cleaning"])
+        self.assertIn("$149", price_reply.published_amounts(self.site.base))
+        pages = read_pages.read_pages(self.site.base)
+        self.assertTrue(
+            any(
+                price_reply.price_is_near_service(page.get("text") or "", "$149", ["drain", "cleaning"])
+                for page in pages
+            )
+        )
+        self.assertEqual(self._ask(question, correct), correct)
+        self.assertEqual(
+            price_reply.answer_for(question, "A drain cleaning is $149.", base_url=self.site.base),
+            "A drain cleaning is $149.",
+        )
+        # The stand-in writes the answer. No live call is made.
+        got = front_desk.reply_to(
+            question,
+            base_url=self.site.base,
+            writer=answer_reply.stand_in_writer,
+        )
+        self.assertEqual(got, correct)
+        self.assertNotIn("200", got)
+        self.assertNotIn("$200", got)
+        self.assertNotEqual(got, self._callback())
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            code = price_reply.main(["--asked", question, correct, self.site.base])
+        self.assertEqual(code, 0)
+        self.assertEqual(stdout.getvalue(), correct + "\n")
+
+    def test_a_confirmed_wrong_price_is_replaced(self):
+        """Yes, a drain cleaning is $200 gets the callback reply."""
+        question = "A drain cleaning is 200?"
+        callback = self._callback()
+        confirmed = "Yes, a drain cleaning is $200."
+        got = self._ask(question, confirmed)
+        self.assertEqual(got, callback)
+        self.assertNotIn("$200", got)
+        self.assertNotIn("$149", got)
+        # The question names the same wrong amount. It is still not exempt.
+        self.assertEqual(self._ask("A drain cleaning is $200?", confirmed), callback)
+        repeated = "No, a drain cleaning is $149, not $200. From Pricing."
+        self.assertEqual(self._ask(question, repeated), callback)
+        self.assertEqual(
+            price_reply.answer_for(question, confirmed, base_url=self.site.base),
+            callback,
+        )
+
+        def confirm_the_wrong_price(question_arg, instructions, pages):
+            return "Yes, a drain cleaning is $200. From Pricing."
+
+        customer = front_desk.reply_to(
+            question,
+            base_url=self.site.base,
+            writer=confirm_the_wrong_price,
+        )
+        self.assertEqual(customer, callback)
+        self.assertNotIn("$200", customer)
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            code = price_reply.main(["--asked", question, confirmed, self.site.base])
+        self.assertEqual(code, 0)
+        self.assertEqual(stdout.getvalue(), callback + "\n")
+
+    def test_the_instructions_correct_a_wrong_price(self):
+        """The instructions say to correct a wrong price without repeating it."""
+        question = "A drain cleaning is 200?"
+        pages = read_pages.read_pages(self.site.base)
+        rule = (
+            "When the customer states a price that differs from the pages, "
+            "correct them by giving the price from the pages, and do not repeat "
+            "the customer's amount."
+        )
+        instructions = answer_reply.build_instructions(question, pages)
+        self.assertEqual(answer_reply.CORRECT_A_WRONG_PRICE, rule)
+        self.assertIn(rule, instructions)
+        self.assertIn(question, instructions)
+
 
 if __name__ == "__main__":
     unittest.main()
