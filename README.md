@@ -37,13 +37,13 @@ flowchart LR
     four -->|unknown price| back([We'll call you back])
 ```
 
-An emergency is caught first. A price is checked last, and an unpublished number does not go out.
+An emergency is caught first. A price is checked last. A number the pages don't state, or a price for a different service, does not go out.
 
 ## Where we are
 
 - ✅ **Reads the pages:** all six, with the words a visitor actually sees.
 - ✅ **Spots emergencies:** the urgent words get the fixed reply, right away.
-- ✅ **Guards every price:** an amount that isn't on the business's pages is swapped for the callback reply.
+- ✅ **Guards every price:** an amount is kept only when the pages state it near the service asked about. Any other amount is swapped for the callback reply.
 - ✅ **Writes the answer:** a short reply from the business's pages.
 - ✅ **Demo chat:** a page to try the same replies, from a link.
 - ✅ **Handover:** [a simple guide for running it](docs/setup-guide.md).

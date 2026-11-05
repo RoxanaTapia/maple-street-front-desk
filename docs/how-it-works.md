@@ -1,6 +1,6 @@
 # How the assistant works
 
-The assistant checks a message for an emergency, answers from the business's pages, and sends the reply only when every price matches those pages.
+The assistant checks a message for an emergency, answers from the business's pages, and sends the reply only when every price matches those pages and belongs to the service the customer asked about.
 
 ```mermaid
 flowchart LR
@@ -89,8 +89,8 @@ python3 scripts/read_pages.py
 
 - A question the pages answer gets a short answer that names the page.
 - A question the pages don't cover gets the callback reply from [When the pages don't say](agreements.md#when-the-pages-dont-say).
-- The instructions include the text of the business's pages, all six of them, plus the callback reply. They say to answer only from these pages, keep it short, and end with From and the page name.
-- Claude writes the answer when `ANTHROPIC_API_KEY` is set, and reads all six pages for every question. With no key, a stand-in answers the agreed test questions, and it answers "What are your hours?" from the Hours & FAQ page. The stand-in is not a real AI.
+- The instructions include the text of the business's pages, all six of them, plus the callback reply. They say to answer only from these pages, keep it short, and end with From and the page name. When the customer states a different price, they say to give the price from the pages and not repeat the customer's amount.
+- Claude writes the answer when `ANTHROPIC_API_KEY` is set, and reads all six pages for every question. With no key, a stand-in answers the agreed test questions, and it answers "What are your hours?" from the Hours & FAQ page. A wrong price the customer states is answered with the price on the pages, and their amount is left out. The stand-in is not a real AI.
 - A page-based answer ends with From and the page name, for example From Hours & FAQ. The urgent reply and the callback reply are left as they are.
 - If the call fails, the customer still gets the callback reply, and a short note is kept for the owner. Where to find it is in the [setup guide](setup-guide.md#questions). An amount the pages don't state is still replaced by the callback reply.
 - The 15 questions in [The 15 test questions](agreements.md#the-15-test-questions) each name a page, use the fixed urgent reply, or offer a callback.
@@ -137,12 +137,14 @@ You see this check on the pull request as Answers come from your pages.
 
 ## 4 · Check every price
 
-*A price goes out only when the business's pages state that amount.*
+*A price goes out only when the business's pages state that amount, on the same page and near the service the customer asked about.*
 
 **What it does**
 
-- A price the pages state is kept only as it is written there.
-- Any other amount is replaced with the callback reply. An answer with no amount is left as it is, and an urgent message is still handled first.
+- A price is kept only as the pages write it, and only when it sits near that service on the same page.
+- Any other amount is replaced with the callback reply. That includes a price for a different service, and a price the pages don't state. An answer with no amount is left as it is, and an urgent message is still handled first.
+- When the customer states a wrong price, the answer gives the price from the pages and does not repeat the customer's amount.
+- Pass what the customer asked with `--asked`. Without it, the check only confirms that the amount is written on the pages.
 - An amount is read whole, so $1499 is not treated as $149. An answer of "A water heater is $1499." is replaced with the callback reply.
 - "We're at 149 Maple Street" is left as it is, because an address is not a price.
 
@@ -150,23 +152,24 @@ You see this check on the pull request as Answers come from your pages.
 
 ```
 python3 scripts/price_reply.py 'A drain cleaning is $149.'
-python3 scripts/price_reply.py 'The call-out fee is 99 dollars.'
+python3 scripts/price_reply.py --asked 'How much is a drain cleaning?' 'A drain cleaning is $149.'
+python3 scripts/price_reply.py --asked 'How much is a drain cleaning?' 'The call-out fee is $99.'
 python3 scripts/price_reply.py 'A water heater replacement is $1,200.'
 ```
 
 | Answer | What you get |
 |---|---|
 | A drain cleaning is $149. | `A drain cleaning is $149.` |
-| The call-out fee is 99 dollars. | The callback reply |
+| A drain cleaning is $149, asked about a drain cleaning. | `A drain cleaning is $149.` |
+| The call-out fee is $99, asked about a drain cleaning. | The callback reply |
 | A water heater replacement is $1,200. | The callback reply |
 
-*Good to know.* "99 dollars" does not match "$99". Pricing does not list a water heater replacement.
+*Good to know.* "99 dollars" does not match "$99". The call-out fee is a real price, and it still gets the callback reply when the customer asked about a drain cleaning. Pricing does not list a water heater replacement.
 
-*Pull request checks:* **Prices come only from your pages**. **A longer price isn't mistaken for a shorter one**.
+*Pull request checks:* **Prices come only from your pages**. **A longer price isn't mistaken for a shorter one**. **A price belongs to the service asked about**.
 
 ## Still to come
 
-- **Matching each price to the right service.** A published amount is kept. The check does not yet confirm that the amount belongs to the service in the question.
 - **More ways of writing prices.** Today "99 dollars" and "$149.00" get the callback reply, and "250 bucks" isn't read as a price.
 - **The owner's OK** on the 15 test questions and urgent words, already written in [What we've agreed](agreements.md).
 
@@ -200,6 +203,7 @@ Each check prints ok, and the run ends with OK. The same checks run on every pul
 - Urgent words
 - A frozen pipe
 - Prices
+- A price belongs to the service
 - Answers
 - A failed call is noted
 - The demo chat

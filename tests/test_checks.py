@@ -67,6 +67,7 @@ class ProjectChecks(unittest.TestCase):
             "tests/test_urgent.py:UrgentReplyChecks",
             "tests/test_prices.py:PriceChecks",
             "tests/test_prices.py:LongerPriceChecks",
+            "tests/test_prices.py:ServicePriceChecks",
             "tests/test_answers.py:AnswerChecks",
             "tests/test_answers.py:ClaudeAnswerChecks",
             "tests/test_answers.py:FailureNoteChecks",

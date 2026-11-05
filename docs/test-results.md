@@ -56,13 +56,13 @@ These were not sent to the live demo. The automatic checks ran them with the sta
 
 ## What the automatic checks cover
 
-`python3 scripts/run_checks.py` runs 48 checks.
+`python3 scripts/run_checks.py` runs 54 checks.
 
 **Your pages (8):** The six practice pages are read, with the words a visitor sees, the agreed phone number, and a note when a page cannot be opened.
 
 **Urgent problems (9):** Each urgent word, in any capitalisation, gets the call-now reply and nothing else. Water everywhere, a basement, and a leak are included. Leaking gets that reply. "I have a leaky faucet" does not. A normal question does not.
 
-**Prices (7):** A price is kept only when the pages state that amount as written, a longer amount is not read as a shorter one, and an address or a phone number is not a price.
+**Prices (13):** A price is kept only when the pages state that amount, on the same page and near the service the customer asked about. When the customer states a different price, the answer gives the price from the pages and does not repeat their amount. A price for a different service, a made-up price, or a reply that repeats the wrong price, is replaced with the callback reply. A longer amount is not read as a shorter one, and an address or a phone number is not a price.
 
 **Answers (13):** A question the pages cover gets a short answer that ends with the page it used, and a question they do not cover, or a failed call, gets the callback reply.
 
