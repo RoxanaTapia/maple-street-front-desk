@@ -78,7 +78,8 @@ Urgent messages use no AI. See your exact costs on your Anthropic usage page. Ho
 
 **What if Claude is down or the key expires?**
 The customer gets the callback reply, so they're never left without an answer.
-A note so you hear about it is planned as a next step (#31).
+Each failure adds a line to `logs/claude-failures.log` on the computer that runs the assistant: the time and the kind of error, with no customer message and no key.
+A warning with the kind of error is also printed where the assistant is running.
 
 ## Handing over the code
 

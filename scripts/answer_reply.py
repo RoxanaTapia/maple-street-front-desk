@@ -9,7 +9,8 @@ pages don't cover the question. The text of every page is included.
 When ANTHROPIC_API_KEY is set, Claude writes the answer through the
 Messages API. A small, fast model is used unless CLAUDE_MODEL names
 another one. If that call fails, the callback reply is used instead of
-an error.
+an error, and a short note records when it happened and what kind of
+error it was. The customer's message and the key are not in that note.
 
 With no key, a stand-in answers the agreed test questions. The stand-in
 is not a real AI, and it does not call one. The checks use that path.
@@ -21,10 +22,13 @@ site prints by default.
 """
 
 import json
+import logging
 import os
 import re
 import sys
+import urllib.error
 import urllib.request
+from datetime import datetime, timezone
 from pathlib import Path
 
 import read_pages
@@ -86,6 +90,9 @@ MESSAGES_URL = "https://api.anthropic.com/v1/messages"
 API_VERSION = "2023-06-01"
 # Short on purpose: a failed or hung call must not leave the customer waiting.
 TIMEOUT_SECONDS = 15
+# The owner reads this on the computer that runs the assistant. It is not
+# part of the repo. The line is the time and the kind of error only.
+FAILURE_LOG = ROOT / "logs" / "claude-failures.log"
 MAX_TOKENS = 1024
 USAGE = (
     'Usage: python3 scripts/answer_reply.py "customer question" [site address]\n'
@@ -486,6 +493,55 @@ def _post_message(payload, key, timeout):
     return json.loads(raw)
 
 
+def _failure_kind(error):
+    """Return a fixed label for a failed Claude call.
+
+    The label is chosen from the kind of failure. The customer message
+    and the key are not read, and they are not part of the label.
+    """
+    if isinstance(error, TimeoutError):
+        return "timeout"
+    if isinstance(error, urllib.error.HTTPError):
+        code = error.code
+        if code in (401, 403):
+            return "key missing or expired"
+        if code == 408:
+            return "timeout"
+        if isinstance(code, int) and code >= 500:
+            return "Claude is down"
+        return "call failed"
+    if isinstance(error, urllib.error.URLError):
+        if isinstance(error.reason, TimeoutError):
+            return "timeout"
+        return "Claude is down"
+    if isinstance(error, ConnectionError):
+        return "Claude is down"
+    if type(error) is RuntimeError and error.args == ("missing key",):
+        return "key missing or expired"
+    if type(error) is ValueError and error.args == ("empty reply",):
+        return "empty reply"
+    return "call failed"
+
+
+def _note_call_failure(error):
+    """Record a failed Claude call for the owner.
+
+    The note is one line: when it happened, and what kind of error it
+    was. The same note is logged as a warning. The customer message and
+    the key are left out. A problem saving the note does not change the
+    reply the customer gets.
+    """
+    kind = _failure_kind(error)
+    when = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    try:
+        FAILURE_LOG.parent.mkdir(parents=True, exist_ok=True)
+        with FAILURE_LOG.open("a", encoding="utf-8") as handle:
+            handle.write(f"{when} {kind}\n")
+    except OSError:
+        logging.warning("The failure note could not be saved.")
+    logging.warning("Claude could not answer (%s).", kind)
+
+
 def _claude_reply(instructions, client=None):
     """Ask Claude with the instructions already built for this question.
 
@@ -521,7 +577,9 @@ def write_answer(question, pages, writer=None, text=None, client=None):
 
     With no writer, Claude writes the answer when ANTHROPIC_API_KEY is
     set, or when client is given. client is a stand-in for the HTTP call,
-    used by the checks. If the call fails, the callback reply is returned.
+    used by the checks. If the call fails, the callback reply is returned
+    and a short note records when it happened and what kind of error it
+    was. The customer's message and the key are not in that note.
     With no key and no client, the stand-in answers the agreed test questions.
 
     A page-based answer is rewritten so it ends with exactly
@@ -536,7 +594,11 @@ def write_answer(question, pages, writer=None, text=None, client=None):
     else:
         try:
             reply = _claude_reply(instructions, client=client)
-        except Exception:
+        except Exception as error:
+            try:
+                _note_call_failure(error)
+            except Exception:
+                logging.warning("Claude could not answer.")
             return callback
     return normalize_source_line(reply, pages, callback)
 
