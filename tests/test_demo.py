@@ -8,9 +8,13 @@ Run one area with
 python3 scripts/run_checks.py tests/test_demo.py:DemoChatChecks.
 """
 
+import contextlib
+import io
 import json
+import logging
 import os
 import sys
+import tempfile
 import threading
 import time
 import unittest
@@ -212,13 +216,20 @@ class DemoChatChecks(unittest.TestCase):
             self.assertEqual(status, 200, path)
             self.assertNotIn(secret, body, path)
             self.assertNotIn(secret, str(headers), path)
+        urgent = urgent_reply.fixed_urgent_reply()
+        outage = answer_reply.outage_reply()
+        missing = answer_reply.callback_reply()
         for message in ("I have a frozen pipe", "What are your hours?", "Do you sell pizza?"):
             status, headers, raw, parsed = self.demo.post(message, extra={"apiKey": secret})
             self.assertEqual(status, 200, message)
             self.assertNotIn(secret, raw, message)
             self.assertNotIn(secret, parsed["reply"], message)
             self.assertNotIn(secret, str(headers), message)
-        self.assertEqual(parsed["reply"], answer_reply.callback_reply())
+            if message == "I have a frozen pipe":
+                self.assertEqual(parsed["reply"], urgent, message)
+            else:
+                self.assertEqual(parsed["reply"], outage, message)
+                self.assertNotEqual(parsed["reply"], missing, message)
         for name in ("demo/index.html", "demo/style.css", "demo/chat.js", "scripts/demo_chat.py"):
             text = (ROOT / name).read_text(encoding="utf-8")
             self.assertNotIn(secret, text, name)
@@ -226,6 +237,128 @@ class DemoChatChecks(unittest.TestCase):
         source = (ROOT / "scripts" / "demo_chat.py").read_text(encoding="utf-8")
         self.assertNotIn("print(os.environ", source)
         self.assertIn("def log_message", source)
+
+    def test_a_demo_lookup_failure_gets_the_outage_reply(self):
+        """A demo crash, a blank reply, or a reply with the key gets the outage reply."""
+        outage = answer_reply.outage_reply()
+        missing = answer_reply.callback_reply()
+        self.assertNotEqual(outage, missing)
+        token = "maple-street-customer-token"
+        secret = "demo-key-should-stay-on-the-server"
+        self.assertGreaterEqual(len(secret), demo_chat._KEY_MIN)
+        self.assertNotIn("ANTHROPIC_API_KEY", os.environ)
+        saved_log = answer_reply.FAILURE_LOG
+        log_dir = tempfile.TemporaryDirectory()
+        answer_reply.FAILURE_LOG = Path(log_dir.name) / "claude-failures.log"
+        notes = []
+
+        class _Grab(logging.Handler):
+            def emit(self, record):
+                notes.append(record.getMessage())
+
+        grab = _Grab()
+        logging.getLogger().addHandler(grab)
+        stderr = io.StringIO()
+        original_reply = front_desk.reply_to
+        original_post = demo_chat.DemoHandler._post
+        try:
+            with contextlib.redirect_stderr(stderr):
+                raw, got = self._reply("Do you sell pizza?")
+                self.assertEqual(got, missing)
+                self.assertNotEqual(got, outage)
+                self.assertNotIn(token, raw)
+                raw, got = self._reply("How much is a water heater replacement?")
+                self.assertEqual(got, missing)
+                self.assertNotEqual(got, outage)
+                self.assertNotIn("$", got)
+
+                def invented(payload, key, timeout):
+                    self.assertEqual(key, secret)
+                    self.assertNotIn(secret, json.dumps(payload))
+                    self.assertNotIn(token, json.dumps(payload))
+                    return {
+                        "content": [
+                            {"type": "text", "text": "A water heater replacement is $1,200."}
+                        ]
+                    }
+
+                answer_reply._post_message = invented
+                os.environ["ANTHROPIC_API_KEY"] = secret
+                raw, got = self._reply("How much is a water heater replacement?")
+                self.assertEqual(got, missing)
+                self.assertNotEqual(got, outage)
+                self.assertNotIn("$1,200", raw)
+                self.assertNotIn(secret, raw)
+                os.environ.pop("ANTHROPIC_API_KEY", None)
+                answer_reply._post_message = self._post
+
+                def boom(message, base_url=None, writer=None, client=None):
+                    raise RuntimeError(f"{message} {secret}")
+
+                front_desk.reply_to = boom
+                status, headers, raw, parsed = self.demo.post(token)
+                self._assert_outage(status, headers, raw, parsed, outage, missing, token, secret)
+                front_desk.reply_to = original_reply
+
+                for bad in ("", "   ", None, 0, {"text": token}):
+                    def blank(message, base_url=None, writer=None, client=None, value=bad):
+                        return value
+
+                    front_desk.reply_to = blank
+                    status, headers, raw, parsed = self.demo.post(token)
+                    self._assert_outage(status, headers, raw, parsed, outage, missing, token, secret)
+                front_desk.reply_to = original_reply
+
+                os.environ["ANTHROPIC_API_KEY"] = secret
+
+                def leak(message, base_url=None, writer=None, client=None):
+                    return f"The pages say {secret} about {message}"
+
+                front_desk.reply_to = leak
+                status, headers, raw, parsed = self.demo.post(token)
+                self._assert_outage(status, headers, raw, parsed, outage, missing, token, secret)
+                front_desk.reply_to = original_reply
+                os.environ.pop("ANTHROPIC_API_KEY", None)
+
+                def explode(self):
+                    raise RuntimeError(f"{token} {secret}")
+
+                demo_chat.DemoHandler._post = explode
+                status, headers, raw, parsed = self.demo.post(token)
+                self._assert_outage(status, headers, raw, parsed, outage, missing, token, secret)
+                demo_chat.DemoHandler._post = original_post
+
+                raw, got = self._reply("Do you sell pizza?")
+                self.assertEqual(got, missing)
+                self.assertNotEqual(got, outage)
+        finally:
+            front_desk.reply_to = original_reply
+            demo_chat.DemoHandler._post = original_post
+            answer_reply._post_message = self._post
+            os.environ.pop("ANTHROPIC_API_KEY", None)
+            logging.getLogger().removeHandler(grab)
+            answer_reply.FAILURE_LOG = saved_log
+            if (Path(log_dir.name) / "claude-failures.log").exists():
+                recorded = (Path(log_dir.name) / "claude-failures.log").read_text(encoding="utf-8")
+                self.assertNotIn(token, recorded)
+                self.assertNotIn(secret, recorded)
+            log_dir.cleanup()
+        logged = "\n".join(notes) + stderr.getvalue()
+        self.assertNotIn(token, logged)
+        self.assertNotIn(secret, logged)
+        source = (ROOT / "scripts" / "demo_chat.py").read_text(encoding="utf-8")
+        self.assertNotIn("logging", source)
+        self.assertNotIn(secret, source)
+        self.assertNotIn(token, source)
+
+    def _assert_outage(self, status, headers, raw, parsed, outage, missing, token, secret):
+        self.assertEqual(status, 200)
+        self.assertEqual(parsed, {"reply": outage})
+        self.assertNotEqual(parsed["reply"], missing)
+        self.assertNotIn(token, raw)
+        self.assertNotIn(secret, raw)
+        self.assertNotIn(token, str(headers))
+        self.assertNotIn(secret, str(headers))
 
     def test_the_address_comes_from_the_environment(self):
         """The demo listens on the host and port from the environment."""

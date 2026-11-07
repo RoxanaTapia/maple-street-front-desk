@@ -56,6 +56,8 @@ These were not sent to the live demo. The automatic checks ran them with the sta
 
 ## What the automatic checks cover
 
+Historical record only. This whole section is how the checks read on Wednesday, Nov 4, 2026, not how they read now. It keeps that day's count of 54 checks, and that day's line that a failed call got the callback reply.
+
 `python3 scripts/run_checks.py` runs 54 checks.
 
 **Your pages (8):** The six practice pages are read, with the words a visitor sees, the agreed phone number, and a note when a page cannot be opened.
