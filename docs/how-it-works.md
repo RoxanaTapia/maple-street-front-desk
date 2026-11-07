@@ -221,6 +221,6 @@ python3 scripts/demo_chat.py
 
 It prints `Demo chat at http://127.0.0.1:8080`. Open that address. The page says: This is a demo. It answers only from Maple Street's pages. Type a message and the reply comes back. The sample site starts with it, so there is nothing else to run. Stop it with Ctrl+C.
 
-`DEMO_HOST` and `DEMO_PORT` choose the address. The default is local. The names are listed in [.env.example](../.env.example). The Claude key is set on the machine that runs the assistant. It isn't written into the repo or shown in replies.
+`DEMO_HOST` and `DEMO_PORT` choose the address. The default is local. The names are listed in [.env.example](../.env.example). The Claude key is set on the machine that runs the assistant. It isn't written into the repo or shown in replies. A crash, a blank reply, or a reply that would show the key is replaced with the outage reply. A missing fact, and a price the pages don't state, stay the callback reply.
 
 *Pull request checks:* **The demo chat gives the same replies**

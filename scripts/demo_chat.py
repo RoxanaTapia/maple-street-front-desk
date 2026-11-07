@@ -78,19 +78,20 @@ def _json_bytes(payload):
 def safe_reply(message, base_url):
     """Return the front-desk reply, with the key kept off the page.
 
-    A failed call is already the outage reply. Any other failure becomes
-    the callback reply. A reply that contains the key becomes the
-    callback reply too, so the key is not sent on.
+    A crash, a blank reply, or a reply that contains the key becomes
+    the outage reply. The key and the customer message are not logged
+    and are not sent on. A fact the pages don't cover stays the
+    callback reply.
     """
     try:
         reply = front_desk.reply_to(message, base_url=base_url)
     except Exception:
-        reply = answer_reply.callback_reply()
+        return answer_reply.outage_reply()
     if not isinstance(reply, str) or not reply.strip():
-        return answer_reply.callback_reply()
+        return answer_reply.outage_reply()
     key = os.environ.get(answer_reply.KEY_ENV, "").strip()
     if key and len(key) >= _KEY_MIN and key in reply:
-        return answer_reply.callback_reply()
+        return answer_reply.outage_reply()
     return reply
 
 
@@ -134,7 +135,7 @@ class DemoHandler(BaseHTTPRequestHandler):
         try:
             self._post()
         except Exception:
-            self._send_json(200, {"reply": answer_reply.callback_reply()})
+            self._send_json(200, {"reply": answer_reply.outage_reply()})
 
     def _post(self):
         path = unquote(urlsplit(self.path).path)

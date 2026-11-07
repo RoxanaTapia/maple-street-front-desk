@@ -51,7 +51,7 @@ export ANTHROPIC_API_KEY='...'
 Each page name needs the same link text in `sample-site/index.html`.
 A line that is only bold is a group name, and `from` plus a page name picks the page.
 
-The stand-in reads your test questions. Claude reads your pages and the callback sentence, not that list. The outage sentence is used only when a call fails.
+The stand-in reads your test questions. Claude reads your pages and the callback sentence, not that list. The outage sentence is used when a call fails, and when the demo cannot safely show a reply.
 
 ## Check it still works
 
