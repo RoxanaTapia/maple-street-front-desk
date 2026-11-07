@@ -432,28 +432,184 @@ def _correct_stated_price(question, pages, instructions):
     return None
 
 
-def _direct_price_reply(question, reply, pages, instructions):
-    """Speak the page sentence when a correction talks about the customer.
+# Words that can sit in a note about the person and do not add a fact.
+# A sentence is dropped only when every other word is already in the
+# rest of the reply, so a separate fact is kept.
+_NARRATION_WORDS = frozenset(
+    {
+        "about",
+        "amount",
+        "amounts",
+        "been",
+        "figure",
+        "gave",
+        "given",
+        "had",
+        "has",
+        "price",
+        "prices",
+        "quoted",
+        "said",
+        "says",
+        "stated",
+        "their",
+        "them",
+        "they",
+        "was",
+        "were",
+        "wrong",
+    }
+)
 
-    A front-desk reply speaks to the person. When the question states a
-    different price and the draft says "the customer", this returns the
-    sentence on the page. A draft that repeats their amount is left as
-    it is, so the price check can reject it. A draft that already speaks
-    directly is left as it is.
+
+def _folded(text):
+    return " ".join(text.casefold().split())
+
+
+def _sentences(text):
+    """Return the sentences in text, with the end mark kept."""
+    parts = []
+    start = 0
+    for mark in price_reply._SENTENCE_END.finditer(text):
+        piece = text[start : mark.end()].strip()
+        if piece:
+            parts.append(piece)
+        start = mark.end()
+    tail = text[start:].strip()
+    if tail:
+        parts.append(tail)
+    return parts
+
+
+def _content_words(sentence):
+    """Return words that could be a fact, ignoring a note about the person."""
+    words = []
+    for match in _WORD.finditer(sentence.casefold()):
+        word = match.group(0)
+        if word in _STOP or word in price_reply._NOT_A_SERVICE or word == "customer":
+            continue
+        if word in _NARRATION_WORDS:
+            continue
+        words.append(word)
+    return words
+
+
+def _mentions_the_customer(text):
+    return "the customer" in _folded(text)
+
+
+def _same_number(left, right):
+    return left is not None and right is not None and left == right
+
+
+def _page_price_number(direct):
+    amounts = price_reply.find_amounts(direct)
+    if len(amounts) != 1:
+        return None
+    return _price_number(amounts[0])
+
+
+def _draft_passes_price_check(question, reply, pages):
+    """True when the price check would let this exact draft through."""
+    checked = price_reply.checked_answer(reply, pages=pages, message=question)
+    return checked == reply
+
+
+def _agrees_without_the_page_price(reply, page_number):
+    """True when a draft agrees with the stated price and never gives the page price."""
+    numbers = _stated_price_numbers(reply)
+    if any(_same_number(number, page_number) for number in numbers):
+        return False
+    folded = _folded(reply)
+    if re.search(r"\byes\b", folded):
+        return True
+    if re.search(r"\b(is|are|was|were)\s+right\b", folded):
+        return True
+    return False
+
+
+def _repeats_stated_price(question, reply, page_number):
+    """True when the draft repeats the price from the question.
+
+    A bare number such as 200 counts. The price check does not see that
+    form, so it has to be caught here. The price on the page does not count.
     """
-    if not isinstance(reply, str):
+    stated = _stated_price_numbers(question)
+    for number in _stated_price_numbers(reply):
+        if _same_number(number, page_number):
+            continue
+        if any(_same_number(number, item) for item in stated):
+            return True
+    return False
+
+
+def _narration_sentence(sentence, kept_text):
+    """True when this sentence is only a note and its facts are already kept."""
+    if not _mentions_the_customer(sentence):
+        return False
+    if price_reply.find_amounts(sentence) or _stated_price_numbers(sentence):
+        return False
+    kept_words = set(_WORD.findall(kept_text.casefold()))
+    return all(word in kept_words for word in _content_words(sentence))
+
+
+def _without_narration(reply, page_number):
+    """Drop a note about the customer when the rest of the reply still stands.
+
+    The page sentence is not written in its place. A sentence that carries
+    a fact the rest of the reply does not already state is left as it is.
+    Returns the original reply when nothing can be dropped safely.
+    """
+    sentences = _sentences(reply)
+    if len(sentences) < 2:
         return reply
-    if "the customer" not in " ".join(reply.casefold().split()):
+    kept = []
+    dropped = False
+    for index, sentence in enumerate(sentences):
+        others = " ".join(part for other, part in enumerate(sentences) if other != index)
+        if _narration_sentence(sentence, others):
+            dropped = True
+            continue
+        kept.append(sentence)
+    if not dropped or not kept:
+        return reply
+    cleaned = " ".join(kept).strip()
+    if not any(_same_number(number, page_number) for number in _stated_price_numbers(cleaned)):
+        return reply
+    return cleaned
+
+
+def _direct_price_reply(question, reply, pages, instructions, callback):
+    """Shorten a note about the customer only when the draft is already safe.
+
+    The price check is applied to the original draft before anything is
+    removed. A draft that names another amount is left as it is, so that
+    check can reject it. A draft that agrees with the stated price, or
+    repeats that price without a dollar sign, becomes the callback reply.
+    It is not replaced with the price on the page. A draft that already
+    states only that price may lose a note that says "the customer", and
+    every other sentence stays.
+    """
+    if not isinstance(reply, str) or not _mentions_the_customer(reply):
         return reply
     direct = _correct_stated_price(question, pages, instructions)
-    if not direct:
+    if not isinstance(direct, str):
         return reply
-    stated = set(_stated_price_numbers(question))
-    for amount in price_reply.find_amounts(reply):
-        number = _price_number(amount)
-        if number is not None and number in stated:
-            return reply
-    return direct
+    page_number = _page_price_number(direct)
+    if page_number is None:
+        return reply
+    if not _draft_passes_price_check(question, reply, pages):
+        return reply
+    if _repeats_stated_price(question, reply, page_number):
+        return callback
+    if _agrees_without_the_page_price(reply, page_number):
+        return callback
+    if not any(_same_number(number, page_number) for number in _stated_price_numbers(reply)):
+        return reply
+    cleaned = _without_narration(reply, page_number)
+    if cleaned == reply or not _draft_passes_price_check(question, cleaned, pages):
+        return reply
+    return cleaned
 
 
 def build_instructions(question, pages, text=None):
@@ -704,8 +860,10 @@ def write_answer(question, pages, writer=None, text=None, client=None):
 
     A page-based answer is rewritten so it ends with exactly
     'From <Page name>.'. The callback reply is left as it is. A wrong-price
-    correction that talks about the customer is replaced with the sentence
-    on the page. A reply that repeats their amount is left for the price check.
+    note that already states only the page price may lose the words
+    "the customer", and the other sentences stay. A note that agrees with
+    the stated price, or names another amount, is not replaced with the
+    page price.
     """
     instructions = build_instructions(question, pages, text=text)
     callback = callback_reply(text)
@@ -723,7 +881,7 @@ def write_answer(question, pages, writer=None, text=None, client=None):
                 logging.warning("Claude could not answer.")
             return callback
     reply = normalize_source_line(reply, pages, callback)
-    return _direct_price_reply(question, reply, pages, instructions)
+    return _direct_price_reply(question, reply, pages, instructions, callback)
 
 
 def _split_site(args):
