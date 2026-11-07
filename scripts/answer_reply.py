@@ -16,7 +16,9 @@ With no key, a stand-in answers the agreed test questions. When the
 customer states a price that differs from the pages, the stand-in gives
 the price from the pages and does not repeat the customer's amount.
 The stand-in is not a real AI, and it does not call one. The checks use
-that path.
+that path. Quotes or markdown around the whole question are set aside
+before that comparison, so the same words get the same answer. A dollar
+sign, a decimal point, and a hyphen in the question stay as written.
 
 Usage: python3 scripts/answer_reply.py "customer question" [site address]
 
@@ -179,9 +181,52 @@ def _question_rows(body):
     return rows
 
 
+# Marks that only wrap a question. A dollar sign, a decimal point, and a
+# hyphen are not in this list, so a price and a hyphenated word stay.
+_SURROUNDING_PAIRS = {
+    '"': '"',
+    "'": "'",
+    "`": "`",
+    "*": "*",
+    "_": "_",
+    "(": ")",
+    "[": "]",
+    "“": "”",
+    "‘": "’",
+}
+
+
+def _without_surrounding_marks(value):
+    """Return the question without marks that only wrap it.
+
+    Quotes, markdown, and a question mark come off the outside, one
+    layer at a time. The words inside stay, including a dollar sign, a
+    decimal point, and a hyphen.
+    """
+    text = " ".join(value.split())
+    while text:
+        if text.endswith("?"):
+            text = text.rstrip("?").rstrip()
+            continue
+        if len(text) >= 2 and _SURROUNDING_PAIRS.get(text[0]) == text[-1]:
+            text = text[1:-1].strip()
+            continue
+        if text.startswith(">"):
+            text = text[1:].strip()
+            continue
+        if text.startswith("#"):
+            rest = text.lstrip("#")
+            if rest != text and (not rest or rest[:1].isspace()):
+                text = rest.strip()
+                continue
+        break
+    return text
+
+
 def _same_question(left, right):
     def norm(value):
-        return " ".join(value.casefold().split()).rstrip("?")
+        bare = _without_surrounding_marks(value)
+        return " ".join(bare.casefold().split()).rstrip("?")
 
     return norm(left) == norm(right)
 
@@ -499,7 +544,8 @@ def stand_in_writer(question, instructions, pages, text=None):
 
     It reads those questions from your agreements and answers one only
     when the named page's text is in the instructions and supports the
-    answer. A plain question about opening hours is answered from the
+    answer. Quotes or markdown around that question count as the same
+    question. A plain question about opening hours is answered from the
     Hours page the same way. When the customer states a price that
     differs from the pages, the answer is the price written beside that
     service, and the customer's amount is not repeated. Anything the
