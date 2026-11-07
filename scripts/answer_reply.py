@@ -4,7 +4,9 @@ This is part 3 of the path. It takes a customer question and the page
 text from the page reader, and it builds the instructions for the answer:
 answer only from these pages, keep it short, and end with From and the
 page name. It uses the callback sentence from the agreements when the
-pages don't cover the question. The text of every page is included.
+pages don't cover a plumbing question. A question that is not about
+plumbing gets the off-topic reply from the agreements, and neither
+Claude nor the stand-in is called. The text of every page is included.
 
 When ANTHROPIC_API_KEY is set, Claude writes the answer through the
 Messages API. A small, fast model is used unless CLAUDE_MODEL names
@@ -40,6 +42,7 @@ import read_pages
 ROOT = Path(__file__).resolve().parents[1]
 AGREEMENTS = ROOT / "docs" / "agreements.md"
 CALLBACK_HEADING = "When the pages don't say"
+OFF_TOPIC_HEADING = "Off-topic questions"
 QUESTIONS_HEADING = "The 15 test questions"
 ANSWERED_GROUP = "Answered by your pages"
 _CLOCK = re.compile(r"\d{1,2}:\d{2} am to \d{1,2}:\d{2} pm", re.IGNORECASE)
@@ -97,6 +100,101 @@ _STOP = frozenset(
         "please",
     }
 )
+# Words that keep a question on the plumbing path even when the pages
+# never use them. A missing fact then stays on the callback reply.
+# Pizza, the weather, and other unrelated words are not in this list.
+_ABOUT_THE_BUSINESS = frozenset(
+    {
+        "pipe",
+        "drain",
+        "toilet",
+        "faucet",
+        "sink",
+        "shower",
+        "tub",
+        "bath",
+        "bathroom",
+        "bathtub",
+        "sewer",
+        "septic",
+        "clog",
+        "unclog",
+        "boiler",
+        "heater",
+        "heating",
+        "furnace",
+        "water",
+        "leak",
+        "plumbing",
+        "plumber",
+        "disposal",
+        "disposer",
+        "pump",
+        "sump",
+        "valve",
+        "fixture",
+        "tank",
+        "tankless",
+        "radiator",
+        "spigot",
+        "hose",
+        "washer",
+        "garbage",
+        "flood",
+        "basement",
+        "frozen",
+        "hours",
+        "open",
+        "closed",
+        "saturday",
+        "sunday",
+        "monday",
+        "friday",
+        "appointment",
+        "book",
+        "cancel",
+        "warranty",
+        "financing",
+        "licensed",
+        "insured",
+        "insurance",
+        "cover",
+        "coverage",
+        "area",
+        "emergency",
+        "callout",
+    }
+)
+# Words on every page that do not make a question about plumbing.
+_PAGE_NOISE = frozenset(
+    {
+        "maple",
+        "street",
+        "fictional",
+        "business",
+        "made",
+        "demo",
+        "home",
+        "page",
+        "pages",
+        "service",
+        "services",
+        "offer",
+        "offers",
+        "just",
+        "also",
+        "fully",
+        "local",
+        "homes",
+        "main",
+        "line",
+        "call",
+        "calls",
+        "person",
+        "questions",
+        "handle",
+    }
+)
 KEY_ENV = "ANTHROPIC_API_KEY"
 MODEL_ENV = "CLAUDE_MODEL"
 DEFAULT_MODEL = "claude-haiku-5-5"
@@ -111,7 +209,8 @@ MAX_TOKENS = 1024
 USAGE = (
     'Usage: python3 scripts/answer_reply.py "customer question" [site address]\n'
     "Prints a short answer from your pages, ending with the page it used.\n"
-    "When the pages don't cover the question, prints the callback reply.\n"
+    "When a plumbing question is not on the pages, prints the callback reply.\n"
+    "When the question is not about plumbing, prints the off-topic reply.\n"
     "With ANTHROPIC_API_KEY set, Claude writes the answer. With no key, a stand-in answers.\n"
     f"With no address, reads {read_pages.DEFAULT_SITE}."
 )
@@ -153,6 +252,69 @@ def callback_reply(text=None):
     if not parts:
         raise ValueError("The callback reply is missing from your agreements.")
     return " ".join(parts)
+
+
+def off_topic_reply(text=None):
+    """Return the off-topic sentence from your agreements."""
+    parts = []
+    for line in _section(_agreements(text), OFF_TOPIC_HEADING):
+        stripped = line.strip()
+        if not stripped.startswith(">"):
+            continue
+        part = stripped[1:].strip()
+        if part:
+            parts.append(part)
+    if not parts:
+        raise ValueError("The off-topic reply is missing from your agreements.")
+    return " ".join(parts)
+
+
+def _about_the_business(word):
+    """True when this word is about plumbing or this front desk."""
+    if len(word) < 3 or word in _STOP:
+        return False
+    if word in _ABOUT_THE_BUSINESS:
+        return True
+    if len(word) < 4:
+        return False
+    for known in _ABOUT_THE_BUSINESS:
+        if len(known) >= 4 and _overlaps(word, [known]):
+            return True
+    return False
+
+
+def _topic_words(pages):
+    """Return meaningful words from the pages, without the banner and menu noise."""
+    found = []
+    seen = set()
+    for page in pages or []:
+        if not isinstance(page, dict) or page.get("status") != "read":
+            continue
+        blob = f"{page.get('name', '')} {page.get('text') or ''}"
+        for word in _tokens(blob):
+            if word in _PAGE_NOISE or word in seen:
+                continue
+            seen.add(word)
+            found.append(word)
+    return found
+
+
+def _is_off_topic(question, pages):
+    """True when the question is not about plumbing or this front desk.
+
+    A plumbing word, or a word from the business's pages, keeps the
+    question on the answer path. The callback reply then covers a fact
+    the pages don't state. An unrelated request does not share those words.
+    """
+    if not isinstance(question, str) or not question.strip():
+        return False
+    words = [word for word in _WORD.findall(question.casefold()) if word not in _STOP]
+    if any(_about_the_business(word) for word in words):
+        return False
+    page_words = _topic_words(pages)
+    if any(_overlaps(word, page_words) for word in words if len(word) >= 4):
+        return False
+    return True
 
 
 def _question_rows(body):
@@ -670,16 +832,23 @@ def write_answer(question, pages, writer=None, text=None, client=None):
     and replaces both Claude and the stand-in. The instructions are what
     Claude is given: every page, plus the callback sentence.
 
+    A question that is not about plumbing returns the off-topic reply
+    from your agreements. Claude, the stand-in, and a supplied writer
+    are not called for it.
+
     With no writer, Claude writes the answer when ANTHROPIC_API_KEY is
     set, or when client is given. client is a stand-in for the HTTP call,
     used by the checks. If the call fails, the callback reply is returned
     and a short note records when it happened and what kind of error it
     was. The customer's message and the key are not in that note.
     With no key and no client, the stand-in answers the agreed test questions.
+    A plumbing question the pages don't cover still gets the callback reply.
 
     A page-based answer is rewritten so it ends with exactly
     'From <Page name>.'. The callback reply is left as it is.
     """
+    if _is_off_topic(question, pages):
+        return off_topic_reply(text)
     instructions = build_instructions(question, pages, text=text)
     callback = callback_reply(text)
     if writer is not None:

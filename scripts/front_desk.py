@@ -3,7 +3,9 @@
 1. Urgent reply. If the message is urgent, that fixed reply is the whole
    answer, and nothing else runs.
 2. Read your pages.
-3. Write the answer.
+3. Write the answer. A question that is not about plumbing gets the
+   off-topic reply. A plumbing question the pages don't cover gets the
+   callback reply.
 4. Check every price. An amount that isn't on your pages, or that isn't
    near the service the customer asked about, is replaced with the
    callback reply.
@@ -25,6 +27,7 @@ USAGE = (
     'Usage: python3 scripts/front_desk.py "customer message" [site address]\n'
     "Runs the urgent reply, then your pages, then the answer, then the price check.\n"
     "An urgent message stops after the fixed reply.\n"
+    "A question that is not about plumbing gets the off-topic reply.\n"
     f"With no address, reads {read_pages.DEFAULT_SITE}."
 )
 
@@ -36,6 +39,8 @@ def reply_to(message, base_url=None, writer=None, client=None):
     for it, and the answer writer is not called. Otherwise the pages are
     read, the answer is written, and every price is checked last. A price
     is kept only when it is on the same page, near the service asked about.
+    A question that is not about plumbing gets the off-topic reply. A
+    plumbing question the pages don't cover still gets the callback reply.
 
     client, when given, stands in for the Claude call inside the answer
     step. writer, when given, stands in for the whole answer step, so a

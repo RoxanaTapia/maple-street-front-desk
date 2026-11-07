@@ -40,6 +40,7 @@ REQUIRED_FILES = (
     "tests/test_urgent.py",
     "tests/test_prices.py",
     "tests/test_answers.py",
+    "tests/test_off_topic.py",
 )
 
 
@@ -72,6 +73,7 @@ class ProjectChecks(unittest.TestCase):
             "tests/test_answers.py:ClaudeAnswerChecks",
             "tests/test_answers.py:FailureNoteChecks",
             "tests/test_answers.py:HoursFaqAnswerChecks",
+            "tests/test_off_topic.py:OffTopicReplyChecks",
             "tests/test_demo.py:DemoChatChecks",
         ):
             self.assertIn(command, workflow)

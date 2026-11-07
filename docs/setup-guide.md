@@ -45,12 +45,13 @@ export ANTHROPIC_API_KEY='...'
 | Your pages | Visitor text in `sample-site/`, and the page names in the first sentence under Your pages | Ask again |
 | Urgent words | Bold phrases under Urgent messages, and the `>` lines in that section for the reply | Ask again |
 | The callback sentence | The `>` lines under When the pages don't say | Ask again |
+| The off-topic reply | The `>` lines under Off-topic questions | Ask again |
 | Your test questions | Numbered lines under The 15 test questions, with the question ending at `?` | Run the checks |
 
 Each page name needs the same link text in `sample-site/index.html`.
 A line that is only bold is a group name, and `from` plus a page name picks the page.
 
-The stand-in reads your test questions. Claude reads your pages and the callback sentence, not that list.
+The stand-in reads your test questions. Claude reads your pages and the callback sentence, not that list. An off-topic question uses the off-topic reply and is not sent to Claude.
 
 ## Check it still works
 
@@ -65,7 +66,7 @@ python3 scripts/run_checks.py
 ## Questions
 
 **Where are the rules kept?**
-The code reads `docs/agreements.md` on every message: the urgent words and fixed urgent reply, the callback sentence, and the test questions.
+The code reads `docs/agreements.md` on every message: the urgent words and fixed urgent reply, the callback sentence, the off-topic reply, and the test questions.
 You can edit it as plain text. Keep the headings, and run the checks after any change. Other files in docs/ are for reading only.
 
 **Can it make up a price?**

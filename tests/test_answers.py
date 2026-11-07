@@ -317,7 +317,10 @@ class AnswerChecks(unittest.TestCase):
         def custom(question_arg, instructions, pages_arg):
             return "CUSTOM"
 
-        self.assertEqual(answer_reply.write_answer("Hello", pages, writer=custom), "CUSTOM")
+        self.assertEqual(
+            answer_reply.write_answer("Are you open Saturdays?", pages, writer=custom),
+            "CUSTOM",
+        )
         for name in ("answer_reply.py", "front_desk.py"):
             source = (SCRIPTS / name).read_text(encoding="utf-8")
             self.assertNotIn(callback, source)
