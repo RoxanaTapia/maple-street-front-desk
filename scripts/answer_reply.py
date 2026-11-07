@@ -12,11 +12,11 @@ another one. If that call fails, the callback reply is used instead of
 an error, and a short note records when it happened and what kind of
 error it was. The customer's message and the key are not in that note.
 
-With no key, a stand-in answers the agreed test questions. When the
-customer states a price that differs from the pages, the stand-in gives
-the price from the pages and does not repeat the customer's amount.
+With no key, a stand-in answers the agreed test questions. When someone
+states a price that differs from the pages, the stand-in speaks to them
+directly with the sentence on the pages and does not repeat their amount.
 The stand-in is not a real AI, and it does not call one. The checks use
-that path.
+that path, so they do not show what a live call would write.
 
 Usage: python3 scripts/answer_reply.py "customer question" [site address]
 
@@ -49,11 +49,12 @@ _MONEY = re.compile(r"\$(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?")
 # A time such as 8:00 is not a price. A number already inside $200 is
 # read by the price check instead.
 _BARE_NUMBER = re.compile(r"(?<![\d,.])\d{2,}(?:\.\d+)?(?![\d,.])")
-# The rule Claude is given. The customer's own amount stays out of the reply.
+# The rule Claude is given. Speak to the person, and leave their amount out.
+# The example is the sentence on the Pricing page.
 CORRECT_A_WRONG_PRICE = (
-    "When the customer states a price that differs from the pages, "
-    "correct them by giving the price from the pages, and do not repeat "
-    "the customer's amount."
+    "If they state a price that differs from the pages, speak to them directly "
+    "and give the price from the pages, for example: A drain cleaning is $149. "
+    "Do not mention the customer, and do not repeat their price."
 )
 _WORD = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
 # The page reader keeps the navigation in the visible text, glued to the
@@ -397,11 +398,11 @@ def _stated_price_numbers(question):
 
 
 def _correct_stated_price(question, pages, instructions):
-    """Return the page price when the customer stated a different one.
+    """Return the page price when the question states a different one.
 
-    The sentence is the one on the page, beside that service. The
-    customer's amount is not copied into it. Returns None when there
-    is nothing to correct.
+    The sentence is the one on the page, beside that service, spoken
+    to the person. Their amount is not copied into it. Returns None
+    when there is nothing to correct.
     """
     stated = _stated_price_numbers(question)
     if not stated or not isinstance(instructions, str):
@@ -431,15 +432,39 @@ def _correct_stated_price(question, pages, instructions):
     return None
 
 
+def _direct_price_reply(question, reply, pages, instructions):
+    """Speak the page sentence when a correction talks about the customer.
+
+    A front-desk reply speaks to the person. When the question states a
+    different price and the draft says "the customer", this returns the
+    sentence on the page. A draft that repeats their amount is left as
+    it is, so the price check can reject it. A draft that already speaks
+    directly is left as it is.
+    """
+    if not isinstance(reply, str):
+        return reply
+    if "the customer" not in " ".join(reply.casefold().split()):
+        return reply
+    direct = _correct_stated_price(question, pages, instructions)
+    if not direct:
+        return reply
+    stated = set(_stated_price_numbers(question))
+    for amount in price_reply.find_amounts(reply):
+        number = _price_number(amount)
+        if number is not None and number in stated:
+            return reply
+    return direct
+
+
 def build_instructions(question, pages, text=None):
     """Build the instructions an AI would be given for this question.
 
     The instructions say to answer only from these pages, keep it short,
     name the page, end with From and that page name, and use the callback
-    sentence when the pages don't cover the question. When the customer
-    states a price that differs from the pages, they say to give the price
-    from the pages and not repeat the customer's amount. The text of every
-    page is included.
+    sentence when the pages don't cover the question. When someone states
+    a price that differs from the pages, they say to speak to that person
+    directly, give the price from the pages, and not mention the customer
+    or repeat their price. The text of every page is included.
     """
     callback = callback_reply(text)
     example = _source_example(pages)
@@ -500,9 +525,9 @@ def stand_in_writer(question, instructions, pages, text=None):
     It reads those questions from your agreements and answers one only
     when the named page's text is in the instructions and supports the
     answer. A plain question about opening hours is answered from the
-    Hours page the same way. When the customer states a price that
-    differs from the pages, the answer is the price written beside that
-    service, and the customer's amount is not repeated. Anything the
+    Hours page the same way. When someone states a price that differs
+    from the pages, the answer is the sentence beside that service,
+    spoken to them, and their amount is not repeated. Anything the
     pages don't cover gets the callback sentence.
     """
     callback = callback_reply(text)
@@ -678,7 +703,9 @@ def write_answer(question, pages, writer=None, text=None, client=None):
     With no key and no client, the stand-in answers the agreed test questions.
 
     A page-based answer is rewritten so it ends with exactly
-    'From <Page name>.'. The callback reply is left as it is.
+    'From <Page name>.'. The callback reply is left as it is. A wrong-price
+    correction that talks about the customer is replaced with the sentence
+    on the page. A reply that repeats their amount is left for the price check.
     """
     instructions = build_instructions(question, pages, text=text)
     callback = callback_reply(text)
@@ -695,7 +722,8 @@ def write_answer(question, pages, writer=None, text=None, client=None):
             except Exception:
                 logging.warning("Claude could not answer.")
             return callback
-    return normalize_source_line(reply, pages, callback)
+    reply = normalize_source_line(reply, pages, callback)
+    return _direct_price_reply(question, reply, pages, instructions)
 
 
 def _split_site(args):

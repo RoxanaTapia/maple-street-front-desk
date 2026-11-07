@@ -89,8 +89,8 @@ python3 scripts/read_pages.py
 
 - A question the pages answer gets a short answer that names the page.
 - A question the pages don't cover gets the callback reply from [When the pages don't say](agreements.md#when-the-pages-dont-say).
-- The instructions include the text of the business's pages, all six of them, plus the callback reply. They say to answer only from these pages, keep it short, and end with From and the page name. When the customer states a different price, they say to give the price from the pages and not repeat the customer's amount.
-- Claude writes the answer when `ANTHROPIC_API_KEY` is set, and reads all six pages for every question. With no key, a stand-in answers the agreed test questions, and it answers "What are your hours?" from the Hours & FAQ page. A wrong price the customer states is answered with the price on the pages, and their amount is left out. The stand-in is not a real AI.
+- The instructions include the text of the business's pages, all six of them, plus the callback reply. They say to answer only from these pages, keep it short, and end with From and the page name. When someone states a different price, they say to speak to that person directly, give the price from the pages, and not mention the customer or repeat their price.
+- Claude writes the answer when `ANTHROPIC_API_KEY` is set, and reads all six pages for every question. With no key, a stand-in answers the agreed test questions, and it answers "What are your hours?" from the Hours & FAQ page. A wrong price is answered with the sentence on the page, spoken to the person, and their amount is left out. A draft that talks about the customer is replaced with that sentence. The stand-in is not a real AI. The checks use that path, so they do not show what a live call would write.
 - A page-based answer ends with From and the page name, for example From Hours & FAQ. The urgent reply and the callback reply are left as they are.
 - If the call fails, the customer still gets the callback reply, and a short note is kept for the owner. Where to find it is in the [setup guide](setup-guide.md#questions). An amount the pages don't state is still replaced by the callback reply.
 - The 15 questions in [The 15 test questions](agreements.md#the-15-test-questions) each name a page, use the fixed urgent reply, or offer a callback.
@@ -103,6 +103,7 @@ python3 scripts/read_pages.py
 ```
 python3 scripts/answer_reply.py 'Are you open Saturdays?'
 python3 scripts/front_desk.py 'How much is a drain cleaning?'
+python3 scripts/front_desk.py 'A drain cleaning is 200?'
 python3 scripts/front_desk.py 'Do you cover Moorestown?'
 python3 scripts/front_desk.py 'Do you install septic systems?'
 python3 scripts/front_desk.py 'Are you licensed and insured?'
@@ -114,6 +115,7 @@ python3 scripts/front_desk.py 'I have a burst pipe'
 |---|---|
 | Are you open Saturdays? | `Saturday: 8:00 am to 12:00 pm. Yes, we are open Saturdays. From Hours & FAQ.` |
 | How much is a drain cleaning? | `A drain cleaning is $149. From Pricing.` |
+| A drain cleaning is 200? | `A drain cleaning is $149. From Pricing.` |
 | Do you cover Moorestown? | The callback reply |
 | Do you install septic systems? | `No, we don't install or service septic systems. From Hours & FAQ.` |
 | Are you licensed and insured? | `Yes, we're fully licensed and insured in New Jersey. From Hours & FAQ.` |
@@ -143,7 +145,7 @@ You see this check on the pull request as Answers come from your pages.
 
 - A price is kept only as the pages write it, and only when it sits near that service on the same page.
 - Any other amount is replaced with the callback reply. That includes a price for a different service, and a price the pages don't state. An answer with no amount is left as it is, and an urgent message is still handled first.
-- When the customer states a wrong price, the answer gives the price from the pages and does not repeat the customer's amount.
+- When someone states a wrong price, the answer speaks to them directly with the price from the pages and does not repeat their amount. A reply that agrees with the wrong amount is still replaced with the callback reply.
 - Pass what the customer asked with `--asked`. Without it, the check only confirms that the amount is written on the pages.
 - An amount is read whole, so $1499 is not treated as $149. An answer of "A water heater is $1499." is replaced with the callback reply.
 - "We're at 149 Maple Street" is left as it is, because an address is not a price.
@@ -154,6 +156,7 @@ You see this check on the pull request as Answers come from your pages.
 python3 scripts/price_reply.py 'A drain cleaning is $149.'
 python3 scripts/price_reply.py --asked 'How much is a drain cleaning?' 'A drain cleaning is $149.'
 python3 scripts/price_reply.py --asked 'How much is a drain cleaning?' 'The call-out fee is $99.'
+python3 scripts/price_reply.py --asked 'A drain cleaning is 200?' 'Yes, $200.'
 python3 scripts/price_reply.py 'A water heater replacement is $1,200.'
 ```
 
@@ -162,6 +165,7 @@ python3 scripts/price_reply.py 'A water heater replacement is $1,200.'
 | A drain cleaning is $149. | `A drain cleaning is $149.` |
 | A drain cleaning is $149, asked about a drain cleaning. | `A drain cleaning is $149.` |
 | The call-out fee is $99, asked about a drain cleaning. | The callback reply |
+| Yes, $200, asked about a drain cleaning at 200. | The callback reply |
 | A water heater replacement is $1,200. | The callback reply |
 
 *Good to know.* "99 dollars" does not match "$99". The call-out fee is a real price, and it still gets the callback reply when the customer asked about a drain cleaning. Pricing does not list a water heater replacement.

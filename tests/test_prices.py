@@ -613,19 +613,141 @@ class ServicePriceChecks(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertEqual(stdout.getvalue(), callback + "\n")
 
-    def test_the_instructions_correct_a_wrong_price(self):
-        """The instructions say to correct a wrong price without repeating it."""
+    def test_a_wrong_price_is_corrected_by_speaking_to_the_person(self):
+        """A wrong price is corrected by speaking to the person."""
+        # The stand-in and a stand-in writer run this. No live call is made,
+        # so this does not show what that call would write. It shows the reply
+        # that goes out, including when a draft talks about the customer.
         question = "A drain cleaning is 200?"
+        direct = "A drain cleaning is $149. From Pricing."
         pages = read_pages.read_pages(self.site.base)
-        rule = (
-            "When the customer states a price that differs from the pages, "
-            "correct them by giving the price from the pages, and do not repeat "
-            "the customer's amount."
-        )
         instructions = answer_reply.build_instructions(question, pages)
-        self.assertEqual(answer_reply.CORRECT_A_WRONG_PRICE, rule)
-        self.assertIn(rule, instructions)
-        self.assertIn(question, instructions)
+        self.assertIn("speak to them directly", answer_reply.CORRECT_A_WRONG_PRICE)
+        self.assertIn("A drain cleaning is $149.", answer_reply.CORRECT_A_WRONG_PRICE)
+        self.assertIn("Do not mention the customer", answer_reply.CORRECT_A_WRONG_PRICE)
+        self.assertNotIn(
+            "When the customer states a price that differs from the pages",
+            answer_reply.CORRECT_A_WRONG_PRICE,
+        )
+        self.assertIn(answer_reply.CORRECT_A_WRONG_PRICE, instructions)
+        stand_in = answer_reply.stand_in_writer(question, instructions, pages)
+        self.assertEqual(stand_in, direct)
+        self.assertNotIn("the customer", stand_in.casefold())
+        self.assertNotIn("200", stand_in)
+        got = front_desk.reply_to(
+            question,
+            base_url=self.site.base,
+            writer=answer_reply.stand_in_writer,
+        )
+        self.assertEqual(got, direct)
+        self.assertNotIn("the customer", got.casefold())
+
+        def narrate(question_arg, instructions_arg, pages_arg):
+            return "The customer had the wrong figure. A drain cleaning is $149. From Pricing."
+
+        spoken = front_desk.reply_to(question, base_url=self.site.base, writer=narrate)
+        self.assertEqual(spoken, direct)
+        self.assertNotIn("the customer", spoken.casefold())
+        self.assertNotIn("200", spoken)
+        self.assertTrue(spoken.startswith("A drain cleaning is $149."))
+
+        call_out = "The call-out is 50?"
+        call_direct = "The call-out fee is $99. From Services."
+        call_pages = read_pages.read_pages(self.site.base)
+        call_instructions = answer_reply.build_instructions(call_out, call_pages)
+        self.assertEqual(
+            answer_reply.stand_in_writer(call_out, call_instructions, call_pages),
+            call_direct,
+        )
+
+        def narrate_call_out(question_arg, instructions_arg, pages_arg):
+            return "The customer was wrong about the call-out. The call-out fee is $99. From Services."
+
+        call_spoken = front_desk.reply_to(
+            call_out,
+            base_url=self.site.base,
+            writer=narrate_call_out,
+        )
+        self.assertEqual(call_spoken, call_direct)
+        self.assertNotIn("the customer", call_spoken.casefold())
+        self.assertNotIn("50", call_spoken)
+
+        sent = {}
+
+        def client(payload):
+            sent["instructions"] = payload["messages"][0]["content"]
+            return {
+                "content": [
+                    {
+                        "type": "text",
+                        "text": (
+                            "The customer had the wrong figure. "
+                            "A drain cleaning is $149. From Pricing."
+                        ),
+                    }
+                ]
+            }
+
+        via_call = front_desk.reply_to(question, base_url=self.site.base, client=client)
+        self.assertEqual(via_call, direct)
+        self.assertNotIn("the customer", via_call.casefold())
+        self.assertIn(answer_reply.CORRECT_A_WRONG_PRICE, sent["instructions"])
+
+    def test_yes_200_is_rejected(self):
+        """Yes, $200 is rejected when the pages do not state it."""
+        # A stand-in writer agrees with the wrong amount. No live call is made.
+        # The price check still rejects it, and the reply is not rewritten
+        # into the price on the page.
+        question = "A drain cleaning is 200?"
+        callback = self._callback()
+        agreed = "Yes, $200"
+        got = self._ask(question, agreed)
+        self.assertEqual(got, callback)
+        self.assertNotIn("$200", got)
+        self.assertNotIn("$149", got)
+        self.assertEqual(
+            price_reply.answer_for(question, agreed, base_url=self.site.base),
+            callback,
+        )
+
+        def agree(question_arg, instructions, pages):
+            return "Yes, $200"
+
+        customer = front_desk.reply_to(question, base_url=self.site.base, writer=agree)
+        self.assertEqual(customer, callback)
+        self.assertNotIn("$200", customer)
+        self.assertNotIn("$149", customer)
+
+        def agree_and_narrate(question_arg, instructions, pages):
+            return "Yes, the customer is right, it is $200."
+
+        narrated = front_desk.reply_to(
+            question,
+            base_url=self.site.base,
+            writer=agree_and_narrate,
+        )
+        self.assertEqual(narrated, callback)
+        self.assertNotIn("$200", narrated)
+        self.assertNotIn("$149", narrated)
+        self.assertNotIn("the customer", narrated.casefold())
+
+        def client_yes(_payload):
+            return {"content": [{"type": "text", "text": "Yes, $200"}]}
+
+        via_call = front_desk.reply_to(
+            question,
+            base_url=self.site.base,
+            client=client_yes,
+        )
+        self.assertEqual(via_call, callback)
+        self.assertNotIn("$200", via_call)
+        self.assertNotIn("$149", via_call)
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            code = price_reply.main(["--asked", question, agreed, self.site.base])
+        self.assertEqual(code, 0)
+        self.assertEqual(stdout.getvalue(), callback + "\n")
+        self.assertNotIn("$200", stdout.getvalue())
 
 
 if __name__ == "__main__":
