@@ -8,3 +8,5 @@
 | A price | The amount as the business's pages write it, when it is on the same page and near the service asked about, or the callback reply |
 
 Only the listed urgent words trigger the urgent reply. A spelling named beside a listed word counts as that word. A question that mentions emergencies without one of them gets a normal answer.
+
+The same words inside quotes, or with markdown marks around the whole question, get that same reply. A question mark on the end does not change it. A dollar sign, a decimal point, and a hyphen in the message stay as written.
