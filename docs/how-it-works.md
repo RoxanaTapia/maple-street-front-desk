@@ -83,7 +83,7 @@ python3 scripts/read_pages.py
 
 ## 3 · Write the answer
 
-*A question gets a short answer from the business's pages, or the callback reply when they don't cover it.*
+*A question gets a short answer from the business's pages, the callback reply when they don't cover it, or the outage reply when the call fails.*
 
 **What it does**
 
@@ -91,8 +91,8 @@ python3 scripts/read_pages.py
 - A question the pages don't cover gets the callback reply from [When the pages don't say](agreements.md#when-the-pages-dont-say).
 - The instructions include the text of the business's pages, all six of them, plus the callback reply. They say to answer only from these pages, keep it short, and end with From and the page name. When the customer states a different price, they say to give the price from the pages and not repeat the customer's amount.
 - Claude writes the answer when `ANTHROPIC_API_KEY` is set, and reads all six pages for every question. With no key, a stand-in answers the agreed test questions, and it answers "What are your hours?" from the Hours & FAQ page. A wrong price the customer states is answered with the price on the pages, and their amount is left out. The stand-in is not a real AI.
-- A page-based answer ends with From and the page name, for example From Hours & FAQ. The urgent reply and the callback reply are left as they are.
-- If the call fails, the customer still gets the callback reply, and a short note is kept for the owner. Where to find it is in the [setup guide](setup-guide.md#questions). An amount the pages don't state is still replaced by the callback reply.
+- A page-based answer ends with From and the page name, for example From Hours & FAQ. The urgent reply, the callback reply, and the outage reply are left as they are.
+- If the call fails, the customer gets the outage reply from [When the assistant can't look it up](agreements.md#when-the-assistant-cant-look-it-up). A fact the pages don't cover still gets the callback reply from [When the pages don't say](agreements.md#when-the-pages-dont-say). A short note is kept for the owner. Where to find it is in the [setup guide](setup-guide.md#questions). An amount the pages don't state is still replaced by the callback reply.
 - The 15 questions in [The 15 test questions](agreements.md#the-15-test-questions) each name a page, use the fixed urgent reply, or offer a callback.
 - Septic systems, being licensed and insured, and after-hours callouts are answered from the Hours & FAQ page. The after-hours question is not urgent, so it gets that page's answer.
 
@@ -133,7 +133,7 @@ The answer is short and names the page. `CLAUDE_MODEL` is optional, and the defa
 
 You see this check on the pull request as Answers come from your pages.
 
-*Pull request checks:* **Answers come from your pages**. **Claude writes the answer**. **A failed call is noted for the owner**. **Questions 13 to 15 come from Hours and FAQ**.
+*Pull request checks:* **Answers come from your pages**. **Claude writes the answer**. **A failed call is noted for the owner**. **A failed call gets the outage reply**. **Questions 13 to 15 come from Hours and FAQ**.
 
 ## 4 · Check every price
 
@@ -206,6 +206,7 @@ Each check prints ok, and the run ends with OK. The same checks run on every pul
 - A price belongs to the service
 - Answers
 - A failed call is noted
+- A failed call gets the outage reply
 - The demo chat
 
 </details>

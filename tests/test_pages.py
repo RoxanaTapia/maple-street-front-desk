@@ -416,13 +416,17 @@ class QuestionCoverageChecks(unittest.TestCase):
 
         urgent_quote = blockquote("Urgent messages")
         callback_quote = blockquote("When the pages don't say")
+        outage_quote = blockquote("When the assistant can't look it up")
         self.assertTrue(urgent_quote)
         self.assertTrue(callback_quote)
+        self.assertTrue(outage_quote)
         self.assertNotEqual(urgent_quote, callback_quote)
+        self.assertNotEqual(outage_quote, callback_quote)
+        self.assertNotEqual(outage_quote, urgent_quote)
         behaviour = (ROOT / "docs" / "behaviour.md").read_text(encoding="utf-8")
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
         how = (ROOT / "docs" / "how-it-works.md").read_text(encoding="utf-8")
-        for quote in (urgent_quote, callback_quote):
+        for quote in (urgent_quote, callback_quote, outage_quote):
             self.assertNotIn(quote, behaviour)
             self.assertNotIn(quote, readme)
             self.assertNotIn(quote, how)

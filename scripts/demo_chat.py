@@ -78,8 +78,9 @@ def _json_bytes(payload):
 def safe_reply(message, base_url):
     """Return the front-desk reply, with the key kept off the page.
 
-    A failure becomes the callback reply. A reply that contains the key
-    becomes the callback reply too, so the key is not sent on.
+    A failed call is already the outage reply. Any other failure becomes
+    the callback reply. A reply that contains the key becomes the
+    callback reply too, so the key is not sent on.
     """
     try:
         reply = front_desk.reply_to(message, base_url=base_url)

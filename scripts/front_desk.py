@@ -6,7 +6,7 @@
 3. Write the answer.
 4. Check every price. An amount that isn't on your pages, or that isn't
    near the service the customer asked about, is replaced with the
-   callback reply.
+   callback reply. The outage reply is left as it is.
 
 Usage: python3 scripts/front_desk.py "customer message" [site address]
 
@@ -36,11 +36,13 @@ def reply_to(message, base_url=None, writer=None, client=None):
     for it, and the answer writer is not called. Otherwise the pages are
     read, the answer is written, and every price is checked last. A price
     is kept only when it is on the same page, near the service asked about.
+    The outage reply is returned as written, so a failed call is not
+    replaced with the callback reply.
 
     client, when given, stands in for the Claude call inside the answer
     step. writer, when given, stands in for the whole answer step, so a
     check can try a reply without a live call. The price check still runs
-    on whatever comes back.
+    on whatever comes back, except the outage reply.
     """
     urgent = urgent_reply.reply_if_urgent(message)
     if urgent is not None:
@@ -48,6 +50,8 @@ def reply_to(message, base_url=None, writer=None, client=None):
     base = read_pages.DEFAULT_SITE if base_url is None else base_url
     pages = read_pages.read_pages(base)
     answer = answer_reply.write_answer(message, pages, writer=writer, client=client)
+    if answer == answer_reply.outage_reply():
+        return answer
     return price_reply.checked_answer(answer, pages=pages, message=message)
 
 
