@@ -4,7 +4,10 @@ This is part 3 of the path. It takes a customer question and the page
 text from the page reader, and it builds the instructions for the answer:
 answer only from these pages, keep it short, and end with From and the
 page name. It uses the callback sentence from the agreements when the
-pages don't cover the question. The text of every page is included.
+pages don't cover a plumbing question. A question that is clearly about
+something else gets the off-topic reply from the agreements, and neither
+Claude nor the stand-in is called. Anything we do not recognize stays
+on the answer path. The text of every page is included.
 
 When ANTHROPIC_API_KEY is set, Claude writes the answer through the
 Messages API. A small, fast model is used unless CLAUDE_MODEL names
@@ -40,6 +43,7 @@ import read_pages
 ROOT = Path(__file__).resolve().parents[1]
 AGREEMENTS = ROOT / "docs" / "agreements.md"
 CALLBACK_HEADING = "When the pages don't say"
+OFF_TOPIC_HEADING = "Off-topic questions"
 QUESTIONS_HEADING = "The 15 test questions"
 ANSWERED_GROUP = "Answered by your pages"
 _CLOCK = re.compile(r"\d{1,2}:\d{2} am to \d{1,2}:\d{2} pm", re.IGNORECASE)
@@ -97,6 +101,117 @@ _STOP = frozenset(
         "please",
     }
 )
+# The friendly reply is only for a request that is clearly about one of
+# these subjects. Anything else, including a word we have not listed,
+# stays on the answer path. The pages are not consulted.
+_UNRELATED = frozenset(
+    {
+        "pizza",
+        "burger",
+        "taco",
+        "sushi",
+        "coffee",
+        "weather",
+        "forecast",
+        "movie",
+        "film",
+        "cinema",
+        "joke",
+        "song",
+        "football",
+        "basketball",
+        "soccer",
+        "recipe",
+        "homework",
+        "tax",
+        "taxes",
+    }
+)
+# Words that can sit next to an unrelated subject without being a second
+# request. A weekday, "open", or "hours" must not send "pizza on Saturday"
+# to the model. This list is not read from the pages.
+_ASIDE = frozenset(
+    {
+        "saturday",
+        "saturdays",
+        "sunday",
+        "sundays",
+        "monday",
+        "mondays",
+        "tuesday",
+        "tuesdays",
+        "wednesday",
+        "wednesdays",
+        "thursday",
+        "thursdays",
+        "friday",
+        "fridays",
+        "today",
+        "tomorrow",
+        "tonight",
+        "weekend",
+        "morning",
+        "afternoon",
+        "evening",
+        "open",
+        "opened",
+        "closed",
+        "hour",
+        "hours",
+        "service",
+        "services",
+        "business",
+        "maple",
+        "street",
+        "local",
+        "here",
+        "there",
+        "sell",
+        "selling",
+        "sold",
+        "buy",
+        "buying",
+        "order",
+        "ordering",
+        "deliver",
+        "delivery",
+        "recommend",
+        "watch",
+        "watching",
+        "want",
+        "wanted",
+        "like",
+        "love",
+        "need",
+        "needed",
+        "make",
+        "making",
+        "serve",
+        "serving",
+        "eat",
+        "eating",
+        "some",
+        "any",
+        "good",
+        "best",
+        "hot",
+        "cold",
+        "large",
+        "small",
+        "please",
+        "thanks",
+        "thank",
+        "during",
+        "while",
+        "after",
+        "before",
+        "about",
+        "just",
+        "also",
+        "really",
+        "very",
+    }
+)
 KEY_ENV = "ANTHROPIC_API_KEY"
 MODEL_ENV = "CLAUDE_MODEL"
 DEFAULT_MODEL = "claude-haiku-5-5"
@@ -111,7 +226,8 @@ MAX_TOKENS = 1024
 USAGE = (
     'Usage: python3 scripts/answer_reply.py "customer question" [site address]\n'
     "Prints a short answer from your pages, ending with the page it used.\n"
-    "When the pages don't cover the question, prints the callback reply.\n"
+    "When a plumbing question is not on the pages, prints the callback reply.\n"
+    "When the question is clearly about something else, prints the off-topic reply.\n"
     "With ANTHROPIC_API_KEY set, Claude writes the answer. With no key, a stand-in answers.\n"
     f"With no address, reads {read_pages.DEFAULT_SITE}."
 )
@@ -153,6 +269,63 @@ def callback_reply(text=None):
     if not parts:
         raise ValueError("The callback reply is missing from your agreements.")
     return " ".join(parts)
+
+
+def off_topic_reply(text=None):
+    """Return the off-topic sentence from your agreements."""
+    parts = []
+    for line in _section(_agreements(text), OFF_TOPIC_HEADING):
+        stripped = line.strip()
+        if not stripped.startswith(">"):
+            continue
+        part = stripped[1:].strip()
+        if part:
+            parts.append(part)
+    if not parts:
+        raise ValueError("The off-topic reply is missing from your agreements.")
+    return " ".join(parts)
+
+
+def _singular(word):
+    """Return word without a trailing s, so pizzas matches pizza.
+
+    This is not a prefix match. "business" does not become a shorter word
+    that then matches something else.
+    """
+    if len(word) > 3 and word.endswith("s") and not word.endswith("ss"):
+        return word[:-1]
+    return word
+
+
+def _unrelated_subject(word):
+    """True when this word is one of the clearly unrelated subjects."""
+    return word in _UNRELATED or _singular(word) in _UNRELATED
+
+
+def _is_off_topic(question):
+    """True only when the question is clearly about something else.
+
+    A dripping tap, a payment question, or a plumbing job we have not
+    named stays on the answer path. The business's pages are not read
+    for this decision, so a change in their wording cannot move it.
+    A weekday, "open", or "hours" beside pizza does not send that
+    question to the model. Another unrecognized word does: pizza plus
+    a dripping tap stays on the answer path.
+    """
+    if not isinstance(question, str) or not question.strip():
+        return False
+    words = []
+    for word in _WORD.findall(question.casefold()):
+        if word in _STOP or len(word) < 3:
+            continue
+        words.append(word)
+    if not any(_unrelated_subject(word) for word in words):
+        return False
+    for word in words:
+        if _unrelated_subject(word) or word in _ASIDE or _singular(word) in _ASIDE:
+            continue
+        return False
+    return True
 
 
 def _question_rows(body):
@@ -670,16 +843,25 @@ def write_answer(question, pages, writer=None, text=None, client=None):
     and replaces both Claude and the stand-in. The instructions are what
     Claude is given: every page, plus the callback sentence.
 
+    A question that is clearly about something else returns the off-topic
+    reply from your agreements. Claude, the stand-in, and a supplied
+    writer are not called for it. Anything else is written as usual, and
+    a plumbing or payment question the pages don't cover still gets the
+    callback reply.
+
     With no writer, Claude writes the answer when ANTHROPIC_API_KEY is
     set, or when client is given. client is a stand-in for the HTTP call,
     used by the checks. If the call fails, the callback reply is returned
     and a short note records when it happened and what kind of error it
     was. The customer's message and the key are not in that note.
     With no key and no client, the stand-in answers the agreed test questions.
+    A plumbing question the pages don't cover still gets the callback reply.
 
     A page-based answer is rewritten so it ends with exactly
     'From <Page name>.'. The callback reply is left as it is.
     """
+    if _is_off_topic(question):
+        return off_topic_reply(text)
     instructions = build_instructions(question, pages, text=text)
     callback = callback_reply(text)
     if writer is not None:

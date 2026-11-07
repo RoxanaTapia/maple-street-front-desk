@@ -157,16 +157,48 @@ class DemoChatChecks(unittest.TestCase):
         self.assertEqual(got, expected)
         self.assertNotIn("<", raw)
 
-    def test_a_question_the_pages_dont_cover_gets_the_callback(self):
-        """Do you sell pizza gets the callback reply."""
-        callback = answer_reply.callback_reply()
+    def test_an_off_topic_question_gets_the_friendly_reply(self):
+        """Do you sell pizza gets the off-topic reply."""
+        friendly = answer_reply.off_topic_reply()
+        self.assertNotEqual(friendly, answer_reply.callback_reply())
         self.assertEqual(
             front_desk.reply_to("Do you sell pizza?", base_url=self.demo.base),
-            callback,
+            friendly,
         )
         raw, got = self._reply("Do you sell pizza?")
+        self.assertEqual(got, friendly)
+        self.assertNotIn("<", raw)
+
+    def test_a_plumbing_gap_gets_the_callback(self):
+        """A garbage disposal repair gets the callback reply."""
+        callback = answer_reply.callback_reply()
+        question = "Do you repair garbage disposals?"
+        self.assertNotEqual(callback, answer_reply.off_topic_reply())
+        self.assertEqual(
+            front_desk.reply_to(question, base_url=self.demo.base),
+            callback,
+        )
+        raw, got = self._reply(question)
         self.assertEqual(got, callback)
         self.assertNotIn("<", raw)
+
+    def test_the_demo_http_keeps_unknown_questions_on_the_callback(self):
+        """A dripping tap, a card payment, and pizza on Saturday come back over HTTP."""
+        friendly = answer_reply.off_topic_reply()
+        callback = answer_reply.callback_reply()
+        cases = {
+            "Do you sell pizza on Saturday?": friendly,
+            "What's the weather during your hours?": friendly,
+            "My tap is dripping.": callback,
+            "Do you accept credit cards?": callback,
+            "Can you replace a bidet?": callback,
+        }
+        for message, expected in cases.items():
+            desk = front_desk.reply_to(message, base_url=self.demo.base)
+            raw, got = self._reply(message)
+            self.assertEqual(desk, expected, message)
+            self.assertEqual(got, expected, message)
+            self.assertNotIn("<", raw, message)
 
     def test_a_reply_is_shown_as_text(self):
         """A reply is shown as text, not as HTML."""
@@ -212,13 +244,19 @@ class DemoChatChecks(unittest.TestCase):
             self.assertEqual(status, 200, path)
             self.assertNotIn(secret, body, path)
             self.assertNotIn(secret, str(headers), path)
-        for message in ("I have a frozen pipe", "What are your hours?", "Do you sell pizza?"):
+        expected = {
+            "I have a frozen pipe": urgent_reply.fixed_urgent_reply(),
+            "What are your hours?": answer_reply.callback_reply(),
+            "Do you sell pizza?": answer_reply.off_topic_reply(),
+        }
+        self.assertNotEqual(expected["Do you sell pizza?"], expected["What are your hours?"])
+        for message, reply in expected.items():
             status, headers, raw, parsed = self.demo.post(message, extra={"apiKey": secret})
             self.assertEqual(status, 200, message)
+            self.assertEqual(parsed["reply"], reply, message)
             self.assertNotIn(secret, raw, message)
             self.assertNotIn(secret, parsed["reply"], message)
             self.assertNotIn(secret, str(headers), message)
-        self.assertEqual(parsed["reply"], answer_reply.callback_reply())
         for name in ("demo/index.html", "demo/style.css", "demo/chat.js", "scripts/demo_chat.py"):
             text = (ROOT / name).read_text(encoding="utf-8")
             self.assertNotIn(secret, text, name)

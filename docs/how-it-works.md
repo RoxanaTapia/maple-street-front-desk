@@ -83,14 +83,15 @@ python3 scripts/read_pages.py
 
 ## 3 · Write the answer
 
-*A question gets a short answer from the business's pages, or the callback reply when they don't cover it.*
+*A question gets a short answer from the business's pages, the off-topic reply when it is clearly about something else, or the callback reply when the pages don't cover it.*
 
 **What it does**
 
 - A question the pages answer gets a short answer that names the page.
-- A question the pages don't cover gets the callback reply from [When the pages don't say](agreements.md#when-the-pages-dont-say).
+- A question that is clearly about something else gets the off-topic reply from [Off-topic questions](agreements.md#off-topic-questions). That reply is chosen before Claude is called. A weekday or the word "hours" in that question does not change it.
+- A question we do not recognize still gets the callback reply from [When the pages don't say](agreements.md#when-the-pages-dont-say). That includes a dripping tap, a payment question, and a plumbing job the pages don't name.
 - The instructions include the text of the business's pages, all six of them, plus the callback reply. They say to answer only from these pages, keep it short, and end with From and the page name. When the customer states a different price, they say to give the price from the pages and not repeat the customer's amount.
-- Claude writes the answer when `ANTHROPIC_API_KEY` is set, and reads all six pages for every question. With no key, a stand-in answers the agreed test questions, and it answers "What are your hours?" from the Hours & FAQ page. A wrong price the customer states is answered with the price on the pages, and their amount is left out. The stand-in is not a real AI.
+- Claude writes the answer when `ANTHROPIC_API_KEY` is set, except for a clearly unrelated question, and reads all six pages for the questions it is asked. With no key, a stand-in answers the agreed test questions, and it answers "What are your hours?" from the Hours & FAQ page. A wrong price the customer states is answered with the price on the pages, and their amount is left out. The stand-in is not a real AI. A clearly unrelated question does not use Claude or the stand-in.
 - A page-based answer ends with From and the page name, for example From Hours & FAQ. The urgent reply and the callback reply are left as they are.
 - If the call fails, the customer still gets the callback reply, and a short note is kept for the owner. Where to find it is in the [setup guide](setup-guide.md#questions). An amount the pages don't state is still replaced by the callback reply.
 - The 15 questions in [The 15 test questions](agreements.md#the-15-test-questions) each name a page, use the fixed urgent reply, or offer a callback.
@@ -104,6 +105,11 @@ python3 scripts/read_pages.py
 python3 scripts/answer_reply.py 'Are you open Saturdays?'
 python3 scripts/front_desk.py 'How much is a drain cleaning?'
 python3 scripts/front_desk.py 'Do you cover Moorestown?'
+python3 scripts/front_desk.py 'Do you sell pizza?'
+python3 scripts/front_desk.py 'Do you sell pizza on Saturday?'
+python3 scripts/front_desk.py 'My tap is dripping.'
+python3 scripts/front_desk.py 'Do you accept credit cards?'
+python3 scripts/front_desk.py 'Do you repair garbage disposals?'
 python3 scripts/front_desk.py 'Do you install septic systems?'
 python3 scripts/front_desk.py 'Are you licensed and insured?'
 python3 scripts/front_desk.py 'Do you offer after-hours emergency callouts?'
@@ -115,6 +121,11 @@ python3 scripts/front_desk.py 'I have a burst pipe'
 | Are you open Saturdays? | `Saturday: 8:00 am to 12:00 pm. Yes, we are open Saturdays. From Hours & FAQ.` |
 | How much is a drain cleaning? | `A drain cleaning is $149. From Pricing.` |
 | Do you cover Moorestown? | The callback reply |
+| Do you sell pizza? | The off-topic reply |
+| Do you sell pizza on Saturday? | The off-topic reply |
+| My tap is dripping. | The callback reply |
+| Do you accept credit cards? | The callback reply |
+| Do you repair garbage disposals? | The callback reply |
 | Do you install septic systems? | `No, we don't install or service septic systems. From Hours & FAQ.` |
 | Are you licensed and insured? | `Yes, we're fully licensed and insured in New Jersey. From Hours & FAQ.` |
 | Do you offer after-hours emergency callouts? | `Yes, we handle emergencies after hours too. Just call our main line at (856) 555-0142. From Hours & FAQ.` |
@@ -129,11 +140,11 @@ python3 scripts/answer_reply.py 'Are you open Saturdays?'
 
 The answer is short and names the page. `CLAUDE_MODEL` is optional, and the default is set in the code.
 
-*Good to know.* Every question is answered from all six pages. A document search engine can be added later if many more documents are added.
+*Good to know.* Every question that is not clearly unrelated is answered from all six pages. A document search engine can be added later if many more documents are added. The friendly reply is chosen before Claude is called, and only for a clearly unrelated request. Mentioning a weekday does not send that request to Claude. A dripping tap, a payment question, or another job the pages don't name gets the callback reply from the stand-in. With a key, Claude writes any other answer and may not use the callback sentence word for word.
 
 You see this check on the pull request as Answers come from your pages.
 
-*Pull request checks:* **Answers come from your pages**. **Claude writes the answer**. **A failed call is noted for the owner**. **Questions 13 to 15 come from Hours and FAQ**.
+*Pull request checks:* **Answers come from your pages**. **Claude writes the answer**. **A failed call is noted for the owner**. **Questions 13 to 15 come from Hours and FAQ**. **Off-topic questions get the friendly reply**.
 
 ## 4 · Check every price
 
@@ -206,6 +217,7 @@ Each check prints ok, and the run ends with OK. The same checks run on every pul
 - A price belongs to the service
 - Answers
 - A failed call is noted
+- Off-topic questions
 - The demo chat
 
 </details>

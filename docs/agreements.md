@@ -20,6 +20,12 @@ When the business's pages don't cover the question, the assistant replies with e
 
 > I can't confirm that from your pages.
 
+## Off-topic questions
+
+When a question is not about this business's plumbing, the assistant replies with exactly this:
+
+> I can help with Maple Street’s plumbing services. What do you need help with?
+
 ## The 15 test questions
 
 Every change is checked against these 15 questions.
