@@ -543,31 +543,44 @@ def _repeats_stated_price(question, reply, page_number):
     return False
 
 
+def _anchored_sentence(sentence):
+    """True when this sentence stays, whatever the other sentences say.
+
+    A note about the customer can be removed. A sentence with an amount,
+    or one that does not mention the customer, cannot. Another note is
+    not an anchor, so two copies of the same fact cannot delete each other.
+    """
+    if not _mentions_the_customer(sentence):
+        return True
+    if price_reply.find_amounts(sentence) or _stated_price_numbers(sentence):
+        return True
+    return False
+
+
 def _narration_sentence(sentence, kept_text):
     """True when this sentence is only a note and its facts are already kept."""
-    if not _mentions_the_customer(sentence):
-        return False
-    if price_reply.find_amounts(sentence) or _stated_price_numbers(sentence):
-        return False
-    kept_words = set(_WORD.findall(kept_text.casefold()))
-    return all(word in kept_words for word in _content_words(sentence))
+    if not _anchored_sentence(sentence) and _mentions_the_customer(sentence):
+        kept_words = set(_WORD.findall(kept_text.casefold()))
+        return all(word in kept_words for word in _content_words(sentence))
+    return False
 
 
 def _without_narration(reply, page_number):
-    """Drop a note about the customer when the rest of the reply still stands.
+    """Drop a note about the customer when an anchored sentence already has its facts.
 
-    The page sentence is not written in its place. A sentence that carries
-    a fact the rest of the reply does not already state is left as it is.
-    Returns the original reply when nothing can be dropped safely.
+    The page sentence is not written in its place. A fact is anchored when
+    it sits in a sentence that will stay. A repeated note is not that
+    anchor, so at least one copy of the fact remains. Returns the original
+    reply when shortening would drop a fact or the page price.
     """
     sentences = _sentences(reply)
     if len(sentences) < 2:
         return reply
+    anchored = " ".join(sentence for sentence in sentences if _anchored_sentence(sentence))
     kept = []
     dropped = False
-    for index, sentence in enumerate(sentences):
-        others = " ".join(part for other, part in enumerate(sentences) if other != index)
-        if _narration_sentence(sentence, others):
+    for sentence in sentences:
+        if _narration_sentence(sentence, anchored):
             dropped = True
             continue
         kept.append(sentence)
@@ -575,6 +588,9 @@ def _without_narration(reply, page_number):
         return reply
     cleaned = " ".join(kept).strip()
     if not any(_same_number(number, page_number) for number in _stated_price_numbers(cleaned)):
+        return reply
+    kept_words = set(_WORD.findall(cleaned.casefold()))
+    if any(word not in kept_words for word in _content_words(reply)):
         return reply
     return cleaned
 

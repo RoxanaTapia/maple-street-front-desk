@@ -841,6 +841,40 @@ class ServicePriceChecks(unittest.TestCase):
         self.assertIn("$149", mixed_got)
         self.assertNotEqual(mixed_got, direct)
 
+    def test_a_repeated_fact_is_not_deleted_with_the_note(self):
+        """A fact stated only in a repeated note is kept."""
+        # Each copy used to count the other as the place the fact was kept,
+        # so both were deleted. A writer and a fake call run this. No live
+        # call is made. The fact stays, and the reply is not cut down to
+        # the price sentence.
+        question = "A drain cleaning is 200?"
+        direct = "A drain cleaning is $149. From Pricing."
+        draft = (
+            "The customer needs a Saturday visit. "
+            "The customer needs a Saturday visit. "
+            "A drain cleaning is $149. From Pricing."
+        )
+
+        def writer(question_arg, instructions, pages):
+            return draft
+
+        got = front_desk.reply_to(question, base_url=self.site.base, writer=writer)
+        self.assertIn("Saturday visit", got)
+        self.assertGreaterEqual(got.casefold().count("saturday visit"), 1)
+        self.assertIn("$149", got)
+        self.assertNotEqual(got, direct)
+        self.assertNotEqual(got, self._callback())
+
+        def client(_payload):
+            return {"content": [{"type": "text", "text": draft}]}
+
+        via_call = front_desk.reply_to(question, base_url=self.site.base, client=client)
+        self.assertIn("Saturday visit", via_call)
+        self.assertGreaterEqual(via_call.casefold().count("saturday visit"), 1)
+        self.assertIn("$149", via_call)
+        self.assertNotEqual(via_call, direct)
+        self.assertNotEqual(via_call, self._callback())
+
 
 if __name__ == "__main__":
     unittest.main()
