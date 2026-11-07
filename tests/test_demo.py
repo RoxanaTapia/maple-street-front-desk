@@ -182,6 +182,24 @@ class DemoChatChecks(unittest.TestCase):
         self.assertEqual(got, callback)
         self.assertNotIn("<", raw)
 
+    def test_the_demo_http_keeps_unknown_questions_on_the_callback(self):
+        """A dripping tap, a card payment, and pizza on Saturday come back over HTTP."""
+        friendly = answer_reply.off_topic_reply()
+        callback = answer_reply.callback_reply()
+        cases = {
+            "Do you sell pizza on Saturday?": friendly,
+            "What's the weather during your hours?": friendly,
+            "My tap is dripping.": callback,
+            "Do you accept credit cards?": callback,
+            "Can you replace a bidet?": callback,
+        }
+        for message, expected in cases.items():
+            desk = front_desk.reply_to(message, base_url=self.demo.base)
+            raw, got = self._reply(message)
+            self.assertEqual(desk, expected, message)
+            self.assertEqual(got, expected, message)
+            self.assertNotIn("<", raw, message)
+
     def test_a_reply_is_shown_as_text(self):
         """A reply is shown as text, not as HTML."""
         marker = "<script>alert(1)</script>"

@@ -10,6 +10,7 @@ Run this area with
 python3 scripts/run_checks.py tests/test_off_topic.py:OffTopicReplyChecks.
 """
 
+import json
 import os
 import sys
 import tempfile
@@ -25,6 +26,7 @@ if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
 import answer_reply
+import demo_chat
 import front_desk
 import read_pages
 import serve_sample_site
@@ -153,7 +155,11 @@ class OffTopicReplyChecks(unittest.TestCase):
             "Do you sell pizza?",
             "do you sell pizza",
             "DO YOU SELL PIZZA?",
+            "Do you sell pizza on Saturday?",
+            "Do you sell pizzas on Saturdays?",
             "What's the weather today?",
+            "What's the weather during your hours?",
+            "Do you sell pizza when you are open?",
             "How much is a pizza?",
             "Can you recommend a movie?",
         ):
@@ -181,6 +187,10 @@ class OffTopicReplyChecks(unittest.TestCase):
             "How long is your warranty?",
             "Do you repair garbage disposals?",
             "I have a leaky faucet",
+            "My tap is dripping.",
+            "Do you accept credit cards?",
+            "Can you replace a bidet?",
+            "The aerator won't unscrew.",
         )
         for message in missing:
             self.assertIsNone(urgent_reply.reply_if_urgent(message), message)
@@ -196,6 +206,72 @@ class OffTopicReplyChecks(unittest.TestCase):
         self.assertTrue(drain.endswith("From Pricing."))
         self.assertNotEqual(drain, callback)
         self.assertNotEqual(drain, friendly)
+
+    def test_an_unknown_question_still_reaches_the_answer_path(self):
+        """A dripping tap, a card payment, and an unfamiliar job are still sent on."""
+        friendly = answer_reply.off_topic_reply()
+        seen = []
+
+        def client(payload):
+            seen.append(payload["messages"][0]["content"])
+            return {"content": [{"type": "text", "text": "We can look that up."}]}
+
+        def writer(question, instructions, pages):
+            raise AssertionError("the writer ran for a clearly unrelated question")
+
+        for message in (
+            "My tap is dripping.",
+            "Do you accept credit cards?",
+            "Can you replace a bidet?",
+        ):
+            before = len(seen)
+            got = self._reply(message, client=client)
+            self.assertEqual(len(seen), before + 1, message)
+            self.assertIn(message, seen[-1])
+            self.assertNotEqual(got, friendly, message)
+            self.assertNotIn("From ", got)
+        pizza = "Do you sell pizza on Saturday?"
+        got = self._reply(pizza, writer=writer, client=client)
+        self.assertEqual(got, friendly)
+        self.assertEqual(len(seen), 3)
+        mixed = self._reply("Do you sell pizza and my tap is dripping?")
+        self.assertEqual(mixed, answer_reply.callback_reply())
+        self.assertNotEqual(mixed, friendly)
+
+    def test_the_demo_http_matches_the_front_desk(self):
+        """The demo HTTP reply matches the front desk for a tap, a payment, and pizza on Saturday."""
+        friendly = answer_reply.off_topic_reply()
+        callback = answer_reply.callback_reply()
+        demo = demo_chat.make_server("127.0.0.1", 0, self.site.base)
+        thread = threading.Thread(target=demo.serve_forever, daemon=True)
+        thread.start()
+        host, port = demo.server_address[:2]
+        url = f"http://{host}:{port}/reply"
+        cases = {
+            "Do you sell pizza on Saturday?": friendly,
+            "What's the weather during your hours?": friendly,
+            "My tap is dripping.": callback,
+            "Do you accept credit cards?": callback,
+            "Can you replace a bidet?": callback,
+        }
+        try:
+            for message, expected in cases.items():
+                self.assertEqual(self._reply(message), expected, message)
+                data = json.dumps({"message": message}).encode("utf-8")
+                request = urllib.request.Request(
+                    url,
+                    data=data,
+                    headers={"Content-Type": "application/json"},
+                    method="POST",
+                )
+                with urllib.request.urlopen(request, timeout=5) as response:
+                    self.assertEqual(response.status, 200, message)
+                    body = json.loads(response.read().decode("utf-8"))
+                self.assertEqual(body, {"reply": expected}, message)
+        finally:
+            demo.shutdown()
+            demo.server_close()
+            thread.join(timeout=2)
 
     def test_an_urgent_message_still_stops_first(self):
         """An urgent message still gets the call-now reply, even when it also mentions pizza."""

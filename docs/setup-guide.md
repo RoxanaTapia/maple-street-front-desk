@@ -51,7 +51,7 @@ export ANTHROPIC_API_KEY='...'
 Each page name needs the same link text in `sample-site/index.html`.
 A line that is only bold is a group name, and `from` plus a page name picks the page.
 
-The stand-in reads your test questions. Claude reads your pages and the callback sentence, not that list. An off-topic question uses the off-topic reply and is not sent to Claude.
+The stand-in reads your test questions. Claude reads your pages and the callback sentence, not that list. A clearly unrelated question uses the off-topic reply and is not sent to Claude. A question we do not recognize still uses the callback sentence.
 
 ## Check it still works
 

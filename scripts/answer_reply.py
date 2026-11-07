@@ -4,9 +4,10 @@ This is part 3 of the path. It takes a customer question and the page
 text from the page reader, and it builds the instructions for the answer:
 answer only from these pages, keep it short, and end with From and the
 page name. It uses the callback sentence from the agreements when the
-pages don't cover a plumbing question. A question that is not about
-plumbing gets the off-topic reply from the agreements, and neither
-Claude nor the stand-in is called. The text of every page is included.
+pages don't cover a plumbing question. A question that is clearly about
+something else gets the off-topic reply from the agreements, and neither
+Claude nor the stand-in is called. Anything we do not recognize stays
+on the answer path. The text of every page is included.
 
 When ANTHROPIC_API_KEY is set, Claude writes the answer through the
 Messages API. A small, fast model is used unless CLAUDE_MODEL names
@@ -100,99 +101,115 @@ _STOP = frozenset(
         "please",
     }
 )
-# Words that keep a question on the plumbing path even when the pages
-# never use them. A missing fact then stays on the callback reply.
-# Pizza, the weather, and other unrelated words are not in this list.
-_ABOUT_THE_BUSINESS = frozenset(
+# The friendly reply is only for a request that is clearly about one of
+# these subjects. Anything else, including a word we have not listed,
+# stays on the answer path. The pages are not consulted.
+_UNRELATED = frozenset(
     {
-        "pipe",
-        "drain",
-        "toilet",
-        "faucet",
-        "sink",
-        "shower",
-        "tub",
-        "bath",
-        "bathroom",
-        "bathtub",
-        "sewer",
-        "septic",
-        "clog",
-        "unclog",
-        "boiler",
-        "heater",
-        "heating",
-        "furnace",
-        "water",
-        "leak",
-        "plumbing",
-        "plumber",
-        "disposal",
-        "disposer",
-        "pump",
-        "sump",
-        "valve",
-        "fixture",
-        "tank",
-        "tankless",
-        "radiator",
-        "spigot",
-        "hose",
-        "washer",
-        "garbage",
-        "flood",
-        "basement",
-        "frozen",
-        "hours",
-        "open",
-        "closed",
-        "saturday",
-        "sunday",
-        "monday",
-        "friday",
-        "appointment",
-        "book",
-        "cancel",
-        "warranty",
-        "financing",
-        "licensed",
-        "insured",
-        "insurance",
-        "cover",
-        "coverage",
-        "area",
-        "emergency",
-        "callout",
+        "pizza",
+        "burger",
+        "taco",
+        "sushi",
+        "coffee",
+        "weather",
+        "forecast",
+        "movie",
+        "film",
+        "cinema",
+        "joke",
+        "song",
+        "football",
+        "basketball",
+        "soccer",
+        "recipe",
+        "homework",
+        "tax",
+        "taxes",
     }
 )
-# Words on every page that do not make a question about plumbing.
-_PAGE_NOISE = frozenset(
+# Words that can sit next to an unrelated subject without being a second
+# request. A weekday, "open", or "hours" must not send "pizza on Saturday"
+# to the model. This list is not read from the pages.
+_ASIDE = frozenset(
     {
-        "maple",
-        "street",
-        "fictional",
-        "business",
-        "made",
-        "demo",
-        "home",
-        "page",
-        "pages",
+        "saturday",
+        "saturdays",
+        "sunday",
+        "sundays",
+        "monday",
+        "mondays",
+        "tuesday",
+        "tuesdays",
+        "wednesday",
+        "wednesdays",
+        "thursday",
+        "thursdays",
+        "friday",
+        "fridays",
+        "today",
+        "tomorrow",
+        "tonight",
+        "weekend",
+        "morning",
+        "afternoon",
+        "evening",
+        "open",
+        "opened",
+        "closed",
+        "hour",
+        "hours",
         "service",
         "services",
-        "offer",
-        "offers",
+        "business",
+        "maple",
+        "street",
+        "local",
+        "here",
+        "there",
+        "sell",
+        "selling",
+        "sold",
+        "buy",
+        "buying",
+        "order",
+        "ordering",
+        "deliver",
+        "delivery",
+        "recommend",
+        "watch",
+        "watching",
+        "want",
+        "wanted",
+        "like",
+        "love",
+        "need",
+        "needed",
+        "make",
+        "making",
+        "serve",
+        "serving",
+        "eat",
+        "eating",
+        "some",
+        "any",
+        "good",
+        "best",
+        "hot",
+        "cold",
+        "large",
+        "small",
+        "please",
+        "thanks",
+        "thank",
+        "during",
+        "while",
+        "after",
+        "before",
+        "about",
         "just",
         "also",
-        "fully",
-        "local",
-        "homes",
-        "main",
-        "line",
-        "call",
-        "calls",
-        "person",
-        "questions",
-        "handle",
+        "really",
+        "very",
     }
 )
 KEY_ENV = "ANTHROPIC_API_KEY"
@@ -210,7 +227,7 @@ USAGE = (
     'Usage: python3 scripts/answer_reply.py "customer question" [site address]\n'
     "Prints a short answer from your pages, ending with the page it used.\n"
     "When a plumbing question is not on the pages, prints the callback reply.\n"
-    "When the question is not about plumbing, prints the off-topic reply.\n"
+    "When the question is clearly about something else, prints the off-topic reply.\n"
     "With ANTHROPIC_API_KEY set, Claude writes the answer. With no key, a stand-in answers.\n"
     f"With no address, reads {read_pages.DEFAULT_SITE}."
 )
@@ -269,50 +286,44 @@ def off_topic_reply(text=None):
     return " ".join(parts)
 
 
-def _about_the_business(word):
-    """True when this word is about plumbing or this front desk."""
-    if len(word) < 3 or word in _STOP:
-        return False
-    if word in _ABOUT_THE_BUSINESS:
-        return True
-    if len(word) < 4:
-        return False
-    for known in _ABOUT_THE_BUSINESS:
-        if len(known) >= 4 and _overlaps(word, [known]):
-            return True
-    return False
+def _singular(word):
+    """Return word without a trailing s, so pizzas matches pizza.
+
+    This is not a prefix match. "business" does not become a shorter word
+    that then matches something else.
+    """
+    if len(word) > 3 and word.endswith("s") and not word.endswith("ss"):
+        return word[:-1]
+    return word
 
 
-def _topic_words(pages):
-    """Return meaningful words from the pages, without the banner and menu noise."""
-    found = []
-    seen = set()
-    for page in pages or []:
-        if not isinstance(page, dict) or page.get("status") != "read":
-            continue
-        blob = f"{page.get('name', '')} {page.get('text') or ''}"
-        for word in _tokens(blob):
-            if word in _PAGE_NOISE or word in seen:
-                continue
-            seen.add(word)
-            found.append(word)
-    return found
+def _unrelated_subject(word):
+    """True when this word is one of the clearly unrelated subjects."""
+    return word in _UNRELATED or _singular(word) in _UNRELATED
 
 
-def _is_off_topic(question, pages):
-    """True when the question is not about plumbing or this front desk.
+def _is_off_topic(question):
+    """True only when the question is clearly about something else.
 
-    A plumbing word, or a word from the business's pages, keeps the
-    question on the answer path. The callback reply then covers a fact
-    the pages don't state. An unrelated request does not share those words.
+    A dripping tap, a payment question, or a plumbing job we have not
+    named stays on the answer path. The business's pages are not read
+    for this decision, so a change in their wording cannot move it.
+    A weekday, "open", or "hours" beside pizza does not send that
+    question to the model. Another unrecognized word does: pizza plus
+    a dripping tap stays on the answer path.
     """
     if not isinstance(question, str) or not question.strip():
         return False
-    words = [word for word in _WORD.findall(question.casefold()) if word not in _STOP]
-    if any(_about_the_business(word) for word in words):
+    words = []
+    for word in _WORD.findall(question.casefold()):
+        if word in _STOP or len(word) < 3:
+            continue
+        words.append(word)
+    if not any(_unrelated_subject(word) for word in words):
         return False
-    page_words = _topic_words(pages)
-    if any(_overlaps(word, page_words) for word in words if len(word) >= 4):
+    for word in words:
+        if _unrelated_subject(word) or word in _ASIDE or _singular(word) in _ASIDE:
+            continue
         return False
     return True
 
@@ -832,9 +843,11 @@ def write_answer(question, pages, writer=None, text=None, client=None):
     and replaces both Claude and the stand-in. The instructions are what
     Claude is given: every page, plus the callback sentence.
 
-    A question that is not about plumbing returns the off-topic reply
-    from your agreements. Claude, the stand-in, and a supplied writer
-    are not called for it.
+    A question that is clearly about something else returns the off-topic
+    reply from your agreements. Claude, the stand-in, and a supplied
+    writer are not called for it. Anything else is written as usual, and
+    a plumbing or payment question the pages don't cover still gets the
+    callback reply.
 
     With no writer, Claude writes the answer when ANTHROPIC_API_KEY is
     set, or when client is given. client is a stand-in for the HTTP call,
@@ -847,7 +860,7 @@ def write_answer(question, pages, writer=None, text=None, client=None):
     A page-based answer is rewritten so it ends with exactly
     'From <Page name>.'. The callback reply is left as it is.
     """
-    if _is_off_topic(question, pages):
+    if _is_off_topic(question):
         return off_topic_reply(text)
     instructions = build_instructions(question, pages, text=text)
     callback = callback_reply(text)
