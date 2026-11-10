@@ -18,7 +18,13 @@ A message that mentions **no heat**, a **burst pipe**, **flooding**, a **frozen 
 
 When the business's pages don't cover the question, the assistant replies with exactly this:
 
-> I can't confirm that from your pages.
+> Please call us on (856) 555-0142 to confirm that.
+
+## When the assistant can't look it up
+
+When the assistant can't look up an answer, the customer gets exactly this, and nothing else:
+
+> Sorry, I can’t look that up right now. Please call us on (856) 555-0142.
 
 ## Off-topic questions
 

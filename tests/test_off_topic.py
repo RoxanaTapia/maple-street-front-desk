@@ -292,9 +292,10 @@ class OffTopicReplyChecks(unittest.TestCase):
         self.assertEqual(called["pages"], 0)
 
     def test_a_failed_plumbing_question_still_uses_the_callback_and_the_note(self):
-        """A failed call for a plumbing question still gets the callback reply and the owner note."""
+        """A failed call for a plumbing question gets the outage reply and the owner note."""
         friendly = answer_reply.off_topic_reply()
         callback = answer_reply.callback_reply()
+        outage = answer_reply.outage_reply()
         self.assertEqual(self._saved_log, ROOT / "logs" / "claude-failures.log")
         question = "How long is your warranty?"
         called = {"client": 0}
@@ -306,7 +307,8 @@ class OffTopicReplyChecks(unittest.TestCase):
 
         got = self._reply(question, client=client)
         self.assertEqual(called["client"], 1)
-        self.assertEqual(got, callback)
+        self.assertEqual(got, outage)
+        self.assertNotEqual(got, callback)
         self.assertNotEqual(got, friendly)
         note = answer_reply.FAILURE_LOG.read_text(encoding="utf-8")
         self.assertNotIn(question, note)
