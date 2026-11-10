@@ -8,9 +8,10 @@ pages don't cover the question. The text of every page is included.
 
 When ANTHROPIC_API_KEY is set, Claude writes the answer through the
 Messages API. A small, fast model is used unless CLAUDE_MODEL names
-another one. If that call fails, the callback reply is used instead of
+another one. If that call fails, the outage reply is used instead of
 an error, and a short note records when it happened and what kind of
 error it was. The customer's message and the key are not in that note.
+The outage reply is a different sentence from the callback reply.
 
 With no key, a stand-in answers the agreed test questions. When someone
 states a price that differs from the pages, the stand-in speaks to them
@@ -43,6 +44,7 @@ import read_pages
 ROOT = Path(__file__).resolve().parents[1]
 AGREEMENTS = ROOT / "docs" / "agreements.md"
 CALLBACK_HEADING = "When the pages don't say"
+OUTAGE_HEADING = "When the assistant can't look it up"
 QUESTIONS_HEADING = "The 15 test questions"
 ANSWERED_GROUP = "Answered by your pages"
 _CLOCK = re.compile(r"\d{1,2}:\d{2} am to \d{1,2}:\d{2} pm", re.IGNORECASE)
@@ -116,6 +118,7 @@ USAGE = (
     'Usage: python3 scripts/answer_reply.py "customer question" [site address]\n'
     "Prints a short answer from your pages, ending with the page it used.\n"
     "When the pages don't cover the question, prints the callback reply.\n"
+    "When the call fails, prints the outage reply.\n"
     "With ANTHROPIC_API_KEY set, Claude writes the answer. With no key, a stand-in answers.\n"
     f"With no address, reads {read_pages.DEFAULT_SITE}."
 )
@@ -144,10 +147,10 @@ def _section(body, heading):
     return lines
 
 
-def callback_reply(text=None):
-    """Return the callback sentence from your agreements."""
+def _quoted(text, heading, missing):
+    """Return the block quote under heading."""
     parts = []
-    for line in _section(_agreements(text), CALLBACK_HEADING):
+    for line in _section(_agreements(text), heading):
         stripped = line.strip()
         if not stripped.startswith(">"):
             continue
@@ -155,8 +158,22 @@ def callback_reply(text=None):
         if part:
             parts.append(part)
     if not parts:
-        raise ValueError("The callback reply is missing from your agreements.")
+        raise ValueError(missing)
     return " ".join(parts)
+
+
+def callback_reply(text=None):
+    """Return the callback sentence from your agreements."""
+    return _quoted(text, CALLBACK_HEADING, "The callback reply is missing from your agreements.")
+
+
+def outage_reply(text=None):
+    """Return the outage sentence from your agreements.
+
+    This is the reply when a call fails. It is a different sentence
+    from the callback reply.
+    """
+    return _quoted(text, OUTAGE_HEADING, "The outage reply is missing from your agreements.")
 
 
 def _question_rows(body):
@@ -916,20 +933,22 @@ def write_answer(question, pages, writer=None, text=None, client=None):
 
     With no writer, Claude writes the answer when ANTHROPIC_API_KEY is
     set, or when client is given. client is a stand-in for the HTTP call,
-    used by the checks. If the call fails, the callback reply is returned
+    used by the checks. If the call fails, the outage reply is returned
     and a short note records when it happened and what kind of error it
-    was. The customer's message and the key are not in that note.
+    was. The customer's message and the key are not in that note. The
+    outage reply is not the callback sentence.
     With no key and no client, the stand-in answers the agreed test questions.
 
     A page-based answer is rewritten so it ends with exactly
-    'From <Page name>.'. The callback reply is left as it is. A wrong-price
-    note that already states only the page price may lose the words
-    "the customer", and the other sentences stay. A note that agrees with
-    the stated price, or names another amount, is not replaced with the
-    page price.
+    'From <Page name>.'. The callback reply and the outage reply are
+    left as they are. A wrong-price note that already states only the
+    page price may lose the words "the customer", and the other sentences
+    stay. A note that agrees with the stated price, or names another
+    amount, is not replaced with the page price.
     """
     instructions = build_instructions(question, pages, text=text)
     callback = callback_reply(text)
+    outage = outage_reply(text)
     if writer is not None:
         reply = writer(question, instructions, pages)
     elif client is None and not _api_key():
@@ -942,7 +961,9 @@ def write_answer(question, pages, writer=None, text=None, client=None):
                 _note_call_failure(error)
             except Exception:
                 logging.warning("Claude could not answer.")
-            return callback
+            return outage
+    if isinstance(reply, str) and reply.strip() == outage:
+        return outage
     reply = normalize_source_line(reply, pages, callback)
     return _direct_price_reply(question, reply, pages, instructions, callback)
 

@@ -86,7 +86,7 @@ python3 scripts/read_pages.py
 
 ## 3 · Write the answer
 
-*A question gets a short answer from the business's pages, or the callback reply when they don't cover it.*
+*A question gets a short answer from the business's pages, the callback reply when they don't cover it, or the outage reply when the call fails.*
 
 **What it does**
 
@@ -95,8 +95,8 @@ python3 scripts/read_pages.py
 - The instructions include the text of the business's pages, all six of them, plus the callback reply. They say to answer only from these pages, keep it short, and end with From and the page name. When someone states a different price, they say to speak to that person directly, give the price from the pages, and not mention the customer or repeat their price.
 - Claude writes the answer when `ANTHROPIC_API_KEY` is set, and reads all six pages for every question. With no key, a stand-in answers the agreed test questions, and it answers "What are your hours?" from the Hours & FAQ page. A wrong price is answered with the sentence on the page, spoken to the person, and their amount is left out. A note that already states that price and no other amount can lose the words "the customer" when its facts are already in a sentence that stays. A fact stated only in that note is kept. The other sentences stay. A note that agrees with the wrong price, or names another amount, is not replaced with the page price. The stand-in is not a real AI. The checks use that path, so they do not show what a live call would write.
 - The same question inside quotes, or with markdown marks around the whole question, gets the same answer. A question mark on the end does too. Those marks come off the outside only. A dollar sign, a decimal point, and a hyphen in the question stay, and an urgent message is still handled first.
-- A page-based answer ends with From and the page name, for example From Hours & FAQ. The urgent reply and the callback reply are left as they are.
-- If the call fails, the customer still gets the callback reply, and a short note is kept for the owner. Where to find it is in the [setup guide](setup-guide.md#questions). An amount the pages don't state is still replaced by the callback reply.
+- A page-based answer ends with From and the page name, for example From Hours & FAQ. The urgent reply, the callback reply, and the outage reply are left as they are.
+- If the call fails, the customer gets the outage reply from [When the assistant can't look it up](agreements.md#when-the-assistant-cant-look-it-up). A fact the pages don't cover still gets the callback reply from [When the pages don't say](agreements.md#when-the-pages-dont-say). A short note is kept for the owner. Where to find it is in the [setup guide](setup-guide.md#questions). An amount the pages don't state is still replaced by the callback reply.
 - The 15 questions in [The 15 test questions](agreements.md#the-15-test-questions) each name a page, use the fixed urgent reply, or offer a callback.
 - Septic systems, being licensed and insured, and after-hours callouts are answered from the Hours & FAQ page. The after-hours question is not urgent, so it gets that page's answer.
 
@@ -143,7 +143,7 @@ The answer is short and names the page. `CLAUDE_MODEL` is optional, and the defa
 
 You see this check on the pull request as Answers come from your pages.
 
-*Pull request checks:* **Answers come from your pages**. **Claude writes the answer**. **A failed call is noted for the owner**. **Questions 13 to 15 come from Hours and FAQ**. **A wrapped question matches the plain one**.
+*Pull request checks:* **Answers come from your pages**. **Claude writes the answer**. **A failed call is noted for the owner**. **A failed call gets the outage reply**. **Questions 13 to 15 come from Hours and FAQ**. **A wrapped question matches the plain one**.
 
 ## 4 · Check every price
 
@@ -218,6 +218,7 @@ Each check prints ok, and the run ends with OK. The same checks run on every pul
 - A price belongs to the service
 - Answers
 - A failed call is noted
+- A failed call gets the outage reply
 - A wrapped question matches the plain one
 - The demo chat
 
@@ -233,6 +234,6 @@ python3 scripts/demo_chat.py
 
 It prints `Demo chat at http://127.0.0.1:8080`. Open that address. The page says: This is a demo. It answers only from Maple Street's pages. Type a message and the reply comes back. The sample site starts with it, so there is nothing else to run. Stop it with Ctrl+C.
 
-`DEMO_HOST` and `DEMO_PORT` choose the address. The default is local. The names are listed in [.env.example](../.env.example). The Claude key is set on the machine that runs the assistant. It isn't written into the repo or shown in replies.
+`DEMO_HOST` and `DEMO_PORT` choose the address. The default is local. The names are listed in [.env.example](../.env.example). The Claude key is set on the machine that runs the assistant. It isn't written into the repo or shown in replies. A crash, a blank reply, or a reply that would show the key is replaced with the outage reply. A missing fact, and a price the pages don't state, stay the callback reply.
 
 *Pull request checks:* **The demo chat gives the same replies**

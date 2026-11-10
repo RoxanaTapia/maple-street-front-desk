@@ -71,6 +71,7 @@ class ProjectChecks(unittest.TestCase):
             "tests/test_answers.py:AnswerChecks",
             "tests/test_answers.py:ClaudeAnswerChecks",
             "tests/test_answers.py:FailureNoteChecks",
+            "tests/test_answers.py:OutageReplyChecks",
             "tests/test_answers.py:HoursFaqAnswerChecks",
             "tests/test_answers.py:WrappedQuestionChecks",
             "tests/test_demo.py:DemoChatChecks",
