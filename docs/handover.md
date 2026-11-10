@@ -15,8 +15,18 @@ The assistant takes its urgent words and replies from the agreements page, so ed
 | Test results | The 15 questions and the urgent words from the live demo on Nov 4 | [Live test results](test-results.md) |
 | Project guide | Where things are, and how a change is made | [Project guide](../AGENTS.md) |
 | Checks | Run automatically on every pull request. To run them yourself, see Try it yourself. | [Try it yourself](how-it-works.md#try-it-yourself) |
-| Live demo | Online until Wed Nov 25, 2026. | [maple-demo.roxanatapia.dev](https://maple-demo.roxanatapia.dev) |
+| Live demo | Online until Wed Nov 25, 2026. See [When the demo goes offline](#when-the-demo-goes-offline). | [maple-demo.roxanatapia.dev](https://maple-demo.roxanatapia.dev) |
 | Claude key | On your own Anthropic account, with your own spend limit. It's never stored in the project. | [Your Claude key](setup-guide.md#your-claude-key) |
+
+## When the demo goes offline
+
+The live demo at maple-demo.roxanatapia.dev stays online until Wed Nov 25, 2026, 14 days after delivery. After that we take it offline.
+
+What you keep is this repository, all the handover docs, and the checks.
+
+To run it again yourself, follow [Try it on your computer](setup-guide.md#try-it-on-your-computer).
+
+If you'd like us to keep it online for you, ask us for a quote.
 
 ## Change it yourself
 
