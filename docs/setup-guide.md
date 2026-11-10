@@ -91,3 +91,11 @@ The code is handed over once the work is approved and paid.
 - Or invite a collaborator: Settings, then Collaborators, then Add people.
 
 After a transfer, the repo and the key are yours.
+
+## Versions it was tested on
+
+The assistant was checked with these versions.
+
+- The Claude model is `claude-haiku-5-5`, and you can change it with the `CLAUDE_MODEL` setting.
+- Anthropic API version `2023-06-01` is sent with each call.
+- Python 3.12 is the version the checks use.
