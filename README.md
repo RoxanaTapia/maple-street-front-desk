@@ -20,6 +20,7 @@ It prints `Demo chat at http://127.0.0.1:8080`. Open that address. The practice 
 |---|---|---|
 | "I have a burst pipe" | A message to call the owner right away, with the business number | ✅ |
 | "How much is a water heater replacement?" | An offer of a callback, since that price isn't on the business's pages | ✅ |
+| "Do you sell pizza?" | A reply that points them back to plumbing, since that isn't a plumbing question | ✅ |
 | "Are you open Saturdays?" | A short answer from the Hours & FAQ page | ✅ |
 
 What each kind of message gets back is in [How the assistant behaves](docs/behaviour.md).
