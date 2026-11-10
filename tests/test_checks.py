@@ -72,6 +72,7 @@ class ProjectChecks(unittest.TestCase):
             "tests/test_answers.py:ClaudeAnswerChecks",
             "tests/test_answers.py:FailureNoteChecks",
             "tests/test_answers.py:HoursFaqAnswerChecks",
+            "tests/test_answers.py:WrappedQuestionChecks",
             "tests/test_demo.py:DemoChatChecks",
         ):
             self.assertIn(command, workflow)

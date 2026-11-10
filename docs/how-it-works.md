@@ -32,6 +32,7 @@ flowchart LR
 - When one of those words is present, the customer gets only the fixed urgent reply. The pages are not read.
 - A frozen pipe is one of those words, so a message such as "I think I have a frozen pipe" gets only the fixed urgent reply.
 - Water everywhere, a basement, and a leak are urgent words too. "My basement has water everywhere" gets only the fixed urgent reply.
+- Quotes, markdown, or a question mark around that whole message do not hide the urgent words. The same message wrapped in quotes still gets only the fixed urgent reply.
 - A spelling named beside a word counts as that word. Leak also covers leaking, so "The pipe is leaking" gets only the fixed urgent reply.
 - "I have a leaky faucet" does not use an urgent word, so it is left for the next part.
 - A normal question is left for the next part.
@@ -42,6 +43,7 @@ flowchart LR
 ```
 python3 scripts/urgent_reply.py 'I have a burst pipe'
 python3 scripts/urgent_reply.py 'My basement has water everywhere'
+python3 scripts/urgent_reply.py '"my basement has water everywhere?"'
 python3 scripts/urgent_reply.py 'The pipe is leaking'
 python3 scripts/urgent_reply.py 'I have a leaky faucet'
 python3 scripts/urgent_reply.py 'Are you open Saturdays?'
@@ -51,6 +53,7 @@ python3 scripts/urgent_reply.py 'Are you open Saturdays?'
 |---|---|
 | I have a burst pipe | The fixed urgent reply |
 | My basement has water everywhere | The fixed urgent reply |
+| "my basement has water everywhere?" | The fixed urgent reply |
 | The pipe is leaking | The fixed urgent reply |
 | I have a leaky faucet | `This message is not urgent.` |
 | Are you open Saturdays? | `This message is not urgent.` |
@@ -91,6 +94,7 @@ python3 scripts/read_pages.py
 - A question the pages don't cover gets the callback reply from [When the pages don't say](agreements.md#when-the-pages-dont-say).
 - The instructions include the text of the business's pages, all six of them, plus the callback reply. They say to answer only from these pages, keep it short, and end with From and the page name. When someone states a different price, they say to speak to that person directly, give the price from the pages, and not mention the customer or repeat their price.
 - Claude writes the answer when `ANTHROPIC_API_KEY` is set, and reads all six pages for every question. With no key, a stand-in answers the agreed test questions, and it answers "What are your hours?" from the Hours & FAQ page. A wrong price is answered with the sentence on the page, spoken to the person, and their amount is left out. A note that already states that price and no other amount can lose the words "the customer" when its facts are already in a sentence that stays. A fact stated only in that note is kept. The other sentences stay. A note that agrees with the wrong price, or names another amount, is not replaced with the page price. The stand-in is not a real AI. The checks use that path, so they do not show what a live call would write.
+- The same question inside quotes, or with markdown marks around the whole question, gets the same answer. A question mark on the end does too. Those marks come off the outside only. A dollar sign, a decimal point, and a hyphen in the question stay, and an urgent message is still handled first.
 - A page-based answer ends with From and the page name, for example From Hours & FAQ. The urgent reply and the callback reply are left as they are.
 - If the call fails, the customer still gets the callback reply, and a short note is kept for the owner. Where to find it is in the [setup guide](setup-guide.md#questions). An amount the pages don't state is still replaced by the callback reply.
 - The 15 questions in [The 15 test questions](agreements.md#the-15-test-questions) each name a page, use the fixed urgent reply, or offer a callback.
@@ -102,7 +106,9 @@ python3 scripts/read_pages.py
 
 ```
 python3 scripts/answer_reply.py 'Are you open Saturdays?'
+python3 scripts/front_desk.py '"Are you open Saturdays?"'
 python3 scripts/front_desk.py 'How much is a drain cleaning?'
+python3 scripts/front_desk.py '"How much is a drain cleaning?"'
 python3 scripts/front_desk.py 'A drain cleaning is 200?'
 python3 scripts/front_desk.py 'Do you cover Moorestown?'
 python3 scripts/front_desk.py 'Do you install septic systems?'
@@ -114,7 +120,9 @@ python3 scripts/front_desk.py 'I have a burst pipe'
 | Message | What you get |
 |---|---|
 | Are you open Saturdays? | `Saturday: 8:00 am to 12:00 pm. Yes, we are open Saturdays. From Hours & FAQ.` |
+| "Are you open Saturdays?" | The same Saturday answer |
 | How much is a drain cleaning? | `A drain cleaning is $149. From Pricing.` |
+| "How much is a drain cleaning?" | `A drain cleaning is $149. From Pricing.` |
 | A drain cleaning is 200? | `A drain cleaning is $149. From Pricing.` |
 | Do you cover Moorestown? | The callback reply |
 | Do you install septic systems? | `No, we don't install or service septic systems. From Hours & FAQ.` |
@@ -131,11 +139,11 @@ python3 scripts/answer_reply.py 'Are you open Saturdays?'
 
 The answer is short and names the page. `CLAUDE_MODEL` is optional, and the default is set in the code.
 
-*Good to know.* Every question is answered from all six pages. A document search engine can be added later if many more documents are added.
+*Good to know.* Every question is answered from all six pages. A document search engine can be added later if many more documents are added. Marks around the whole question are set aside. A mark in the middle of the words is left as written.
 
 You see this check on the pull request as Answers come from your pages.
 
-*Pull request checks:* **Answers come from your pages**. **Claude writes the answer**. **A failed call is noted for the owner**. **Questions 13 to 15 come from Hours and FAQ**.
+*Pull request checks:* **Answers come from your pages**. **Claude writes the answer**. **A failed call is noted for the owner**. **Questions 13 to 15 come from Hours and FAQ**. **A wrapped question matches the plain one**.
 
 ## 4 · Check every price
 
@@ -210,6 +218,7 @@ Each check prints ok, and the run ends with OK. The same checks run on every pul
 - A price belongs to the service
 - Answers
 - A failed call is noted
+- A wrapped question matches the plain one
 - The demo chat
 
 </details>
