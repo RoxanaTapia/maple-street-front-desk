@@ -47,7 +47,7 @@ An emergency is caught first. A price is checked last. A number the pages don't 
 - ✅ **Guards every price:** an amount is kept only when the pages state it near the service asked about. Any other amount is swapped for the callback reply.
 - ✅ **Writes the answer:** a short reply from the business's pages.
 - ✅ **Demo chat:** a page to try the same replies, from a link.
-- ✅ **Handover:** [a simple guide for running it](docs/setup-guide.md).
+- ✅ **Handover:** [what you have, and how to change it yourself](docs/handover.md).
 
 ## Built with AI, checked by people
 
@@ -62,6 +62,7 @@ An emergency is caught first. A price is checked last. A number the pages don't 
 - [How the assistant behaves](docs/behaviour.md): what a customer gets back.
 - [How the assistant works](docs/how-it-works.md): the path of a message, and how to try the sample site.
 - [Setup guide](docs/setup-guide.md): how to run it.
+- [Handover notes](docs/handover.md): what you have, and how to change it yourself.
 - [Live test results](docs/test-results.md): the 15 questions and the urgent words, from the live demo on Nov 4.
 
 **Next up:** the owner's notes from the demo call.

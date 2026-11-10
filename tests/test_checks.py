@@ -18,6 +18,7 @@ REQUIRED_FILES = (
     "docs/behaviour.md",
     "docs/agreements.md",
     "docs/how-it-works.md",
+    "docs/handover.md",
     ".cursor/rules/working-in-this-repo.mdc",
     ".cursor/rules/tests.mdc",
     "tests/test_links.py",

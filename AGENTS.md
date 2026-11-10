@@ -25,6 +25,7 @@ These never change without the client's OK. The list is in [What we've agreed](d
 | Client-facing | [docs/agreements.md](docs/agreements.md) | What we've agreed |
 | Client-facing | [docs/behaviour.md](docs/behaviour.md) | What a customer writes, and what they get back |
 | Client-facing | [docs/how-it-works.md](docs/how-it-works.md) | How a message is handled, and how to try the sample site and the checks. See [Try it yourself](docs/how-it-works.md#try-it-yourself). |
+| Client-facing | [docs/handover.md](docs/handover.md) | Notes for when the project is handed over |
 | Client-facing | [AGENTS.md](AGENTS.md) | This guide |
 | Client-facing | [sample-site/](sample-site/) | A small fictional sample of the business's public pages |
 | Client-facing | [scripts/serve_sample_site.py](scripts/serve_sample_site.py) | Serves that sample like a website |
@@ -46,7 +47,6 @@ These never change without the client's OK. The list is in [What we've agreed](d
 | Coming in a later step | `src/` | The assistant itself, which reads pages and answers |
 | Coming in a later step | `requirements.txt` | The list of parts the project needs |
 | Coming in a later step | `docs/setup.md` | How to run the project |
-| Coming in a later step | `docs/handover.md` | Notes for when the project is handed over |
 
 To try the sample site, read the pages, or run the checks, follow [Try it yourself](docs/how-it-works.md#try-it-yourself).
 
