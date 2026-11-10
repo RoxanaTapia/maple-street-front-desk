@@ -328,7 +328,7 @@ class LongerPriceChecks(unittest.TestCase):
         self.assertNotEqual(price_reply.find_amounts("$1,499"), ["$149"])
         published = price_reply.published_amounts(self.site.base)
         callback = price_reply.callback_reply()
-        self.assertEqual(callback, "Please call us to confirm that.")
+        self.assertEqual(callback, "Please call us on (856) 555-0142 to confirm that.")
         self.assertIn("$149", published)
         self.assertNotIn("$1499", published)
         self.assertNotIn("$1,499", published)

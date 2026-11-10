@@ -18,13 +18,13 @@ A message that mentions **no heat**, a **burst pipe**, **flooding**, a **frozen 
 
 When the business's pages don't cover the question, the assistant replies with exactly this:
 
-> Please call us to confirm that.
+> Please call us on (856) 555-0142 to confirm that.
 
 ## When the assistant can't look it up
 
 When the assistant can't look up an answer, the customer gets exactly this, and nothing else:
 
-> Sorry, I can’t look that up right now. Please call us or leave your number so we can get back to you.
+> Sorry, I can’t look that up right now. Please call us on (856) 555-0142.
 
 ## The 15 test questions
 

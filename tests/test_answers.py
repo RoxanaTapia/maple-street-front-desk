@@ -828,10 +828,10 @@ class FailureNoteChecks(unittest.TestCase):
         self.assertEqual(answer_reply.FAILURE_LOG.read_text(encoding="utf-8"), note)
 
 
-MISSING_REPLY = "Please call us to confirm that."
+MISSING_REPLY = "Please call us on (856) 555-0142 to confirm that."
 OUTAGE_REPLY = (
     "Sorry, I can\u2019t look that up right now. "
-    "Please call us or leave your number so we can get back to you."
+    "Please call us on (856) 555-0142."
 )
 
 
