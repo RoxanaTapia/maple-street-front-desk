@@ -323,6 +323,10 @@ class AnswerChecks(unittest.TestCase):
         def custom(question_arg, instructions, pages_arg):
             return "CUSTOM"
 
+        self.assertEqual(
+            answer_reply.write_answer("Are you open Saturdays?", pages, writer=custom),
+            "CUSTOM",
+        )
         self.assertEqual(answer_reply.write_answer("Hello", pages, writer=custom), "CUSTOM")
         for name in ("answer_reply.py", "front_desk.py"):
             source = (SCRIPTS / name).read_text(encoding="utf-8")
@@ -1065,12 +1069,20 @@ class OutageReplyChecks(unittest.TestCase):
             "Do you cover Moorestown?",
             "How much is a water heater replacement?",
             "How long is your warranty?",
-            "Do you sell pizza?",
         ):
             got = front_desk.reply_to(question, base_url=self.site.base)
             self.assertEqual(got, missing, question)
             self.assertNotEqual(got, outage, question)
             self.assertEqual(answer_reply.write_answer(question, pages), missing, question)
+        pizza = "Do you sell pizza?"
+        got = front_desk.reply_to(pizza, base_url=self.site.base)
+        self.assertEqual(got, answer_reply.off_topic_reply())
+        self.assertNotEqual(got, missing)
+        self.assertNotEqual(got, outage)
+        self.assertEqual(
+            answer_reply.write_answer(pizza, pages),
+            answer_reply.off_topic_reply(),
+        )
         self.assertFalse(answer_reply.FAILURE_LOG.exists())
         drain = front_desk.reply_to("How much is a drain cleaning?", base_url=self.site.base)
         self.assertEqual(drain, "A drain cleaning is $149. From Pricing.")

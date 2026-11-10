@@ -26,6 +26,12 @@ When the assistant can't look up an answer, the customer gets exactly this, and 
 
 > Sorry, I can’t look that up right now. Please call us on (856) 555-0142.
 
+## Off-topic questions
+
+When a question is not about this business's plumbing, the assistant replies with exactly this:
+
+> I can help with Maple Street’s plumbing services. What do you need help with?
+
 ## The 15 test questions
 
 Every change is checked against these 15 questions.

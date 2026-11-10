@@ -86,14 +86,15 @@ python3 scripts/read_pages.py
 
 ## 3 · Write the answer
 
-*A question gets a short answer from the business's pages, the callback reply when they don't cover it, or the outage reply when the call fails.*
+*A question gets a short answer from the business's pages, the off-topic reply when it is clearly about something else, the callback reply when the pages don't cover it, or the outage reply when the call fails.*
 
 **What it does**
 
 - A question the pages answer gets a short answer that names the page.
-- A question the pages don't cover gets the callback reply from [When the pages don't say](agreements.md#when-the-pages-dont-say).
+- A question that is clearly about something else gets the off-topic reply from [Off-topic questions](agreements.md#off-topic-questions). That reply is chosen before Claude is called. A weekday or the word "hours" in that question does not change it.
+- A question we do not recognize still gets the callback reply from [When the pages don't say](agreements.md#when-the-pages-dont-say). That includes a dripping tap, a payment question, and a plumbing job the pages don't name.
 - The instructions include the text of the business's pages, all six of them, plus the callback reply. They say to answer only from these pages, keep it short, and end with From and the page name. When someone states a different price, they say to speak to that person directly, give the price from the pages, and not mention the customer or repeat their price.
-- Claude writes the answer when `ANTHROPIC_API_KEY` is set, and reads all six pages for every question. With no key, a stand-in answers the agreed test questions, and it answers "What are your hours?" from the Hours & FAQ page. A wrong price is answered with the sentence on the page, spoken to the person, and their amount is left out. A note that already states that price and no other amount can lose the words "the customer" when its facts are already in a sentence that stays. A fact stated only in that note is kept. The other sentences stay. A note that agrees with the wrong price, or names another amount, is not replaced with the page price. The stand-in is not a real AI. The checks use that path, so they do not show what a live call would write.
+- Claude writes the answer when `ANTHROPIC_API_KEY` is set, except for a clearly unrelated question, and reads all six pages for the questions it is asked. With no key, a stand-in answers the agreed test questions, and it answers "What are your hours?" from the Hours & FAQ page. A wrong price is answered with the sentence on the page, spoken to the person, and their amount is left out. A note that already states that price and no other amount can lose the words "the customer" when its facts are already in a sentence that stays. A fact stated only in that note is kept. The other sentences stay. A note that agrees with the wrong price, or names another amount, is not replaced with the page price. The stand-in is not a real AI. The checks use that path, so they do not show what a live call would write. A clearly unrelated question does not use Claude or the stand-in.
 - The same question inside quotes, or with markdown marks around the whole question, gets the same answer. A question mark on the end does too. Those marks come off the outside only. A dollar sign, a decimal point, and a hyphen in the question stay, and an urgent message is still handled first.
 - A page-based answer ends with From and the page name, for example From Hours & FAQ. The urgent reply, the callback reply, and the outage reply are left as they are.
 - If the call fails, the customer gets the outage reply from [When the assistant can't look it up](agreements.md#when-the-assistant-cant-look-it-up). A fact the pages don't cover still gets the callback reply from [When the pages don't say](agreements.md#when-the-pages-dont-say). A short note is kept for the owner. Where to find it is in the [setup guide](setup-guide.md#questions). An amount the pages don't state is still replaced by the callback reply.
@@ -111,6 +112,11 @@ python3 scripts/front_desk.py 'How much is a drain cleaning?'
 python3 scripts/front_desk.py '"How much is a drain cleaning?"'
 python3 scripts/front_desk.py 'A drain cleaning is 200?'
 python3 scripts/front_desk.py 'Do you cover Moorestown?'
+python3 scripts/front_desk.py 'Do you sell pizza?'
+python3 scripts/front_desk.py 'Do you sell pizza on Saturday?'
+python3 scripts/front_desk.py 'My tap is dripping.'
+python3 scripts/front_desk.py 'Do you accept credit cards?'
+python3 scripts/front_desk.py 'Do you repair garbage disposals?'
 python3 scripts/front_desk.py 'Do you install septic systems?'
 python3 scripts/front_desk.py 'Are you licensed and insured?'
 python3 scripts/front_desk.py 'Do you offer after-hours emergency callouts?'
@@ -125,6 +131,11 @@ python3 scripts/front_desk.py 'I have a burst pipe'
 | "How much is a drain cleaning?" | `A drain cleaning is $149. From Pricing.` |
 | A drain cleaning is 200? | `A drain cleaning is $149. From Pricing.` |
 | Do you cover Moorestown? | The callback reply |
+| Do you sell pizza? | The off-topic reply |
+| Do you sell pizza on Saturday? | The off-topic reply |
+| My tap is dripping. | The callback reply |
+| Do you accept credit cards? | The callback reply |
+| Do you repair garbage disposals? | The callback reply |
 | Do you install septic systems? | `No, we don't install or service septic systems. From Hours & FAQ.` |
 | Are you licensed and insured? | `Yes, we're fully licensed and insured in New Jersey. From Hours & FAQ.` |
 | Do you offer after-hours emergency callouts? | `Yes, we handle emergencies after hours too. Just call our main line at (856) 555-0142. From Hours & FAQ.` |
@@ -139,11 +150,11 @@ python3 scripts/answer_reply.py 'Are you open Saturdays?'
 
 The answer is short and names the page. `CLAUDE_MODEL` is optional, and the default is set in the code.
 
-*Good to know.* Every question is answered from all six pages. A document search engine can be added later if many more documents are added. Marks around the whole question are set aside. A mark in the middle of the words is left as written.
+*Good to know.* Every question that is not clearly unrelated is answered from all six pages. A document search engine can be added later if many more documents are added. Marks around the whole question are set aside. A mark in the middle of the words is left as written. The friendly reply is chosen before Claude is called, and only for a clearly unrelated request. Mentioning a weekday does not send that request to Claude. A dripping tap, a payment question, or another job the pages don't name gets the callback reply from the stand-in. With a key, Claude writes any other answer and may not use the callback sentence word for word.
 
 You see this check on the pull request as Answers come from your pages.
 
-*Pull request checks:* **Answers come from your pages**. **Claude writes the answer**. **A failed call is noted for the owner**. **A failed call gets the outage reply**. **Questions 13 to 15 come from Hours and FAQ**. **A wrapped question matches the plain one**.
+*Pull request checks:* **Answers come from your pages**. **Claude writes the answer**. **A failed call is noted for the owner**. **A failed call gets the outage reply**. **Questions 13 to 15 come from Hours and FAQ**. **A wrapped question matches the plain one**. **Off-topic questions get the friendly reply**.
 
 ## 4 · Check every price
 
@@ -220,6 +231,7 @@ Each check prints ok, and the run ends with OK. The same checks run on every pul
 - A failed call is noted
 - A failed call gets the outage reply
 - A wrapped question matches the plain one
+- Off-topic questions
 - The demo chat
 
 </details>
@@ -234,6 +246,6 @@ python3 scripts/demo_chat.py
 
 It prints `Demo chat at http://127.0.0.1:8080`. Open that address. The page says: This is a demo. It answers only from Maple Street's pages. Type a message and the reply comes back. The sample site starts with it, so there is nothing else to run. Stop it with Ctrl+C.
 
-`DEMO_HOST` and `DEMO_PORT` choose the address. The default is local. The names are listed in [.env.example](../.env.example). The Claude key is set on the machine that runs the assistant. It isn't written into the repo or shown in replies. A crash, a blank reply, or a reply that would show the key is replaced with the outage reply. A missing fact, and a price the pages don't state, stay the callback reply.
+`DEMO_HOST` and `DEMO_PORT` choose the address. The default is local. The names are listed in [.env.example](../.env.example). The Claude key is set on the machine that runs the assistant. It isn't written into the repo or shown in replies. A crash, a blank reply, or a reply that would show the key is replaced with the outage reply. A clearly unrelated question gets the off-topic reply. A missing fact, and a price the pages don't state, stay the callback reply.
 
 *Pull request checks:* **The demo chat gives the same replies**
