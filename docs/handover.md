@@ -1,85 +1,80 @@
 # Handover notes
 
-Dave and Carla, this page is your starting point. It covers what you're getting, what's still open, and how to change the urgent words and the urgent reply yourselves.
+Dave and Carla, this page is yours. Everything you have lives in this project.
 
-The assistant takes its urgent words and replies from the agreements page, so editing that page on GitHub is how you change them.
+Live demo: [maple-demo.roxanatapia.dev](https://maple-demo.roxanatapia.dev), online until Wed Nov 25, 2026.
 
-## At a glance
+## Use it
 
-| Item | What it is | Link |
-|---|---|---|
-| Agreements | The pages, the urgent words, the contact details, and the 15 test questions | [What we've agreed](agreements.md) |
-| Behavior | What a customer gets back | [How the assistant behaves](behaviour.md) |
-| How it works | The path of a message | [How the assistant works](how-it-works.md) |
-| Setup | How to run it, with the versions it was tested on | [Setup guide](setup-guide.md#versions-it-was-tested-on) |
-| Test results | The 15 questions and the urgent words from the live demo on Nov 4 | [Live test results](test-results.md) |
-| Project guide | Where things are, and how a change is made | [Project guide](../AGENTS.md) |
-| Checks | Run automatically on every pull request. To run them yourself, see Try it yourself. | [Try it yourself](how-it-works.md#try-it-yourself) |
-| Live demo | Online until Wed Nov 25, 2026. See [When the demo goes offline](#when-the-demo-goes-offline). | [maple-demo.roxanatapia.dev](https://maple-demo.roxanatapia.dev) |
-| Claude key | On your own Anthropic account, with your own spend limit. It's never stored in the project. | [Your Claude key](setup-guide.md#your-claude-key) |
+- [maple-demo.roxanatapia.dev](https://maple-demo.roxanatapia.dev), until Wed Nov 25, 2026
+- How to run it and change it: [Walkthrough](https://youtu.be/nhAtGt-w8D4)
 
-## When the demo goes offline
+## Run or change it
 
-The live demo at maple-demo.roxanatapia.dev stays online until Wed Nov 25, 2026, 14 days after delivery. After that we take it offline.
+- [Setup guide](setup-guide.md)
+- On your account, never stored here: [Your Claude key](setup-guide.md#your-claude-key)
+- [How to change the urgent words](#change-the-urgent-words)
 
-What you keep is this repository, all the handover docs, and the checks.
+## Reference
 
-To run it again yourself, follow [Try it on your computer](setup-guide.md#try-it-on-your-computer).
-
-If you'd like us to keep it online for you, ask us for a quote.
-
-## Change it yourself
-
-A branch is a draft copy of the project. A pull request asks to add your draft to the live version.
-
-1. On GitHub, open `docs/agreements.md` and click the pencil icon (**Edit this file**).
-2. Under Urgent messages, change a word in bold, or the reply on the line that starts with `>`. Keep the `>` at the start.
-3. Click **Commit changes**. Choose **Create a new branch**, name it, for example `change-urgent-words`, and click **Propose changes**.
-4. On the next page, click **Create pull request**.
-5. Wait a few minutes until every check shows a green tick.
-6. Click **Merge pull request**, then **Confirm merge**.
-
-> **Note:** After you merge, let Roxana know in a comment on the pull request. She updates the live assistant, and the change is live from then on.
-
-## If a check turns red
-
-Do not merge. Open the check. Its name says what did not match.
-
-Fix `docs/agreements.md` on the same branch. The checks run again.
-
-If the file looks right, ask Roxana in a comment on the pull request. The check itself may need updating.
+- [What we've agreed](agreements.md), including the [15 test questions](agreements.md#the-15-test-questions)
+- [Live test results](test-results.md)
+- [How the assistant behaves](behaviour.md)
+- [How the assistant works](how-it-works.md)
+- [Project guide](../AGENTS.md)
+- On every change: [Checks](how-it-works.md#try-it-yourself)
 
 <details>
-<summary>What the checks look for</summary>
+<summary>Working with the agents, and what the checks look for</summary>
+
+Each change is one issue, one branch, and one pull request. The checks run, a person reviews, and then you merge.
+
+The steps are in [How a change happens](../AGENTS.md#how-a-change-happens). The [roles](../.cursor/team/README.md) and [rules](../.cursor/rules/working-in-this-repo.mdc) are there too.
+
+If a check turns red, open it. Its name says what did not match. Fix the agreements page on the same copy. The checks run again. If the file looks right, ask Roxana. The check itself may need updating.
 
 You can change the urgent reply freely if:
 
 - it stays on a line starting with `>`
 - it keeps a phone number written like (856) 555-0142 and has no `$`
 - it's different from the callback and outage replies
-- it isn't already written word for word on the behavior page, the README or the how-it-works page
+- it isn't already written word for word on the behaviour page, the README or the how-it-works page
 
 | Edit | Needs a check update? |
 |---|---|
 | Remove or rename "water everywhere", "basement", "leak", "leaking", "frozen pipe", "burst pipe", or "no heat" | Yes |
-| A new word that appears on the behavior page, even inside a longer word, or in an ordinary test question | Yes |
+| A new word that appears on the behaviour page, even inside a longer word, or in an ordinary test question | Yes |
 | A change that makes "I have a leaky faucet" or "frozen pipes" urgent | Yes |
 | Change the callback sentence, the off-topic reply, or the outage sentence | Yes |
 
 </details>
 
-## Known limits
+## Not done yet
 
-A misspelled service name, or a price with no `$`, can still get the wrong reply. [Issue: misspellings and prices without $](https://github.com/RoxanaTapia/maple-street-front-desk/issues/57)
+Settled on the call: call-us replies use your [main line](agreements.md#main-line-and-contact).
 
-The office isn't alerted when a page is down. [Issue: page-down alert](https://github.com/RoxanaTapia/maple-street-front-desk/issues/58)
+- Say yes to a service when a price is listed. [#64](https://github.com/RoxanaTapia/maple-street-front-desk/issues/64)
+- Call-us replies cannot be edited on the agreements page alone. [#65](https://github.com/RoxanaTapia/maple-street-front-desk/issues/65)
+- Misspellings, or prices with no `$`, can still go wrong. [#57](https://github.com/RoxanaTapia/maple-street-front-desk/issues/57)
+- You won't get an alert if the assistant stops working. [#58](https://github.com/RoxanaTapia/maple-street-front-desk/issues/58)
 
-## Open question
+## Keeping it live
 
-Should the "please call us" replies show your main line, or a different number? You can answer on [issue #59](https://github.com/RoxanaTapia/maple-street-front-desk/issues/59) or in our call.
+14 days after delivery, then offline. Ask for a quote to keep it.
 
-## Working with the agents
+## Change the urgent words
 
-Each change is one issue, one branch, and one pull request. The checks run, a person reviews, and then you merge.
+You edit a copy, then approve it.
 
-The steps are in [How a change happens](../AGENTS.md#how-a-change-happens). The [roles](../.cursor/team/README.md) and [rules](../.cursor/rules/working-in-this-repo.mdc) are there too.
+1. Open [docs/agreements.md](agreements.md) and click **Edit this file**.
+2. Change a bold word or the `>` reply, and keep the `>`.
+3. **Commit changes**, name a branch, then **Propose changes**.
+4. Click **Create pull request**.
+5. Wait until every check is green.
+6. Click **Merge pull request**, then **Confirm merge**.
+
+If a check turns red, don't merge; ask Roxana in the PR.
+
+## Who to ask
+
+Ask Roxana on the pull request or in Upwork messages, until the demo goes offline.
