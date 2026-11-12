@@ -43,6 +43,7 @@ SCRIPTS = ROOT / "scripts"
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
+import agreed
 import answer_reply
 import demo_chat
 import front_desk
@@ -52,54 +53,9 @@ import serve_sample_site
 import urgent_reply
 
 AGREEMENTS = ROOT / "docs" / "agreements.md"
-GROUP_HEADING = re.compile(r"^\*\*(.+?)\*\*$")
-QUESTION_LINE = re.compile(r"^(\d+)\.\s+(.+)$")
-FROM_PAGE = re.compile(r"\bfrom\s+(.+?)\.?$", re.IGNORECASE)
 CLOCK = re.compile(r"\d{1,2}:\d{2} am to \d{1,2}:\d{2} pm", re.IGNORECASE)
-
-
-def question_rows():
-    rows = []
-    in_section = False
-    group = None
-    for line in AGREEMENTS.read_text(encoding="utf-8").splitlines():
-        if line.startswith("## "):
-            if in_section:
-                break
-            in_section = line[3:].strip() == "The 18 test questions"
-            continue
-        if not in_section:
-            continue
-        bold = GROUP_HEADING.fullmatch(line.strip())
-        if bold:
-            group = bold.group(1).strip()
-            continue
-        match = QUESTION_LINE.match(line.strip())
-        if not match or not group:
-            continue
-        text = match.group(2).strip()
-        mark = text.find("?")
-        if mark == -1:
-            question, detail = text, ""
-        else:
-            question = text[: mark + 1].strip()
-            detail = text[mark + 1 :].strip()
-        rows.append(
-            {
-                "number": int(match.group(1)),
-                "question": question,
-                "detail": detail,
-                "group": group,
-            }
-        )
-    return rows
-
-
-def page_named(detail):
-    match = FROM_PAGE.search(detail.strip())
-    if not match:
-        return None
-    return match.group(1).strip()
+question_rows = agreed.question_rows
+page_named = agreed.page_named
 
 
 class RunningSite:
@@ -941,14 +897,12 @@ class OutageReplyChecks(unittest.TestCase):
             changed = changed.replace(needle, f"> {new}", 1)
         self.assertNotIn(original_callback, changed)
         self.assertNotIn(original_outage, changed)
-        saved_answer = answer_reply.AGREEMENTS
-        saved_price = price_reply.AGREEMENTS
+        saved_agreements = agreed.AGREEMENTS
         try:
             with tempfile.TemporaryDirectory() as folder:
                 path = Path(folder) / "agreements.md"
                 path.write_text(changed, encoding="utf-8")
-                answer_reply.AGREEMENTS = path
-                price_reply.AGREEMENTS = path
+                agreed.AGREEMENTS = path
                 self.assertEqual(answer_reply.callback_reply(), callback)
                 self.assertEqual(answer_reply.outage_reply(), outage)
                 self.assertEqual(price_reply.callback_reply(), callback)
@@ -996,8 +950,7 @@ class OutageReplyChecks(unittest.TestCase):
                 self.assertNotEqual(kept, callback)
                 self.assertNotEqual(kept, outage)
         finally:
-            answer_reply.AGREEMENTS = saved_answer
-            price_reply.AGREEMENTS = saved_price
+            agreed.AGREEMENTS = saved_agreements
         self.assertEqual(AGREEMENTS.read_text(encoding="utf-8"), body)
         self.assertEqual(answer_reply.callback_reply(), original_callback)
         self.assertEqual(answer_reply.outage_reply(), original_outage)

@@ -11,10 +11,9 @@ Usage: python3 scripts/urgent_reply.py "customer message"
 
 import re
 import sys
-from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
-AGREEMENTS = ROOT / "docs" / "agreements.md"
+import agreed
+
 URGENT_HEADING = "Urgent messages"
 NOT_URGENT = "This message is not urgent."
 _BESIDE = re.compile(
@@ -29,33 +28,10 @@ USAGE = (
 )
 
 
-def _body(text):
-    if text is None:
-        return AGREEMENTS.read_text(encoding="utf-8")
-    return text
-
-
-def _section(body, heading):
-    found = False
-    lines = []
-    for line in body.splitlines():
-        if line.startswith("## "):
-            title = line[3:].strip()
-            if found:
-                break
-            found = title == heading
-            continue
-        if found:
-            lines.append(line)
-    if not found:
-        raise ValueError(f"Your agreements have no section {heading}.")
-    return lines
-
-
 def urgent_words(text=None):
     """Return the urgent words from your agreements."""
     words = []
-    for line in _section(_body(text), URGENT_HEADING):
+    for line in agreed.section_lines(URGENT_HEADING, text):
         for word in re.findall(r"\*\*([^*]+)\*\*", line):
             word = word.strip()
             if word:
@@ -67,17 +43,7 @@ def urgent_words(text=None):
 
 def fixed_urgent_reply(text=None):
     """Return the fixed urgent reply from your agreements."""
-    parts = []
-    for line in _section(_body(text), URGENT_HEADING):
-        stripped = line.strip()
-        if not stripped.startswith(">"):
-            continue
-        part = stripped[1:].strip()
-        if part:
-            parts.append(part)
-    if not parts:
-        raise ValueError("The fixed urgent reply is missing from your agreements.")
-    return " ".join(parts)
+    return agreed.fixed_urgent_reply(text)
 
 
 def _contains_word(message, word):
@@ -92,7 +58,7 @@ def _spellings(body, word):
     """
     forms = [word]
     seen = {word.casefold()}
-    for line in _section(body, URGENT_HEADING):
+    for line in agreed.section_lines(URGENT_HEADING, body):
         for match in _BESIDE.finditer(line):
             if match.group(1).strip().casefold() != word.casefold():
                 continue
@@ -113,7 +79,7 @@ def reply_if_urgent(message, text=None):
     """
     if not isinstance(message, str) or not message.strip():
         return None
-    body = _body(text)
+    body = agreed.body(text)
     for word in urgent_words(body):
         if any(_contains_word(message, form) for form in _spellings(body, word)):
             return fixed_urgent_reply(body)

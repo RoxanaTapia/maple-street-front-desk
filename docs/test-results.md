@@ -2,6 +2,8 @@
 
 Wednesday, Nov 4, 2026. Live demo: <https://maple-demo.roxanatapia.dev>. Version: main at commit e0a24d6.
 
+The agreed list is 18 test questions. This page records the 15 that were sent to the live demo on Nov 4.
+
 **15 of 15 questions and 4 of 4 urgent words from that live demo pass.**
 
 Water everywhere, basement, and leak were added after the demo. The automatic checks pass for those three words, and for leaking. "I have a leaky faucet" is not urgent.
@@ -30,10 +32,11 @@ We sent each question to the live demo one at a time, as a customer would, and c
 
 ## Questions added after the demo
 
-These two were not sent to the live demo. The automatic checks cover them.
+These three were not sent to the live demo. The automatic checks cover them. Together with the 15 above, that is the 18 test questions.
 
 | Question | Result |
 |---|---|
+| Do you clean drains? | A short yes from Pricing, with the price written there |
 | How much is a drane cleaning? | The drain cleaning price from Pricing, the same price as question 3 |
 | Is drain cleaning 149? | A short yes that names that price, spoken to the customer |
 

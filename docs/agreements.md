@@ -61,6 +61,11 @@ Questions 13 to 15 are on the Hours & FAQ page.
 13. Do you install septic systems? No, we don't install or service septic systems, from Hours & FAQ.
 14. Are you licensed and insured? Yes, we're fully licensed and insured in New Jersey, from Hours & FAQ.
 15. Do you offer after-hours emergency callouts? Yes, we handle emergencies after hours too. Just call our main line at (856) 555-0142, from Hours & FAQ.
+
+### Pricing answers
+
+These answers are on the Pricing page.
+
 16. Do you clean drains? Yes, we do drain cleaning. It's $149, from Pricing.
 17. How much is a drane cleaning? $149, from Pricing.
 18. Is drain cleaning 149? Yes, $149, from Pricing.

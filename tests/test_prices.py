@@ -15,7 +15,6 @@ or python3 scripts/run_checks.py tests/test_prices.py:ServicePriceChecks.
 
 import contextlib
 import io
-import re
 import sys
 import threading
 import time
@@ -28,6 +27,7 @@ SCRIPTS = ROOT / "scripts"
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
+import agreed
 import answer_reply
 import front_desk
 import price_reply
@@ -36,38 +36,7 @@ import serve_sample_site
 import urgent_reply
 
 AGREEMENTS = ROOT / "docs" / "agreements.md"
-GROUP_HEADING = re.compile(r"^\*\*(.+?)\*\*$")
-QUESTION_LINE = re.compile(r"^(\d+)\.\s+(.+)$")
-
-
-def question_rows():
-    rows = []
-    in_section = False
-    group = None
-    for line in AGREEMENTS.read_text(encoding="utf-8").splitlines():
-        if line.startswith("## "):
-            if in_section:
-                break
-            in_section = line[3:].strip() == "The 18 test questions"
-            continue
-        if not in_section:
-            continue
-        bold = GROUP_HEADING.fullmatch(line.strip())
-        if bold:
-            group = bold.group(1).strip()
-            continue
-        match = QUESTION_LINE.match(line.strip())
-        if not match or not group:
-            continue
-        text = match.group(2).strip()
-        mark = text.find("?")
-        if mark == -1:
-            question, detail = text, ""
-        else:
-            question = text[: mark + 1].strip()
-            detail = text[mark + 1 :].strip()
-        rows.append({"question": question, "detail": detail, "group": group})
-    return rows
+question_rows = agreed.question_rows
 
 
 class RunningSite:
