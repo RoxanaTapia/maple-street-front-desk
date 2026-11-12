@@ -840,13 +840,6 @@ class FailureNoteChecks(unittest.TestCase):
         self.assertEqual(answer_reply.FAILURE_LOG.read_text(encoding="utf-8"), note)
 
 
-MISSING_REPLY = "Please call us on (856) 555-0142 to confirm that."
-OUTAGE_REPLY = (
-    "Sorry, I can\u2019t look that up right now. "
-    "Please call us on (856) 555-0142."
-)
-
-
 class _FrozenClock:
     """A clock that always reports one instant, so the failure note is exact."""
 
@@ -890,20 +883,18 @@ class OutageReplyChecks(unittest.TestCase):
         self._block_network()
         missing = answer_reply.callback_reply()
         outage = answer_reply.outage_reply()
-        self.assertEqual(missing, MISSING_REPLY)
-        self.assertEqual(price_reply.callback_reply(), MISSING_REPLY)
-        self.assertEqual(outage, OUTAGE_REPLY)
+        self.assertEqual(price_reply.callback_reply(), missing)
         self.assertNotEqual(outage, missing)
         self.assertNotEqual(missing, "I can't confirm that from your pages.")
         agreements = AGREEMENTS.read_text(encoding="utf-8")
         self.assertIn("## When the pages don't say\n", agreements)
         self.assertIn("## When the assistant can't look it up\n", agreements)
-        self.assertEqual(agreements.count(MISSING_REPLY), 1)
-        self.assertEqual(agreements.count(OUTAGE_REPLY), 1)
+        self.assertEqual(agreements.count(missing), 1)
+        self.assertEqual(agreements.count(outage), 1)
         for name in ("answer_reply.py", "price_reply.py", "front_desk.py", "demo_chat.py"):
             source = (SCRIPTS / name).read_text(encoding="utf-8")
-            self.assertNotIn(MISSING_REPLY, source, name)
-            self.assertNotIn(OUTAGE_REPLY, source, name)
+            self.assertNotIn(missing, source, name)
+            self.assertNotIn(outage, source, name)
         sample = (
             "## When the pages don't say\n\n> Call the office.\n\n"
             "## When the assistant can't look it up\n\n> The lookup is down.\n"
@@ -928,6 +919,88 @@ class OutageReplyChecks(unittest.TestCase):
         self.assertEqual(kind, "timeout")
         datetime.strptime(stamp, "%Y-%m-%dT%H:%M:%SZ")
         self.assertEqual(note, f"{stamp} timeout\n")
+
+    def test_a_changed_call_us_sentence_is_what_the_replies_use(self):
+        """A changed call-us sentence, including the phone number, is what the replies and the checks use."""
+        self._block_network()
+        original_callback = answer_reply.callback_reply()
+        original_outage = answer_reply.outage_reply()
+        callback = "Please phone the office on (609) 555-0199 and we will check."
+        outage = "Sorry, that lookup is unavailable. Please phone the office on (609) 555-0199."
+        self.assertNotEqual(callback, original_callback)
+        self.assertNotEqual(outage, original_outage)
+        self.assertNotIn("(856) 555-0142", callback)
+        self.assertNotIn("(856) 555-0142", outage)
+        self.assertIn("(609) 555-0199", callback)
+        self.assertIn("(609) 555-0199", outage)
+        body = AGREEMENTS.read_text(encoding="utf-8")
+        changed = body
+        for old, new in ((original_callback, callback), (original_outage, outage)):
+            needle = f"> {old}"
+            self.assertEqual(changed.count(needle), 1)
+            changed = changed.replace(needle, f"> {new}", 1)
+        self.assertNotIn(original_callback, changed)
+        self.assertNotIn(original_outage, changed)
+        saved_answer = answer_reply.AGREEMENTS
+        saved_price = price_reply.AGREEMENTS
+        try:
+            with tempfile.TemporaryDirectory() as folder:
+                path = Path(folder) / "agreements.md"
+                path.write_text(changed, encoding="utf-8")
+                answer_reply.AGREEMENTS = path
+                price_reply.AGREEMENTS = path
+                self.assertEqual(answer_reply.callback_reply(), callback)
+                self.assertEqual(answer_reply.outage_reply(), outage)
+                self.assertEqual(price_reply.callback_reply(), callback)
+                missing = front_desk.reply_to(
+                    "How long is your warranty?",
+                    base_url=self.site.base,
+                )
+                self.assertEqual(missing, callback)
+                self.assertNotEqual(missing, outage)
+
+                def client(_payload):
+                    raise TimeoutError("down")
+
+                with self.assertLogs(level="WARNING"):
+                    failed = front_desk.reply_to(
+                        "Are you open Saturdays?",
+                        base_url=self.site.base,
+                        client=client,
+                    )
+                self.assertEqual(failed, outage)
+                self.assertNotEqual(failed, callback)
+
+                def bad_price(_question, _instructions, _pages):
+                    return "A water heater replacement is $1,200."
+
+                rejected = front_desk.reply_to(
+                    "How much is a water heater replacement?",
+                    base_url=self.site.base,
+                    writer=bad_price,
+                )
+                self.assertEqual(rejected, callback)
+                self.assertNotIn("$1,200", rejected)
+                self.assertEqual(
+                    price_reply.checked_answer(
+                        "A water heater is $1499.",
+                        base_url=self.site.base,
+                    ),
+                    callback,
+                )
+                kept = front_desk.reply_to(
+                    "How much is a drain cleaning?",
+                    base_url=self.site.base,
+                )
+                self.assertEqual(kept, "A drain cleaning is $149. From Pricing.")
+                self.assertNotEqual(kept, callback)
+                self.assertNotEqual(kept, outage)
+        finally:
+            answer_reply.AGREEMENTS = saved_answer
+            price_reply.AGREEMENTS = saved_price
+        self.assertEqual(AGREEMENTS.read_text(encoding="utf-8"), body)
+        self.assertEqual(answer_reply.callback_reply(), original_callback)
+        self.assertEqual(answer_reply.outage_reply(), original_outage)
 
     def test_a_failed_call_returns_only_the_outage_reply(self):
         """A failed call returns only the outage reply, and the note keeps the time and the kind of error."""
