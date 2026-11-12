@@ -47,7 +47,7 @@ export ANTHROPIC_API_KEY='...'
 | The callback sentence | The `>` lines under When the pages don't say | Ask again |
 | The off-topic reply | The `>` lines under Off-topic questions | Ask again |
 | The outage sentence | The `>` lines under When the assistant can't look it up | Ask again |
-| Your test questions | Numbered lines under The 15 test questions, with the question ending at `?` | Run the checks |
+| Your test questions | Numbered lines under The 16 test questions, with the question ending at `?` | Run the checks |
 
 Each page name needs the same link text in `sample-site/index.html`.
 A line that is only bold is a group name, and `from` plus a page name picks the page.

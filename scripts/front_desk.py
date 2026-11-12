@@ -4,8 +4,9 @@
    answer, and nothing else runs.
 2. Read your pages.
 3. Write the answer. A question that is clearly about something else
-   gets the off-topic reply. Anything else is answered as usual, and a
-   question the pages don't cover gets the callback reply.
+   gets the off-topic reply. A service with a price on the pages is
+   offered, so the reply says yes and includes that price. Anything
+   else the pages don't cover gets the callback reply.
 4. Check every price. An amount that isn't on your pages, or that isn't
    near the service the customer asked about, is replaced with the
    callback reply. The outage reply is left as it is.
@@ -40,7 +41,9 @@ def reply_to(message, base_url=None, writer=None, client=None):
     read, the answer is written, and every price is checked last. A price
     is kept only when it is on the same page, near the service asked about.
     A question that is clearly about something else gets the off-topic
-    reply. A question the pages don't cover still gets the callback reply.
+    reply. A service with a price on the pages is offered, so the reply
+    says yes and includes that price. A question the pages don't cover
+    still gets the callback reply.
     The outage reply is returned as written, so a failed call is not
     replaced with the callback reply.
 

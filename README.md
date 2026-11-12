@@ -53,12 +53,12 @@ An emergency is caught first. A price is checked last. A number the pages don't 
 
 - **Clear roles.** Each change is planned, checked by tests, and reviewed before it goes live.
 - **One change at a time.** Each change starts as a written request, with a plain-English summary.
-- **Promises are tested.** The 15 agreed questions, the urgent words, and the price rules are tested on every change.
+- **Promises are tested.** The 16 agreed questions, the urgent words, and the price rules are tested on every change.
 - **A person signs off.** Nothing is added until that sign-off is done.
 
 ## Take a closer look
 
-- [What we've agreed](docs/agreements.md): the pages, the urgent words, the contact details, and the 15 test questions.
+- [What we've agreed](docs/agreements.md): the pages, the urgent words, the contact details, and the 16 test questions.
 - [How the assistant behaves](docs/behaviour.md): what a customer gets back.
 - [How the assistant works](docs/how-it-works.md): the path of a message, and how to try the sample site.
 - [Setup guide](docs/setup-guide.md): how to run it.

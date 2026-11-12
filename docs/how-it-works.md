@@ -91,14 +91,15 @@ python3 scripts/read_pages.py
 **What it does**
 
 - A question the pages answer gets a short answer that names the page.
+- A question about a service that has a price on the pages gets a yes, with that price, and the page name. The pages do not have to say "we do" that job in other words. "Do you clean drains?" is that case: Pricing lists drain cleaning at $149.
 - A question that is clearly about something else gets the off-topic reply from [Off-topic questions](agreements.md#off-topic-questions). That reply is chosen before Claude is called. A weekday or the word "hours" in that question does not change it.
-- A question we do not recognize still gets the callback reply from [When the pages don't say](agreements.md#when-the-pages-dont-say). That includes a dripping tap, a payment question, and a plumbing job the pages don't name.
-- The instructions include the text of the business's pages, all six of them, plus the callback reply. They say to answer only from these pages, keep it short, and end with From and the page name. When someone states a different price, they say to speak to that person directly, give the price from the pages, and not mention the customer or repeat their price.
-- Claude writes the answer when `ANTHROPIC_API_KEY` is set, except for a clearly unrelated question, and reads all six pages for the questions it is asked. With no key, a stand-in answers the agreed test questions, and it answers "What are your hours?" from the Hours & FAQ page. A wrong price is answered with the sentence on the page, spoken to the person, and their amount is left out. A note that already states that price and no other amount can lose the words "the customer" when its facts are already in a sentence that stays. A fact stated only in that note is kept. The other sentences stay. A note that agrees with the wrong price, or names another amount, is not replaced with the page price. The stand-in is not a real AI. The checks use that path, so they do not show what a live call would write. A clearly unrelated question does not use Claude or the stand-in.
+- A question we do not recognize still gets the callback reply from [When the pages don't say](agreements.md#when-the-pages-dont-say). That includes a dripping tap, a payment question, and a plumbing job the pages don't mention at all.
+- The instructions include the text of the business's pages, all six of them, plus the callback reply. They say to answer only from these pages, keep it short, and end with From and the page name. When someone states a different price, they say to speak to that person directly, give the price from the pages, and not mention the customer or repeat their price. When a service has a price on the pages, they say to treat it as offered, say yes, include the price, and name the page.
+- Claude writes the answer when `ANTHROPIC_API_KEY` is set, except for a clearly unrelated question, and reads all six pages for the questions it is asked. With no key, a stand-in answers the agreed test questions, and it answers "What are your hours?" from the Hours & FAQ page. A service with a price on the pages gets a yes, with that price and the page name. A wrong price is answered with the sentence on the page, spoken to the person, and their amount is left out. A note that already states that price and no other amount can lose the words "the customer" when its facts are already in a sentence that stays. A fact stated only in that note is kept. The other sentences stay. A note that agrees with the wrong price, or names another amount, is not replaced with the page price. The stand-in is not a real AI. The checks use that path, so they do not show what a live call would write. A clearly unrelated question does not use Claude or the stand-in.
 - The same question inside quotes, or with markdown marks around the whole question, gets the same answer. A question mark on the end does too. Those marks come off the outside only. A dollar sign, a decimal point, and a hyphen in the question stay, and an urgent message is still handled first.
 - A page-based answer ends with From and the page name, for example From Hours & FAQ. The urgent reply, the callback reply, and the outage reply are left as they are.
 - If the call fails, the customer gets the outage reply from [When the assistant can't look it up](agreements.md#when-the-assistant-cant-look-it-up). A fact the pages don't cover still gets the callback reply from [When the pages don't say](agreements.md#when-the-pages-dont-say). A short note is kept for the owner. Where to find it is in the [setup guide](setup-guide.md#questions). An amount the pages don't state is still replaced by the callback reply.
-- The 15 questions in [The 15 test questions](agreements.md#the-15-test-questions) each name a page, use the fixed urgent reply, or offer a callback.
+- The 16 questions in [The 16 test questions](agreements.md#the-16-test-questions) each name a page, use the fixed urgent reply, or offer a callback.
 - Septic systems, being licensed and insured, and after-hours callouts are answered from the Hours & FAQ page. The after-hours question is not urgent, so it gets that page's answer.
 
 **Try it**
@@ -109,6 +110,7 @@ python3 scripts/read_pages.py
 python3 scripts/answer_reply.py 'Are you open Saturdays?'
 python3 scripts/front_desk.py '"Are you open Saturdays?"'
 python3 scripts/front_desk.py 'How much is a drain cleaning?'
+python3 scripts/front_desk.py 'Do you clean drains?'
 python3 scripts/front_desk.py '"How much is a drain cleaning?"'
 python3 scripts/front_desk.py 'A drain cleaning is 200?'
 python3 scripts/front_desk.py 'Do you cover Moorestown?'
@@ -128,6 +130,7 @@ python3 scripts/front_desk.py 'I have a burst pipe'
 | Are you open Saturdays? | `Saturday: 8:00 am to 12:00 pm. Yes, we are open Saturdays. From Hours & FAQ.` |
 | "Are you open Saturdays?" | The same Saturday answer |
 | How much is a drain cleaning? | `A drain cleaning is $149. From Pricing.` |
+| Do you clean drains? | `Yes, we do drain cleaning. It's $149. From Pricing.` |
 | "How much is a drain cleaning?" | `A drain cleaning is $149. From Pricing.` |
 | A drain cleaning is 200? | `A drain cleaning is $149. From Pricing.` |
 | Do you cover Moorestown? | The callback reply |
@@ -150,11 +153,11 @@ python3 scripts/answer_reply.py 'Are you open Saturdays?'
 
 The answer is short and names the page. `CLAUDE_MODEL` is optional, and the default is set in the code.
 
-*Good to know.* Every question that is not clearly unrelated is answered from all six pages. A document search engine can be added later if many more documents are added. Marks around the whole question are set aside. A mark in the middle of the words is left as written. The friendly reply is chosen before Claude is called, and only for a clearly unrelated request. Mentioning a weekday does not send that request to Claude. A dripping tap, a payment question, or another job the pages don't name gets the callback reply from the stand-in. With a key, Claude writes any other answer and may not use the callback sentence word for word.
+*Good to know.* Every question that is not clearly unrelated is answered from all six pages. A document search engine can be added later if many more documents are added. Marks around the whole question are set aside. A mark in the middle of the words is left as written. The friendly reply is chosen before Claude is called, and only for a clearly unrelated request. Mentioning a weekday does not send that request to Claude. A job that appears only as a price still gets a yes with that price. A dripping tap, a payment question, or a job the pages never mention gets the callback reply from the stand-in. With a key, Claude writes any other answer and may not use the callback sentence word for word.
 
 You see this check on the pull request as Answers come from your pages.
 
-*Pull request checks:* **Answers come from your pages**. **Claude writes the answer**. **A failed call is noted for the owner**. **A failed call gets the outage reply**. **Questions 13 to 15 come from Hours and FAQ**. **A wrapped question matches the plain one**. **Off-topic questions get the friendly reply**.
+*Pull request checks:* **Answers come from your pages**. **Claude writes the answer**. **A failed call is noted for the owner**. **A failed call gets the outage reply**. **Questions 13 to 15 come from Hours and FAQ**. **A wrapped question matches the plain one**. **Off-topic questions get the friendly reply**. **A priced service is offered**.
 
 ## 4 · Check every price
 
@@ -162,7 +165,7 @@ You see this check on the pull request as Answers come from your pages.
 
 **What it does**
 
-- A price is kept only as the pages write it, and only when it sits near that service on the same page.
+- A price is kept only as the pages write it, and only when it sits near that service on the same page. A plural or an -ing form still counts, so drains matches drain and clean matches cleaning.
 - Any other amount is replaced with the callback reply. That includes a price for a different service, and a price the pages don't state. An answer with no amount is left as it is, and an urgent message is still handled first.
 - When someone states a wrong price, the answer speaks to them directly with the price from the pages and does not repeat their amount. A reply that agrees with the wrong amount, or names another amount, is still replaced with the callback reply. It is not swapped for the page price.
 - Pass what the customer asked with `--asked`. Without it, the check only confirms that the amount is written on the pages.
@@ -194,7 +197,7 @@ python3 scripts/price_reply.py 'A water heater replacement is $1,200.'
 ## Still to come
 
 - **More ways of writing prices.** Today "99 dollars" and "$149.00" get the callback reply, and "250 bucks" isn't read as a price.
-- **The owner's OK** on the 15 test questions and urgent words, already written in [What we've agreed](agreements.md).
+- **The owner's OK** on the 16 test questions and urgent words, already written in [What we've agreed](agreements.md).
 
 ## Try it yourself
 
@@ -222,7 +225,8 @@ Each check prints ok, and the run ends with OK. The same checks run on every pul
 - `python3 scripts/run_checks.py tests/test_checks.py`
 - `python3 scripts/run_checks.py tests/test_links.py`
 - Pages are read
-- The 15 questions
+- The test questions
+- A priced service is offered
 - Urgent words
 - A frozen pipe
 - Prices
