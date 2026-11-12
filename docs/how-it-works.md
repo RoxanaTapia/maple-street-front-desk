@@ -158,7 +158,7 @@ The answer is short and names the page. `CLAUDE_MODEL` is optional, and the defa
 
 You see this check on the pull request as Answers come from your pages.
 
-To see the note for a page that can't be opened, set `pricing_live = False` in `scripts/serve_sample_site.py`, run `python3 scripts/demo_chat.py`, ask a question, then read `logs/claude-failures.log`. Set `pricing_live` back to `True` afterwards. Asking again within the hour does not add another line for that page.
+To see the note for a page that can't be opened, set `pricing_live = False` in `scripts/serve_sample_site.py`, run `python3 scripts/demo_chat.py`, ask a question, then read `logs/error-notes.log`. Set `pricing_live` back to `True` afterwards. Asking again within the hour does not add another line for that page.
 
 *Pull request checks:* **Answers come from your pages**. **Claude writes the answer**. **A failed call is noted for the owner**. **A failed call gets the outage reply**. **Questions 13 to 15 come from Hours and FAQ**. **A wrapped question matches the plain one**. **Off-topic questions get the friendly reply**. **A priced service is offered**. **A page that can't be read is noted for the owner**.
 

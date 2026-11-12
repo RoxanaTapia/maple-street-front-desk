@@ -399,7 +399,7 @@ class ClaudeAnswerChecks(unittest.TestCase):
         self._post = answer_reply._post_message
         self._saved_log = answer_reply.FAILURE_LOG
         self._log_dir = tempfile.TemporaryDirectory()
-        answer_reply.FAILURE_LOG = Path(self._log_dir.name) / "claude-failures.log"
+        answer_reply.FAILURE_LOG = Path(self._log_dir.name) / "error-notes.log"
 
     def tearDown(self):
         answer_reply._post_message = self._post
@@ -679,7 +679,7 @@ class FailureNoteChecks(unittest.TestCase):
         self._post = answer_reply._post_message
         self._saved_log = answer_reply.FAILURE_LOG
         self._log_dir = tempfile.TemporaryDirectory()
-        answer_reply.FAILURE_LOG = Path(self._log_dir.name) / "claude-failures.log"
+        answer_reply.FAILURE_LOG = Path(self._log_dir.name) / "error-notes.log"
 
     def tearDown(self):
         answer_reply._post_message = self._post
@@ -705,9 +705,9 @@ class FailureNoteChecks(unittest.TestCase):
         question = f"Are you open Saturdays? {token}"
         ignore = (ROOT / ".gitignore").read_text(encoding="utf-8")
         guide = (ROOT / "docs" / "setup-guide.md").read_text(encoding="utf-8")
-        self.assertEqual(self._saved_log, ROOT / "logs" / "claude-failures.log")
+        self.assertEqual(self._saved_log, ROOT / "logs" / "error-notes.log")
         self.assertTrue(any(line.strip() == "logs/" for line in ignore.splitlines()))
-        self.assertIn("logs/claude-failures.log", guide)
+        self.assertIn("logs/error-notes.log", guide)
         self.assertNotIn("sk-ant-", guide)
         self.assertNotIn(key, guide)
 
@@ -863,7 +863,7 @@ class OutageReplyChecks(unittest.TestCase):
         self._saved_log = answer_reply.FAILURE_LOG
         self._saved_clock = answer_reply.datetime
         self._log_dir = tempfile.TemporaryDirectory()
-        answer_reply.FAILURE_LOG = Path(self._log_dir.name) / "claude-failures.log"
+        answer_reply.FAILURE_LOG = Path(self._log_dir.name) / "error-notes.log"
 
     def tearDown(self):
         answer_reply._post_message = self._post
@@ -929,7 +929,7 @@ class OutageReplyChecks(unittest.TestCase):
 
     def test_a_failed_call_returns_only_the_outage_reply(self):
         """A failed call returns only the outage reply, and the note keeps the time and the kind of error."""
-        self.assertEqual(self._saved_log, ROOT / "logs" / "claude-failures.log")
+        self.assertEqual(self._saved_log, ROOT / "logs" / "error-notes.log")
         answer_reply.datetime = _FrozenClock
         missing = answer_reply.callback_reply()
         outage = answer_reply.outage_reply()

@@ -63,6 +63,7 @@ An emergency is caught first. A price is checked last. A number the pages don't 
 - [How the assistant works](docs/how-it-works.md): the path of a message, and how to try the sample site.
 - [Setup guide](docs/setup-guide.md): how to run it.
 - [Handover notes](docs/handover.md): what you have, and how to change it yourself.
+- Your error notes are in the handover notes, under Your error notes.
 - [Live test results](docs/test-results.md): the 15 questions and the urgent words, from the live demo on Nov 4.
 
 **Next up:** the owner's notes from the demo call.

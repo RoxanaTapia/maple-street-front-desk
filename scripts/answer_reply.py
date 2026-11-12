@@ -240,7 +240,7 @@ TIMEOUT_SECONDS = 15
 # part of the repo. A failed call records the time and the kind of error.
 # A page that can't be read records the time, the page name, and the kind
 # of error. The customer's message is not written here.
-FAILURE_LOG = ROOT / "logs" / "claude-failures.log"
+FAILURE_LOG = ROOT / "logs" / "error-notes.log"
 # One note per page per hour. The notes file is the record, so a later
 # question, even from a new command, does not write the page again while
 # that hour still has a line for it.

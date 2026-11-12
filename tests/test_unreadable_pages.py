@@ -83,7 +83,7 @@ class UnreadablePageNoteChecks(unittest.TestCase):
         self.site = RunningSite()
         self._saved_log = answer_reply.FAILURE_LOG
         self._log_dir = tempfile.TemporaryDirectory()
-        answer_reply.FAILURE_LOG = Path(self._log_dir.name) / "claude-failures.log"
+        answer_reply.FAILURE_LOG = Path(self._log_dir.name) / "error-notes.log"
 
     def tearDown(self):
         answer_reply.FAILURE_LOG = self._saved_log
@@ -113,7 +113,7 @@ class UnreadablePageNoteChecks(unittest.TestCase):
 
     def test_a_down_page_is_noted_once_and_the_replies_stay_the_same(self):
         """A down page is noted once, and the replies stay the same."""
-        self.assertEqual(self._saved_log, ROOT / "logs" / "claude-failures.log")
+        self.assertEqual(self._saved_log, ROOT / "logs" / "error-notes.log")
         self.assertEqual(answer_reply.PAGE_NOTE_WINDOW, timedelta(hours=1))
         callback = answer_reply.callback_reply()
         outage = answer_reply.outage_reply()

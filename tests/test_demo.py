@@ -289,7 +289,7 @@ class DemoChatChecks(unittest.TestCase):
         self.assertNotIn("ANTHROPIC_API_KEY", os.environ)
         saved_log = answer_reply.FAILURE_LOG
         log_dir = tempfile.TemporaryDirectory()
-        answer_reply.FAILURE_LOG = Path(log_dir.name) / "claude-failures.log"
+        answer_reply.FAILURE_LOG = Path(log_dir.name) / "error-notes.log"
         notes = []
 
         class _Grab(logging.Handler):
@@ -380,8 +380,8 @@ class DemoChatChecks(unittest.TestCase):
             os.environ.pop("ANTHROPIC_API_KEY", None)
             logging.getLogger().removeHandler(grab)
             answer_reply.FAILURE_LOG = saved_log
-            if (Path(log_dir.name) / "claude-failures.log").exists():
-                recorded = (Path(log_dir.name) / "claude-failures.log").read_text(encoding="utf-8")
+            if (Path(log_dir.name) / "error-notes.log").exists():
+                recorded = (Path(log_dir.name) / "error-notes.log").read_text(encoding="utf-8")
                 self.assertNotIn(token, recorded)
                 self.assertNotIn(secret, recorded)
             log_dir.cleanup()
