@@ -43,7 +43,7 @@ Look here if customers say they got the call-us reply more than usual.
 
 ## Reference
 
-- [What we've agreed](agreements.md), including the [16 test questions](agreements.md#the-16-test-questions)
+- [What we've agreed](agreements.md), including the [18 test questions](agreements.md#the-18-test-questions)
 - [Live test results](test-results.md)
 - [How the assistant behaves](behaviour.md)
 - [How the assistant works](how-it-works.md)
@@ -80,7 +80,6 @@ You can change the urgent reply freely if:
 Settled on the call: call-us replies use your [main line](agreements.md#main-line-and-contact).
 
 - Call-us replies cannot be edited on the agreements page alone. [#65](https://github.com/RoxanaTapia/maple-street-front-desk/issues/65)
-- Misspellings, or prices with no `$`, can still go wrong. [#57](https://github.com/RoxanaTapia/maple-street-front-desk/issues/57)
 
 ## Keeping it live
 

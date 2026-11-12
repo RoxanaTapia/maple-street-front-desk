@@ -13,6 +13,8 @@
 
 Only the listed urgent words trigger the urgent reply. A spelling named beside a listed word counts as that word. A question that mentions emergencies without one of them gets a normal answer. A question that is clearly about something else gets the off-topic reply. A question we do not recognize, including a plumbing or payment question the pages don't answer, still gets the callback reply.
 
-A price on the pages is enough to show that service is offered, even when no page says so in other words. The reply says yes, gives that price as the pages write it, and names the page. A plural or an -ing form still counts as the same service, so drains matches drain and clean matches cleaning. A service with no mention on any page still gets the callback reply.
+A price on the pages is enough to show that service is offered, even when no page says so in other words. The reply says yes, gives that price as the pages write it, and names the page. A plural or an -ing form still counts as the same service, so drains matches drain and clean matches cleaning. A small misspelling of a service the pages list still gets that service's answer, in plain words. A service with no mention on any page still gets the callback reply.
+
+A price written without a dollar sign, such as 150 or 150 dollars, is still a price. When the amount matches the pages, the reply is short and speaks to the customer. A wrong amount still gets the callback reply.
 
 The same words inside quotes, or with markdown marks around the whole question, get that same reply. A question mark on the end does not change it. A dollar sign, a decimal point, and a hyphen in the message stay as written.

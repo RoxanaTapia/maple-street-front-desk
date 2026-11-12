@@ -92,15 +92,16 @@ python3 scripts/read_pages.py
 
 - A question the pages answer gets a short answer that names the page.
 - A question about a service that has a price on the pages gets a yes, with that price, and the page name. The pages do not have to say "we do" that job in other words. "Do you clean drains?" is that case: Pricing lists drain cleaning at $149.
+- A small misspelling of a service the pages list, such as drane for drain, gets that service's answer in plain words.
 - A question that is clearly about something else gets the off-topic reply from [Off-topic questions](agreements.md#off-topic-questions). That reply is chosen before Claude is called. A weekday or the word "hours" in that question does not change it.
 - A question we do not recognize still gets the callback reply from [When the pages don't say](agreements.md#when-the-pages-dont-say). That includes a dripping tap, a payment question, and a plumbing job the pages don't mention at all.
-- The instructions include the text of the business's pages, all six of them, plus the callback reply. They say to answer only from these pages, keep it short, and end with From and the page name. When someone states a different price, they say to speak to that person directly, give the price from the pages, and not mention the customer or repeat their price. When a service has a price on the pages, they say to treat it as offered, say yes, include the price, and name the page.
+- The instructions include the text of the business's pages, all six of them, plus the callback reply. They say to answer only from these pages, keep it short, and end with From and the page name. When someone states a different price, they say to speak to that person directly, give the price from the pages, and not mention the customer or repeat their price. When a service has a price on the pages, they say to treat it as offered, say yes, include the price, and name the page. A small misspelling still means that service. A price written without a dollar sign, when it matches the pages, gets a short yes spoken to the person.
 - Claude writes the answer when `ANTHROPIC_API_KEY` is set, except for a clearly unrelated question, and reads all six pages for the questions it is asked. With no key, a stand-in answers the agreed test questions, and it answers "What are your hours?" from the Hours & FAQ page. A service with a price on the pages gets a yes, with that price and the page name. A wrong price is answered with the sentence on the page, spoken to the person, and their amount is left out. A note that already states that price and no other amount can lose the words "the customer" when its facts are already in a sentence that stays. A fact stated only in that note is kept. The other sentences stay. A note that agrees with the wrong price, or names another amount, is not replaced with the page price. The stand-in is not a real AI. The checks use that path, so they do not show what a live call would write. A clearly unrelated question does not use Claude or the stand-in.
 - The same question inside quotes, or with markdown marks around the whole question, gets the same answer. A question mark on the end does too. Those marks come off the outside only. A dollar sign, a decimal point, and a hyphen in the question stay, and an urgent message is still handled first.
 - A page-based answer ends with From and the page name, for example From Hours & FAQ. The urgent reply, the callback reply, and the outage reply are left as they are.
 - If the call fails, the customer gets the outage reply from [When the assistant can't look it up](agreements.md#when-the-assistant-cant-look-it-up). A fact the pages don't cover still gets the callback reply from [When the pages don't say](agreements.md#when-the-pages-dont-say). A short note is kept for the owner. Where to find it is in the [setup guide](setup-guide.md#questions). An amount the pages don't state is still replaced by the callback reply.
 - A page that can't be read is written to those same notes. The line has the time, the page name, and the kind of error. The customer's message is not included. The same page is written once an hour, so many questions do not fill the notes. The customer still gets the callback reply when that page was needed. An answer from a page that could be read, such as Hours & FAQ, stays as it is.
-- The 16 questions in [The 16 test questions](agreements.md#the-16-test-questions) each name a page, use the fixed urgent reply, or offer a callback.
+- The 18 questions in [The 18 test questions](agreements.md#the-18-test-questions) each name a page, use the fixed urgent reply, or offer a callback.
 - Septic systems, being licensed and insured, and after-hours callouts are answered from the Hours & FAQ page. The after-hours question is not urgent, so it gets that page's answer.
 
 **Try it**
@@ -111,6 +112,8 @@ python3 scripts/read_pages.py
 python3 scripts/answer_reply.py 'Are you open Saturdays?'
 python3 scripts/front_desk.py '"Are you open Saturdays?"'
 python3 scripts/front_desk.py 'How much is a drain cleaning?'
+python3 scripts/front_desk.py 'How much is a drane cleaning?'
+python3 scripts/front_desk.py 'Is drain cleaning 149?'
 python3 scripts/front_desk.py 'Do you clean drains?'
 python3 scripts/front_desk.py '"How much is a drain cleaning?"'
 python3 scripts/front_desk.py 'A drain cleaning is 200?'
@@ -131,6 +134,8 @@ python3 scripts/front_desk.py 'I have a burst pipe'
 | Are you open Saturdays? | `Saturday: 8:00 am to 12:00 pm. Yes, we are open Saturdays. From Hours & FAQ.` |
 | "Are you open Saturdays?" | The same Saturday answer |
 | How much is a drain cleaning? | `A drain cleaning is $149. From Pricing.` |
+| How much is a drane cleaning? | `A drain cleaning is $149. From Pricing.` |
+| Is drain cleaning 149? | `Yes, a drain cleaning is $149. From Pricing.` |
 | Do you clean drains? | `Yes, we do drain cleaning. It's $149. From Pricing.` |
 | "How much is a drain cleaning?" | `A drain cleaning is $149. From Pricing.` |
 | A drain cleaning is 200? | `A drain cleaning is $149. From Pricing.` |
@@ -160,7 +165,7 @@ You see this check on the pull request as Answers come from your pages.
 
 To see the note for a page that can't be opened, set `pricing_live = False` in `scripts/serve_sample_site.py`, run `python3 scripts/demo_chat.py`, ask a question, then read `logs/error-notes.log`. Set `pricing_live` back to `True` afterwards. Asking again within the hour does not add another line for that page.
 
-*Pull request checks:* **Answers come from your pages**. **Claude writes the answer**. **A failed call is noted for the owner**. **A failed call gets the outage reply**. **Questions 13 to 15 come from Hours and FAQ**. **A wrapped question matches the plain one**. **Off-topic questions get the friendly reply**. **A priced service is offered**. **A page that can't be read is noted for the owner**.
+*Pull request checks:* **Answers come from your pages**. **Claude writes the answer**. **A failed call is noted for the owner**. **A failed call gets the outage reply**. **Questions 13 to 15 come from Hours and FAQ**. **A wrapped question matches the plain one**. **Off-topic questions get the friendly reply**. **A priced service is offered**. **A misspelling and a plain price are answered**. **A page that can't be read is noted for the owner**.
 
 ## 4 · Check every price
 
@@ -168,7 +173,8 @@ To see the note for a page that can't be opened, set `pricing_live = False` in `
 
 **What it does**
 
-- A price is kept only as the pages write it, and only when it sits near that service on the same page. A plural or an -ing form still counts, so drains matches drain and clean matches cleaning.
+- A price is kept only as the pages write it, and only when it sits near that service on the same page. A plural or an -ing form still counts, so drains matches drain and clean matches cleaning. A small misspelling still counts, so drane matches drain.
+- A number written as 150, or as 150 dollars, is still a price. A wrong amount is replaced with the callback reply.
 - Any other amount is replaced with the callback reply. That includes a price for a different service, and a price the pages don't state. An answer with no amount is left as it is, and an urgent message is still handled first.
 - When someone states a wrong price, the answer speaks to them directly with the price from the pages and does not repeat their amount. A reply that agrees with the wrong amount, or names another amount, is still replaced with the callback reply. It is not swapped for the page price.
 - Pass what the customer asked with `--asked`. Without it, the check only confirms that the amount is written on the pages.
@@ -182,6 +188,8 @@ python3 scripts/price_reply.py 'A drain cleaning is $149.'
 python3 scripts/price_reply.py --asked 'How much is a drain cleaning?' 'A drain cleaning is $149.'
 python3 scripts/price_reply.py --asked 'How much is a drain cleaning?' 'The call-out fee is $99.'
 python3 scripts/price_reply.py --asked 'A drain cleaning is 200?' 'Yes, $200.'
+python3 scripts/price_reply.py --asked 'How much is a drain cleaning?' 'A drain cleaning is 150.'
+python3 scripts/price_reply.py --asked 'How much is a drain cleaning?' 'A drain cleaning is 150 dollars.'
 python3 scripts/price_reply.py 'A water heater replacement is $1,200.'
 ```
 
@@ -191,6 +199,8 @@ python3 scripts/price_reply.py 'A water heater replacement is $1,200.'
 | A drain cleaning is $149, asked about a drain cleaning. | `A drain cleaning is $149.` |
 | The call-out fee is $99, asked about a drain cleaning. | The callback reply |
 | Yes, $200, asked about a drain cleaning at 200. | The callback reply |
+| A drain cleaning is 150, asked about a drain cleaning. | The callback reply |
+| A drain cleaning is 150 dollars, asked about a drain cleaning. | The callback reply |
 | A water heater replacement is $1,200. | The callback reply |
 
 *Good to know.* "99 dollars" does not match "$99". The call-out fee is a real price, and it still gets the callback reply when the customer asked about a drain cleaning. Pricing does not list a water heater replacement.
@@ -200,7 +210,7 @@ python3 scripts/price_reply.py 'A water heater replacement is $1,200.'
 ## Still to come
 
 - **More ways of writing prices.** Today "99 dollars" and "$149.00" get the callback reply, and "250 bucks" isn't read as a price.
-- **The owner's OK** on the 16 test questions and urgent words, already written in [What we've agreed](agreements.md).
+- **The owner's OK** on the 18 test questions and urgent words, already written in [What we've agreed](agreements.md).
 
 ## Try it yourself
 
@@ -230,6 +240,7 @@ Each check prints ok, and the run ends with OK. The same checks run on every pul
 - Pages are read
 - The test questions
 - A priced service is offered
+- A misspelling and a plain price
 - Urgent words
 - A frozen pipe
 - Prices

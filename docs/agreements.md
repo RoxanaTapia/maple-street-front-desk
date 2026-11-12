@@ -32,9 +32,9 @@ When a question is not about this business's plumbing, the assistant replies wit
 
 > I can help with Maple Street’s plumbing services. What do you need help with?
 
-## The 16 test questions
+## The 18 test questions
 
-Every change is checked against these 16 questions.
+Every change is checked against these 18 questions.
 
 **Answered by your pages**
 
@@ -56,12 +56,14 @@ Every change is checked against these 16 questions.
 
 **Answered by your pages**
 
-These answers are on the Hours & FAQ page.
+Questions 13 to 15 are on the Hours & FAQ page.
 
 13. Do you install septic systems? No, we don't install or service septic systems, from Hours & FAQ.
 14. Are you licensed and insured? Yes, we're fully licensed and insured in New Jersey, from Hours & FAQ.
 15. Do you offer after-hours emergency callouts? Yes, we handle emergencies after hours too. Just call our main line at (856) 555-0142, from Hours & FAQ.
 16. Do you clean drains? Yes, we do drain cleaning. It's $149, from Pricing.
+17. How much is a drane cleaning? $149, from Pricing.
+18. Is drain cleaning 149? Yes, $149, from Pricing.
 
 ## Which AI the assistant uses
 

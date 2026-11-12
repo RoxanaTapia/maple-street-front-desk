@@ -48,7 +48,7 @@ def question_rows():
         if line.startswith("## "):
             if in_section:
                 break
-            in_section = line[3:].strip() == "The 16 test questions"
+            in_section = line[3:].strip() == "The 18 test questions"
             continue
         if not in_section:
             continue
@@ -142,14 +142,30 @@ class PriceChecks(unittest.TestCase):
             for amount in price_reply.find_amounts(row["detail"]):
                 self.assertIn(amount, published, row["question"])
                 answer = f"{row['question']} {amount}"
-                self.assertEqual(
-                    price_reply.checked_answer(answer, base_url=self.site.base),
-                    answer,
-                )
-                self.assertEqual(
-                    price_reply.answer_for(row["question"], answer, base_url=self.site.base),
-                    answer,
-                )
+                # A question can already contain a price written another way.
+                # That form is not the one on the pages, so the glued reply
+                # is the callback. The page's own amount still stands.
+                if all(item in published for item in price_reply.find_amounts(answer)):
+                    self.assertEqual(
+                        price_reply.checked_answer(answer, base_url=self.site.base),
+                        answer,
+                    )
+                    self.assertEqual(
+                        price_reply.answer_for(row["question"], answer, base_url=self.site.base),
+                        answer,
+                    )
+                else:
+                    self.assertEqual(
+                        price_reply.checked_answer(answer, base_url=self.site.base),
+                        self._callback(),
+                        row["question"],
+                    )
+                    plain = f"The price is {amount}."
+                    self.assertEqual(
+                        price_reply.answer_for(row["question"], plain, base_url=self.site.base),
+                        plain,
+                        row["question"],
+                    )
         both = " and ".join(published)
         self.assertEqual(
             price_reply.checked_answer(both, base_url=self.site.base),

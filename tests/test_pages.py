@@ -334,7 +334,7 @@ def blockquote(heading):
 def question_rows():
     rows = []
     group = None
-    for line in _section_lines("The 16 test questions"):
+    for line in _section_lines("The 18 test questions"):
         bold = GROUP_HEADING.match(line.strip())
         if bold:
             group = bold.group(1).strip()
@@ -372,8 +372,8 @@ class QuestionCoverageChecks(unittest.TestCase):
         """Every test question has an answer plan, an answered question names one of your pages, and the drain-cleaning question is answered from Pricing."""
         rows = question_rows()
         agreed = {page["name"]: page["path"] for page in read_pages.agreed_pages()}
-        self.assertEqual(len(rows), 16)
-        self.assertEqual([row["number"] for row in rows], list(range(1, 17)))
+        self.assertEqual(len(rows), 18)
+        self.assertEqual([row["number"] for row in rows], list(range(1, 19)))
         self.assertEqual([row["question"] for row in rows[:6]], FIRST_QUESTIONS)
         groups = []
         for row in rows:
@@ -392,7 +392,7 @@ class QuestionCoverageChecks(unittest.TestCase):
             by_group.setdefault(row["group"], []).append(row)
         self.assertEqual(
             [row["number"] for row in by_group["Answered by your pages"]],
-            [1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 14, 15, 16],
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 14, 15, 16, 17, 18],
         )
         self.assertEqual(len(by_group["Handled by a set reply"]), 3)
         self.assertNotIn("Yours to decide", _agreements_text())
