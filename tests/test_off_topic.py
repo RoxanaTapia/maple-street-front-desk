@@ -85,7 +85,7 @@ class OffTopicReplyChecks(unittest.TestCase):
         self._post = answer_reply._post_message
         self._saved_log = answer_reply.FAILURE_LOG
         self._log_dir = tempfile.TemporaryDirectory()
-        answer_reply.FAILURE_LOG = Path(self._log_dir.name) / "claude-failures.log"
+        answer_reply.FAILURE_LOG = Path(self._log_dir.name) / "error-notes.log"
 
     def tearDown(self):
         answer_reply._post_message = self._post
@@ -296,7 +296,7 @@ class OffTopicReplyChecks(unittest.TestCase):
         friendly = answer_reply.off_topic_reply()
         callback = answer_reply.callback_reply()
         outage = answer_reply.outage_reply()
-        self.assertEqual(self._saved_log, ROOT / "logs" / "claude-failures.log")
+        self.assertEqual(self._saved_log, ROOT / "logs" / "error-notes.log")
         question = "How long is your warranty?"
         called = {"client": 0}
 

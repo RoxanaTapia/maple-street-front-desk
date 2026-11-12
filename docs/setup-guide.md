@@ -80,8 +80,12 @@ Urgent messages use no AI. A clearly unrelated question is not sent to Claude. S
 
 **What if Claude is down or the key expires?**
 The customer gets the outage reply, from When the assistant can't look it up, so they're never left without an answer. A fact the pages don't cover still uses the callback sentence, from When the pages don't say.
-Each failure adds a line to `logs/claude-failures.log` on the computer that runs the assistant: the time and the kind of error, with no customer message and no key.
+Each failure adds a line to `logs/error-notes.log` on the computer that runs the assistant: the time and the kind of error, with no customer message and no key.
 A warning with the kind of error is also printed where the assistant is running.
+
+**What if a page can't be opened?**
+The customer gets the same reply as before. A question that needed that page gets the callback sentence. A question another page answers, such as Hours & FAQ, is still answered.
+The same file, `logs/error-notes.log`, gets one line: the time, the page name, and the kind of error. The customer's message is not written there. The same page is noted once an hour.
 
 ## Handing over the code
 

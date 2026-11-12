@@ -15,6 +15,9 @@ another one. If that call fails, the outage reply is used instead of
 an error, and a short note records when it happened and what kind of
 error it was. The customer's message and the key are not in that note.
 The outage reply is a different sentence from the callback reply.
+A page that can't be read is written to those same notes: the time,
+the page name, and the kind of error. The customer's message is not
+included. The same page is noted once an hour.
 
 With no key, a stand-in answers the agreed test questions. When a
 service has a price on the pages, that price is enough: the stand-in
@@ -38,9 +41,10 @@ import logging
 import os
 import re
 import sys
+import threading
 import urllib.error
 import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import price_reply
@@ -233,8 +237,17 @@ API_VERSION = "2023-06-01"
 # Short on purpose: a failed or hung call must not leave the customer waiting.
 TIMEOUT_SECONDS = 15
 # The owner reads this on the computer that runs the assistant. It is not
-# part of the repo. The line is the time and the kind of error only.
-FAILURE_LOG = ROOT / "logs" / "claude-failures.log"
+# part of the repo. A failed call records the time and the kind of error.
+# A page that can't be read records the time, the page name, and the kind
+# of error. The customer's message is not written here.
+FAILURE_LOG = ROOT / "logs" / "error-notes.log"
+# One note per page per hour. The notes file is the record, so a later
+# question, even from a new command, does not write the page again while
+# that hour still has a line for it.
+PAGE_NOTE_WINDOW = timedelta(hours=1)
+_NOTE_LOCK = threading.RLock()
+_STAMP_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
+_strptime = datetime.strptime
 MAX_TOKENS = 1024
 USAGE = (
     'Usage: python3 scripts/answer_reply.py "customer question" [site address]\n'
@@ -1101,6 +1114,72 @@ def _post_message(payload, key, timeout):
     return json.loads(raw)
 
 
+def _write_owner_note(detail):
+    """Append one line to the owner's error notes.
+
+    The line starts with the time. detail is the rest: the kind of
+    error, or the page name and the kind of error. The customer's
+    message is not added. A problem saving the note returns False.
+    """
+    when = datetime.now(timezone.utc).strftime(_STAMP_FORMAT)
+    line = f"{when} {detail}\n"
+    try:
+        with _NOTE_LOCK:
+            FAILURE_LOG.parent.mkdir(parents=True, exist_ok=True)
+            with FAILURE_LOG.open("a", encoding="utf-8") as handle:
+                handle.write(line)
+    except OSError:
+        logging.warning("The failure note could not be saved.")
+        return False
+    return True
+
+
+def _page_noted_recently(name, now):
+    """True when this page already has a note inside the hour."""
+    try:
+        text = FAILURE_LOG.read_text(encoding="utf-8")
+    except (OSError, UnicodeError):
+        return False
+    prefix = f"{name}: "
+    for line in text.splitlines():
+        stamp, _, rest = line.partition(" ")
+        if not rest.startswith(prefix):
+            continue
+        try:
+            seen = _strptime(stamp, _STAMP_FORMAT).replace(tzinfo=timezone.utc)
+        except ValueError:
+            continue
+        if now - seen < PAGE_NOTE_WINDOW:
+            return True
+    return False
+
+
+def _note_unreadable_pages(pages):
+    """Note each page that could not be read, at most once an hour.
+
+    The note is the time, the page name, and the kind of error. The
+    customer's message is not included. A later question about the same
+    page, inside that hour, does not add another line. A different page
+    is noted on its own.
+    """
+    now = datetime.now(timezone.utc)
+    with _NOTE_LOCK:
+        for page in pages or []:
+            if not isinstance(page, dict) or page.get("status") != "unreadable":
+                continue
+            name = " ".join(str(page.get("name", "")).split())
+            if not name:
+                continue
+            if _page_noted_recently(name, now):
+                continue
+            reason = " ".join(str(page.get("reason") or "unreadable").split())
+            if not reason:
+                reason = "unreadable"
+            if not _write_owner_note(f"{name}: {reason}"):
+                continue
+            logging.warning("A page could not be read (%s: %s).", name, reason)
+
+
 def _failure_kind(error):
     """Return a fixed label for a failed Claude call.
 
@@ -1140,13 +1219,7 @@ def _note_call_failure(error):
     reply the customer gets.
     """
     kind = _failure_kind(error)
-    when = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    try:
-        FAILURE_LOG.parent.mkdir(parents=True, exist_ok=True)
-        with FAILURE_LOG.open("a", encoding="utf-8") as handle:
-            handle.write(f"{when} {kind}\n")
-    except OSError:
-        logging.warning("The failure note could not be saved.")
+    _write_owner_note(kind)
     logging.warning("Claude could not answer (%s).", kind)
 
 
@@ -1206,7 +1279,15 @@ def write_answer(question, pages, writer=None, text=None, client=None):
     page price may lose the words "the customer", and the other sentences
     stay. A note that agrees with the stated price, or names another
     amount, is not replaced with the page price.
+
+    A page that can't be read is noted for the owner before the reply
+    is chosen. The note does not change the reply. The customer's
+    message is not part of the note.
     """
+    try:
+        _note_unreadable_pages(pages)
+    except Exception:
+        logging.warning("The failure note could not be saved.")
     if _is_off_topic(question):
         return off_topic_reply(text)
     instructions = build_instructions(question, pages, text=text)

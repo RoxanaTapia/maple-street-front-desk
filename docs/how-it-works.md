@@ -70,7 +70,7 @@ python3 scripts/urgent_reply.py 'Are you open Saturdays?'
 
 - Reads the six pages listed in [What we've agreed](agreements.md#your-pages).
 - Opens each one over the web and keeps the title and the words a visitor can see. Code and styling are left out.
-- A page that can't be opened stays on the list as unreadable, with the reason. The others are still read.
+- A page that can't be opened stays on the list as unreadable, with the reason. The others are still read. When a customer asks a question, that page is also noted for the owner. The note is described with the answer, below.
 
 **Try it**
 
@@ -99,6 +99,7 @@ python3 scripts/read_pages.py
 - The same question inside quotes, or with markdown marks around the whole question, gets the same answer. A question mark on the end does too. Those marks come off the outside only. A dollar sign, a decimal point, and a hyphen in the question stay, and an urgent message is still handled first.
 - A page-based answer ends with From and the page name, for example From Hours & FAQ. The urgent reply, the callback reply, and the outage reply are left as they are.
 - If the call fails, the customer gets the outage reply from [When the assistant can't look it up](agreements.md#when-the-assistant-cant-look-it-up). A fact the pages don't cover still gets the callback reply from [When the pages don't say](agreements.md#when-the-pages-dont-say). A short note is kept for the owner. Where to find it is in the [setup guide](setup-guide.md#questions). An amount the pages don't state is still replaced by the callback reply.
+- A page that can't be read is written to those same notes. The line has the time, the page name, and the kind of error. The customer's message is not included. The same page is written once an hour, so many questions do not fill the notes. The customer still gets the callback reply when that page was needed. An answer from a page that could be read, such as Hours & FAQ, stays as it is.
 - The 16 questions in [The 16 test questions](agreements.md#the-16-test-questions) each name a page, use the fixed urgent reply, or offer a callback.
 - Septic systems, being licensed and insured, and after-hours callouts are answered from the Hours & FAQ page. The after-hours question is not urgent, so it gets that page's answer.
 
@@ -157,7 +158,9 @@ The answer is short and names the page. `CLAUDE_MODEL` is optional, and the defa
 
 You see this check on the pull request as Answers come from your pages.
 
-*Pull request checks:* **Answers come from your pages**. **Claude writes the answer**. **A failed call is noted for the owner**. **A failed call gets the outage reply**. **Questions 13 to 15 come from Hours and FAQ**. **A wrapped question matches the plain one**. **Off-topic questions get the friendly reply**. **A priced service is offered**.
+To see the note for a page that can't be opened, set `pricing_live = False` in `scripts/serve_sample_site.py`, run `python3 scripts/demo_chat.py`, ask a question, then read `logs/error-notes.log`. Set `pricing_live` back to `True` afterwards. Asking again within the hour does not add another line for that page.
+
+*Pull request checks:* **Answers come from your pages**. **Claude writes the answer**. **A failed call is noted for the owner**. **A failed call gets the outage reply**. **Questions 13 to 15 come from Hours and FAQ**. **A wrapped question matches the plain one**. **Off-topic questions get the friendly reply**. **A priced service is offered**. **A page that can't be read is noted for the owner**.
 
 ## 4 · Check every price
 
@@ -234,6 +237,7 @@ Each check prints ok, and the run ends with OK. The same checks run on every pul
 - Answers
 - A failed call is noted
 - A failed call gets the outage reply
+- A page that can't be read is noted
 - A wrapped question matches the plain one
 - Off-topic questions
 - The demo chat

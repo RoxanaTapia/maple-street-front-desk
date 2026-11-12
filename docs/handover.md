@@ -15,6 +15,32 @@ Live demo: [maple-demo.roxanatapia.dev](https://maple-demo.roxanatapia.dev), onl
 - On your account, never stored here: [Your Claude key](setup-guide.md#your-claude-key)
 - [How to change the urgent words](#change-the-urgent-words)
 
+## Your error notes
+
+These notes are on the computer that runs the assistant, in `logs/error-notes.log`. They are not kept in this project.
+
+Each line is one problem, and it starts with the time.
+
+A page that can't be opened:
+
+```
+2026-11-12T16:10:00Z Pricing: HTTP 503 Service Unavailable: Pricing is down for now
+```
+
+That line is the time, the page name, and the kind of error. The same page is written once an hour.
+
+A Claude outage:
+
+```
+2026-11-12T15:30:00Z Claude is down
+```
+
+That line is the time and the kind of error.
+
+The file never contains a customer's message or a key.
+
+Look here if customers say they got the call-us reply more than usual.
+
 ## Reference
 
 - [What we've agreed](agreements.md), including the [16 test questions](agreements.md#the-16-test-questions)
@@ -55,7 +81,6 @@ Settled on the call: call-us replies use your [main line](agreements.md#main-lin
 
 - Call-us replies cannot be edited on the agreements page alone. [#65](https://github.com/RoxanaTapia/maple-street-front-desk/issues/65)
 - Misspellings, or prices with no `$`, can still go wrong. [#57](https://github.com/RoxanaTapia/maple-street-front-desk/issues/57)
-- You won't get an alert if the assistant stops working. [#58](https://github.com/RoxanaTapia/maple-street-front-desk/issues/58)
 
 ## Keeping it live
 
