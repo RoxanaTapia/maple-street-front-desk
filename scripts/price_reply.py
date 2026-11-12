@@ -4,9 +4,12 @@ Reads your pages with the page reader and keeps an amount only when it
 is written there, exactly as written. When the customer's question is
 given, the amount also has to be on the same page, near the service
 they asked about. A plural or an -ing form of a service word still
-counts, so drains matches drain and clean matches cleaning. If an
-answer contains any other amount, the whole answer is replaced with
-the callback reply from your agreements. An answer with no amount is
+counts, so drains matches drain and clean matches cleaning. A small
+misspelling still counts, so drane matches drain. A price written
+without a dollar sign, such as 150, or as 150 dollars, is still a
+price. If an answer contains any other amount, the whole answer is
+replaced with the callback reply from your agreements. An address, a
+phone number, and a time are not prices. An answer with no amount is
 left as it is. An urgent message is handled first, and your pages are
 not read for it.
 
@@ -38,6 +41,10 @@ _AMOUNT = re.compile(
     r"|(?<![\d,.])\d+(?:\.\d+)?\s+dollars?(?!\w)",
     re.IGNORECASE,
 )
+# A price with no dollar sign, such as 150. A time, a phone number,
+# and the digits already inside a dollar amount are left out here.
+# A full stop after the number stays outside it.
+_BARE_PRICE = re.compile(r"(?<![\d,.$:(/-])\d{2,}(?:\.\d+)?(?!,?\d)(?![:)/-])")
 # A word of the service name. A hyphen stays inside the word, so a
 # two-part name is kept together.
 _WORD = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*", re.IGNORECASE)
@@ -98,6 +105,31 @@ _NOT_A_SERVICE = frozenset(
         "paid",
         "rate",
         "rates",
+        "dollar",
+        "dollars",
+    }
+)
+# Words that follow a street number. "149 Maple Street" is an address,
+# so that 149 is not a price.
+_STREET_WORDS = frozenset(
+    {
+        "street",
+        "st",
+        "road",
+        "rd",
+        "avenue",
+        "ave",
+        "lane",
+        "ln",
+        "drive",
+        "dr",
+        "boulevard",
+        "blvd",
+        "court",
+        "ct",
+        "way",
+        "place",
+        "pl",
     }
 )
 # A service is near a price when its words sit within this many words
@@ -137,11 +169,42 @@ def _section(body, heading):
     return lines
 
 
-def find_amounts(text):
-    """Return each money amount in text, exactly as written, in order."""
+def _looks_like_a_street_number(text, end):
+    """True when this number sits in front of a street name."""
+    window = text[end : end + 48]
+    words = [match.group(0).casefold() for match in _WORD.finditer(window)]
+    return any(word in _STREET_WORDS for word in words[:3])
+
+
+def _amount_matches(text):
+    """Return each price as (start, end, text), in the order written.
+
+    A dollar amount and a number of dollars are included. A bare number
+    such as 150 is a price too, unless it is a time, a phone number,
+    or a street number.
+    """
     if not isinstance(text, str) or not text:
         return []
-    return [match.group(0) for match in _AMOUNT.finditer(text)]
+    matches = []
+    for match in _AMOUNT.finditer(text):
+        matches.append((match.start(), match.end(), match.group(0)))
+    covered = [(start, end) for start, end, _amount in matches]
+    for match in _BARE_PRICE.finditer(text):
+        start, end = match.span()
+        if any(start < span_end and end > span_start for span_start, span_end in covered):
+            continue
+        if _looks_like_a_street_number(text, end):
+            continue
+        if re.match(r"\s*(?:am|pm)\b", text[end : end + 8], re.IGNORECASE):
+            continue
+        matches.append((start, end, match.group(0)))
+    matches.sort(key=lambda item: item[0])
+    return matches
+
+
+def find_amounts(text):
+    """Return each money amount in text, exactly as written, in order."""
+    return [amount for _start, _end, amount in _amount_matches(text)]
 
 
 def callback_reply(text=None):
@@ -256,25 +319,97 @@ def _service_stem(word):
     return stem
 
 
+def _edit_distance(left, right, limit):
+    """Return the edit distance, or limit + 1 when it is larger than limit.
+
+    A substitution, a missing or extra letter, and two neighbouring
+    letters swapped each count as one.
+    """
+    if abs(len(left) - len(right)) > limit:
+        return limit + 1
+    rows = len(left) + 1
+    cols = len(right) + 1
+    distance = [[0] * cols for _ in range(rows)]
+    for index in range(rows):
+        distance[index][0] = index
+    for index in range(cols):
+        distance[0][index] = index
+    for row in range(1, rows):
+        smallest = distance[row][0]
+        for col in range(1, cols):
+            cost = 0 if left[row - 1] == right[col - 1] else 1
+            value = min(
+                distance[row - 1][col] + 1,
+                distance[row][col - 1] + 1,
+                distance[row - 1][col - 1] + cost,
+            )
+            if (
+                row > 1
+                and col > 1
+                and left[row - 1] == right[col - 2]
+                and left[row - 2] == right[col - 1]
+            ):
+                value = min(value, distance[row - 2][col - 2] + 1)
+            distance[row][col] = value
+            smallest = min(smallest, value)
+        if smallest > limit:
+            return limit + 1
+    return distance[-1][-1]
+
+
+def _one_edit(left, right):
+    """True when left and right are a small slip apart.
+
+    One changed, missing, extra, or swapped letter counts. Two count
+    only when the words start the same way, so drane matches drain.
+    A very short word is left out, so it cannot match a different word
+    by accident.
+    """
+    if min(len(left), len(right)) < 4 or max(len(left), len(right)) < 5:
+        return False
+    distance = _edit_distance(left, right, 2)
+    if distance == 1:
+        return True
+    if distance == 2 and len(left) >= 5 and len(right) >= 5 and left[:3] == right[:3]:
+        return True
+    return False
+
+
 def _same_service_word(left, right):
-    """True when two words name the same service."""
+    """True when two words name the same service.
+
+    A plural or an -ing form still matches. A small misspelling does
+    too, so drane matches drain.
+    """
     if left == right:
         return True
-    return _service_stem(left) == _service_stem(right)
+    if _service_stem(left) == _service_stem(right):
+        return True
+    return _one_edit(left, right) or _one_edit(_service_stem(left), _service_stem(right))
+
+
+def _words_near_amount(text, amount):
+    """Return the words just beside this amount, in its sentence."""
+    for start, end, found in _amount_matches(text):
+        if found != amount:
+            continue
+        return _words_near(text, start, end)
+    return []
 
 
 def price_is_near_service(page_text, amount, words):
     """True when this amount is on the page, near every service word.
 
     A plural or an -ing form still matches, so drains matches drain
-    and clean matches cleaning.
+    and clean matches cleaning. A small misspelling still matches,
+    so drane matches drain.
     """
     if not words or not isinstance(page_text, str) or not amount:
         return False
-    for match in _AMOUNT.finditer(page_text):
-        if match.group(0) != amount:
+    for start, end, found in _amount_matches(page_text):
+        if found != amount:
             continue
-        nearby = _words_near(page_text, match.start(), match.end())
+        nearby = _words_near(page_text, start, end)
         if all(any(_same_service_word(word, near) for near in nearby) for word in words):
             return True
     return False

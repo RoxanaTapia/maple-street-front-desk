@@ -28,6 +28,17 @@ We sent each question to the live demo one at a time, as a customer would, and c
 | 14 | Are you licensed and insured? | Yes, in New Jersey, from Hours & FAQ | "Yes, we're fully licensed and insured in New Jersey. From Hours & FAQ." | ✅ |
 | 15 | Do you offer after-hours emergency callouts? | Yes, call the main line, from Hours & FAQ | "Yes, we handle emergencies after hours too. Just call our main line at (856) 555-0142. From Hours & FAQ." | ✅ |
 
+## Questions added after the demo
+
+These two were not sent to the live demo. The automatic checks cover them.
+
+| Question | Result |
+|---|---|
+| How much is a drane cleaning? | The drain cleaning price from Pricing, the same price as question 3 |
+| Is drain cleaning 149? | A short yes that names that price, spoken to the customer |
+
+A wrong amount written as 150, or as 150 dollars, gets the call-us reply. An address is still not a price.
+
 ## Urgent words
 
 Each of these got exactly the urgent reply: "This sounds urgent. Please call us now on (856) 555-0142."

@@ -24,8 +24,11 @@ service has a price on the pages, that price is enough: the stand-in
 says yes, includes the price, and names the page. When someone
 states a price that differs from the pages, the stand-in speaks to them
 directly with the sentence on the pages and does not repeat their amount.
-The stand-in is not a real AI, and it does not call one. The checks use
-that path, so they do not show what a live call would write.
+A small misspelling of a service the pages list still finds that service.
+When they write a price without a dollar sign and it matches the pages,
+the reply is a short yes spoken to them. The stand-in is not a real AI,
+and it does not call one. The checks use that path, so they do not show
+what a live call would write.
 Quotes or markdown around the whole question are set aside before that
 comparison, so the same words get the same answer. A dollar sign, a
 decimal point, and a hyphen in the question stay as written.
@@ -55,7 +58,7 @@ AGREEMENTS = ROOT / "docs" / "agreements.md"
 CALLBACK_HEADING = "When the pages don't say"
 OFF_TOPIC_HEADING = "Off-topic questions"
 OUTAGE_HEADING = "When the assistant can't look it up"
-QUESTIONS_HEADING = "The 16 test questions"
+QUESTIONS_HEADING = "The 18 test questions"
 ANSWERED_GROUP = "Answered by your pages"
 _CLOCK = re.compile(r"\d{1,2}:\d{2} am to \d{1,2}:\d{2} pm", re.IGNORECASE)
 # A comma counts only as a thousands separator, so "$149," stays "$149".
@@ -75,6 +78,17 @@ CORRECT_A_WRONG_PRICE = (
 PRICED_SERVICE_IS_OFFERED = (
     "If a service has a price on these pages, that service is offered. "
     "Say yes, include that price, and name the page."
+)
+# A small slip in a service name still means that service.
+MISSPELLED_SERVICE = (
+    "A small misspelling of a service on these pages still means that service. "
+    "Answer as you would for the right spelling, in plain words."
+)
+# The price may be written without a dollar sign. Speak to the person.
+PLAIN_PRICE = (
+    "If they write a price without a dollar sign and it matches these pages, "
+    "answer with a short yes that includes the price as the pages write it. "
+    "Speak to them directly, and do not mention the customer."
 )
 _WORD = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
 # The page reader keeps the navigation in the visible text, glued to the
@@ -884,7 +898,10 @@ def build_instructions(question, pages, text=None):
     directly, give the price from the pages, and not mention the customer
     or repeat their price. When a service has a price on the pages, they
     say to treat that service as offered, say yes, include the price, and
-    name the page. The text of every page is included.
+    name the page. A small misspelling of a service still means that
+    service. A price written without a dollar sign, when it matches the
+    pages, gets a short yes spoken to the person. The text of every page
+    is included.
     """
     callback = callback_reply(text)
     example = _source_example(pages)
@@ -896,6 +913,8 @@ def build_instructions(question, pages, text=None):
         f"For example, From {example}.",
         CORRECT_A_WRONG_PRICE,
         PRICED_SERVICE_IS_OFFERED,
+        MISSPELLED_SERVICE,
+        PLAIN_PRICE,
         "When the pages don't cover the question, reply with exactly this sentence:",
         callback,
         "",
@@ -1010,6 +1029,114 @@ def _priced_service_reply(question, pages, instructions):
     return best[1]
 
 
+def _priced_snippet(question, pages, instructions):
+    """Return the price sentence, the page name, and the amount, or None.
+
+    The price has to sit in one sentence, near the service. A small
+    misspelling of a service word still counts.
+    """
+    words = price_reply.service_words(question)
+    if not words or not isinstance(instructions, str):
+        return None
+    best = None
+    for page in pages or []:
+        if not isinstance(page, dict) or page.get("status") != "read":
+            continue
+        name = page.get("name")
+        page_text = page.get("text") or ""
+        if not isinstance(name, str) or not name.strip():
+            continue
+        if not page_text or page_text not in instructions:
+            continue
+        for snippet in _snippets(page_text):
+            amounts = price_reply.find_amounts(snippet)
+            if len(amounts) != 1:
+                continue
+            amount = amounts[0]
+            if not price_reply.price_is_near_service(snippet, amount, words):
+                continue
+            score = (len(words), len(snippet))
+            if best is not None and score <= best[0]:
+                continue
+            best = (score, snippet, name, amount)
+    if best is None:
+        return None
+    return best[1], best[2], best[3]
+
+
+def _yes_sentence(snippet, name):
+    """Turn a page price sentence into a short yes to the customer."""
+    sentence = snippet.strip()
+    if sentence.endswith("."):
+        sentence = sentence[:-1]
+    if sentence[:1].isupper():
+        sentence = sentence[:1].lower() + sentence[1:]
+    return _with_source([f"Yes, {sentence}."], name)
+
+
+def _yes_matching_price(question, pages, instructions):
+    """Return a short yes when the stated price matches the page.
+
+    The customer may write the amount without a dollar sign. The reply
+    uses the price as the page writes it, and it speaks to them.
+    Returns None when the stated price differs, or when none was stated.
+    """
+    stated = _stated_price_numbers(question)
+    if not stated:
+        return None
+    found = _priced_snippet(question, pages, instructions)
+    if found is None:
+        return None
+    snippet, name, amount = found
+    page_number = _price_number(amount)
+    if page_number is None:
+        return None
+    if not all(_same_number(number, page_number) for number in stated):
+        return None
+    return _yes_sentence(snippet, name)
+
+
+def _has_small_misspelling(words, snippet, amount):
+    """True when a service word is only a small misspelling of the sentence."""
+    nearby = price_reply._words_near_amount(snippet, amount)
+    if not nearby:
+        return False
+    for word in words:
+        exact = any(
+            word == near or price_reply._service_stem(word) == price_reply._service_stem(near)
+            for near in nearby
+        )
+        if exact:
+            continue
+        slipped = any(
+            price_reply._one_edit(word, near)
+            or price_reply._one_edit(
+                price_reply._service_stem(word),
+                price_reply._service_stem(near),
+            )
+            for near in nearby
+        )
+        if slipped:
+            return True
+    return False
+
+
+def _misspelled_price(question, pages, instructions):
+    """Return the page price when the service is only slightly misspelled.
+
+    The sentence is the one on the page. Returns None when every service
+    word is already exact, or when no priced sentence matches.
+    """
+    words = price_reply.service_words(question)
+    found = _priced_snippet(question, pages, instructions)
+    if found is None or not words:
+        return None
+    snippet, name, amount = found
+    if not _has_small_misspelling(words, snippet, amount):
+        return None
+    return _with_source([snippet], name)
+
+
 def stand_in_writer(question, instructions, pages, text=None):
     """Answer the agreed test questions. This is not a real AI.
 
@@ -1019,11 +1146,14 @@ def stand_in_writer(question, instructions, pages, text=None):
     question. A plain question about opening hours is answered from the
     Hours page the same way. When someone states a price that differs
     from the pages, the answer is the sentence beside that service,
-    spoken to them, and their amount is not repeated. When a question
-    asks whether a service is offered, and a page lists a price for it,
-    the answer says yes, includes that price, and names the page. The
-    pages do not have to say "we do" that job in other words. A service
-    the pages never mention gets the callback sentence.
+    spoken to them, and their amount is not repeated. When they state
+    the price the pages already show, even without a dollar sign, the
+    answer is a short yes that uses the page's price. A small misspelling
+    of a service still gets that service's price. When a question asks
+    whether a service is offered, and a page lists a price for it, the
+    answer says yes, includes that price, and names the page. The pages
+    do not have to say "we do" that job in other words. A service the
+    pages never mention gets the callback sentence.
     """
     callback = callback_reply(text)
     if not isinstance(question, str) or not question.strip():
@@ -1042,7 +1172,9 @@ def stand_in_writer(question, instructions, pages, text=None):
         return (
             _hours_answer(question, pages, instructions)
             or _correct_stated_price(question, pages, instructions)
+            or _yes_matching_price(question, pages, instructions)
             or offered
+            or _misspelled_price(question, pages, instructions)
             or callback
         )
     name = _source_page(row["detail"])
@@ -1061,10 +1193,13 @@ def stand_in_writer(question, instructions, pages, text=None):
     sentences = _supporting(page_text, question, row["detail"])
     if sentences and _states_yes_or_no(sentences):
         return _with_source(sentences, name)
+    matching = _yes_matching_price(question, pages, instructions)
+    if matching:
+        return matching
     if offered:
         return offered
     if not sentences:
-        return callback
+        return _misspelled_price(question, pages, instructions) or callback
     return _with_source(sentences, name)
 
 
@@ -1249,6 +1384,29 @@ def _claude_reply(instructions, client=None):
     return text
 
 
+def _plain_customer_price(question, reply, pages, instructions):
+    """Replace a note about the customer when their price matches the page.
+
+    The short yes uses the price as the page writes it. A reply that
+    names a different amount is left as it is, so the price check can
+    reject it. A reply that does not mention the customer is left as it is.
+    """
+    if not isinstance(reply, str) or not _mentions_the_customer(reply):
+        return reply
+    plain = _yes_matching_price(question, pages, instructions)
+    if not isinstance(plain, str):
+        return reply
+    page_number = _page_price_number(plain)
+    if page_number is None:
+        return reply
+    numbers = _stated_price_numbers(reply)
+    if not numbers or any(not _same_number(number, page_number) for number in numbers):
+        return reply
+    if not _draft_passes_price_check(question, plain, pages):
+        return reply
+    return plain
+
+
 def write_answer(question, pages, writer=None, text=None, client=None):
     """Write an answer for question from the page text.
 
@@ -1278,7 +1436,9 @@ def write_answer(question, pages, writer=None, text=None, client=None):
     left as they are. A wrong-price note that already states only the
     page price may lose the words "the customer", and the other sentences
     stay. A note that agrees with the stated price, or names another
-    amount, is not replaced with the page price.
+    amount, is not replaced with the page price. When the price they
+    wrote matches the pages, even without a dollar sign, a note about
+    the customer becomes a short yes spoken to them.
 
     A page that can't be read is noted for the owner before the reply
     is chosen. The note does not change the reply. The customer's
@@ -1309,6 +1469,7 @@ def write_answer(question, pages, writer=None, text=None, client=None):
     if isinstance(reply, str) and reply.strip() == outage:
         return outage
     reply = normalize_source_line(reply, pages, callback)
+    reply = _plain_customer_price(question, reply, pages, instructions)
     return _direct_price_reply(question, reply, pages, instructions, callback)
 
 

@@ -5,11 +5,13 @@
 2. Read your pages.
 3. Write the answer. A question that is clearly about something else
    gets the off-topic reply. A service with a price on the pages is
-   offered, so the reply says yes and includes that price. Anything
+   offered, so the reply says yes and includes that price. A small
+   misspelling of that service still gets the same answer. Anything
    else the pages don't cover gets the callback reply.
 4. Check every price. An amount that isn't on your pages, or that isn't
    near the service the customer asked about, is replaced with the
-   callback reply. The outage reply is left as it is.
+   callback reply. A price written without a dollar sign counts as an
+   amount. The outage reply is left as it is.
 
 Usage: python3 scripts/front_desk.py "customer message" [site address]
 
@@ -42,8 +44,10 @@ def reply_to(message, base_url=None, writer=None, client=None):
     is kept only when it is on the same page, near the service asked about.
     A question that is clearly about something else gets the off-topic
     reply. A service with a price on the pages is offered, so the reply
-    says yes and includes that price. A question the pages don't cover
-    still gets the callback reply.
+    says yes and includes that price. A small misspelling of that service
+    still gets the same answer. A price written without a dollar sign is
+    still checked. A question the pages don't cover still gets the
+    callback reply.
     The outage reply is returned as written, so a failed call is not
     replaced with the callback reply. A page that can't be read is
     noted for the owner. That note does not change this reply.
