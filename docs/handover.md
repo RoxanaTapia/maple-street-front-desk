@@ -14,6 +14,7 @@ Live demo: [maple-demo.roxanatapia.dev](https://maple-demo.roxanatapia.dev), onl
 - [Setup guide](setup-guide.md)
 - On your account, never stored here: [Your Claude key](setup-guide.md#your-claude-key)
 - [How to change the urgent words](#change-the-urgent-words)
+- [How to change the call-us sentences](#change-the-call-us-sentences)
 
 ## Your error notes
 
@@ -66,20 +67,22 @@ You can change the urgent reply freely if:
 - it's different from the callback and outage replies
 - it isn't already written word for word on the behaviour page, the README or the how-it-works page
 
+You can change either call-us sentence freely if:
+
+- it stays on a line starting with `>`
+- it stays different from the other call-us sentence and from the urgent reply
+- it isn't copied inside another reply on the agreements page
+- it isn't already written word for word on the behaviour page, the README, the how-it-works page, or the setup guide
+
 | Edit | Needs a check update? |
 |---|---|
 | Remove or rename "water everywhere", "basement", "leak", "leaking", "frozen pipe", "burst pipe", or "no heat" | Yes |
 | A new word that appears on the behaviour page, even inside a longer word, or in an ordinary test question | Yes |
 | A change that makes "I have a leaky faucet" or "frozen pipes" urgent | Yes |
-| Change the callback sentence, the off-topic reply, or the outage sentence | Yes |
+| Change the callback sentence or the outage sentence | No |
+| Change the off-topic reply | Yes |
 
 </details>
-
-## Not done yet
-
-Settled on the call: call-us replies use your [main line](agreements.md#main-line-and-contact).
-
-- Call-us replies cannot be edited on the agreements page alone. [#65](https://github.com/RoxanaTapia/maple-street-front-desk/issues/65)
 
 ## Keeping it live
 
@@ -91,6 +94,19 @@ You edit a copy, then approve it.
 
 1. Open [docs/agreements.md](agreements.md) and click **Edit this file**.
 2. Change a bold word or the `>` reply, and keep the `>`.
+3. **Commit changes**, name a branch, then **Propose changes**.
+4. Click **Create pull request**.
+5. Wait until every check is green.
+6. Click **Merge pull request**, then **Confirm merge**.
+
+If a check turns red, don't merge; ask Roxana in the PR.
+
+## Change the call-us sentences
+
+You edit a copy, then approve it. You can change the words or the phone number. The checks read these two replies from the agreements page.
+
+1. Open [docs/agreements.md](agreements.md) and click **Edit this file**.
+2. Change the `>` reply under When the pages don't say, or the `>` reply under When the assistant can't look it up, and keep the `>`.
 3. **Commit changes**, name a branch, then **Propose changes**.
 4. Click **Create pull request**.
 5. Wait until every check is green.
