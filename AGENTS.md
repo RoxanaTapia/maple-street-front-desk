@@ -10,12 +10,14 @@ These never change without the client's OK. The list is in [What we've agreed](d
 
 ## How a change happens
 
-1. **One issue.** An issue is the written request. Each request stays one piece of work.
+1. **One issue.** An issue is the written request. Each request stays one piece of work. Use `.github/ISSUE_TEMPLATE.md`. The sections are What, Acceptance criteria, and Out of scope, in plain words. Acceptance criteria are plain bullet points, not checkboxes.
 2. **One branch.** A branch is a separate copy of the project, so this work does not mix with anything else. Its name is plain and descriptive, such as step-5-price-rule.
-3. **One pull request.** A pull request is the proposal to add that copy. The title is a plain sentence, with no prefix such as "fix:", and issue titles and pull request titles use no emoji. PR descriptions follow [the change summary](.github/pull_request_template.md), with headings 📝 What changes, ⚙️ How it works, 🔍 How to review and ✅ Checks. When a change adds or changes a script, update its section in docs/how-it-works.md (what it does, why it's there, a command to try).
+3. **One pull request.** A pull request is the proposal to add that copy. The title is a plain sentence, with no prefix such as "fix:", and issue titles and pull request titles use no emoji. The description is written to Dave and Carla in plain words. It has four parts: Closes, What changes, How to try it, and Checks. There is no Coming next part. Internal review notes stay out of the description. When a change adds or changes a script, update its section in docs/how-it-works.md (what it does, why it's there, a command to try).
 4. **Automatic checks.** So nothing breaks what was agreed. Each new test area gets its own plainly named check on the pull request.
 5. **A person reviews.** A person signs off every change.
 6. **Merge.** Merge means the change joins the project.
+
+Issues, pull requests, and other client-facing writing use no em dashes and no square brackets.
 
 ## Where things are
 
@@ -39,11 +41,12 @@ These never change without the client's OK. The list is in [What we've agreed](d
 | Client-facing | [demo/](demo/) | The chat page: the message box, the conversation, and the demo line. |
 | For the agents | [.cursor/rules/](.cursor/rules/) | How the agents are allowed to work |
 | For the agents | [.cursor/team/](.cursor/team/README.md) | The roles they work in |
-| For the agents | [.cursor/commands/](.cursor/commands/run-checks.md) | Shortcuts for the checks and the change summary |
+| For the agents | [.cursor/commands/](.cursor/commands/run-checks.md) | Shortcuts for the checks and the pull request description |
 | Checks | [tests/](tests/) | The automatic checks |
 | Checks | [scripts/run_checks.py](scripts/run_checks.py) | Runs the checks |
 | Checks | [.github/workflows/ci.yml](.github/workflows/ci.yml) | Runs those same checks on every proposed change |
-| Checks | [.github/pull_request_template.md](.github/pull_request_template.md) | The short form for the change summary |
+| Checks | [.github/ISSUE_TEMPLATE.md](.github/ISSUE_TEMPLATE.md) | The short form for a new issue |
+| Checks | [.github/pull_request_template.md](.github/pull_request_template.md) | The short form for a pull request |
 | Checks | [.python-version](.python-version) | Which version of Python the checks use. Python is the language they are written in. |
 
 To try the sample site, read the pages, or run the checks, follow [Try it yourself](docs/how-it-works.md#try-it-yourself).
