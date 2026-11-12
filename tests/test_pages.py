@@ -334,7 +334,7 @@ def blockquote(heading):
 def question_rows():
     rows = []
     group = None
-    for line in _section_lines("The 15 test questions"):
+    for line in _section_lines("The 16 test questions"):
         bold = GROUP_HEADING.match(line.strip())
         if bold:
             group = bold.group(1).strip()
@@ -372,8 +372,8 @@ class QuestionCoverageChecks(unittest.TestCase):
         """Every test question has an answer plan, an answered question names one of your pages, and the drain-cleaning question is answered from Pricing."""
         rows = question_rows()
         agreed = {page["name"]: page["path"] for page in read_pages.agreed_pages()}
-        self.assertEqual(len(rows), 15)
-        self.assertEqual([row["number"] for row in rows], list(range(1, 16)))
+        self.assertEqual(len(rows), 16)
+        self.assertEqual([row["number"] for row in rows], list(range(1, 17)))
         self.assertEqual([row["question"] for row in rows[:6]], FIRST_QUESTIONS)
         groups = []
         for row in rows:
@@ -392,7 +392,7 @@ class QuestionCoverageChecks(unittest.TestCase):
             by_group.setdefault(row["group"], []).append(row)
         self.assertEqual(
             [row["number"] for row in by_group["Answered by your pages"]],
-            [1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 14, 15],
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 14, 15, 16],
         )
         self.assertEqual(len(by_group["Handled by a set reply"]), 3)
         self.assertNotIn("Yours to decide", _agreements_text())
@@ -438,6 +438,14 @@ class QuestionCoverageChecks(unittest.TestCase):
         pricing_page = (ROOT / "sample-site" / "pricing.html").read_text(encoding="utf-8")
         self.assertIn("drain cleaning", pricing_page.lower())
         self.assertIn(amount.group(0), pricing_page)
+        clean = next(row for row in rows if row["question"] == "Do you clean drains?")
+        self.assertEqual(clean["number"], 16)
+        self.assertEqual(clean["group"], "Answered by your pages")
+        self.assertEqual(page_named(clean["detail"]), "Pricing")
+        clean_amount = PRICE.search(clean["detail"])
+        self.assertIsNotNone(clean_amount)
+        self.assertEqual(clean_amount.group(0), amount.group(0))
+        self.assertIn(clean_amount.group(0), pricing_page)
 
         saturday = next(row for row in rows if row["question"] == "Are you open Saturdays?")
         hours = (ROOT / "sample-site" / "hours.html").read_text(encoding="utf-8")

@@ -16,7 +16,9 @@ an error, and a short note records when it happened and what kind of
 error it was. The customer's message and the key are not in that note.
 The outage reply is a different sentence from the callback reply.
 
-With no key, a stand-in answers the agreed test questions. When someone
+With no key, a stand-in answers the agreed test questions. When a
+service has a price on the pages, that price is enough: the stand-in
+says yes, includes the price, and names the page. When someone
 states a price that differs from the pages, the stand-in speaks to them
 directly with the sentence on the pages and does not repeat their amount.
 The stand-in is not a real AI, and it does not call one. The checks use
@@ -49,7 +51,7 @@ AGREEMENTS = ROOT / "docs" / "agreements.md"
 CALLBACK_HEADING = "When the pages don't say"
 OFF_TOPIC_HEADING = "Off-topic questions"
 OUTAGE_HEADING = "When the assistant can't look it up"
-QUESTIONS_HEADING = "The 15 test questions"
+QUESTIONS_HEADING = "The 16 test questions"
 ANSWERED_GROUP = "Answered by your pages"
 _CLOCK = re.compile(r"\d{1,2}:\d{2} am to \d{1,2}:\d{2} pm", re.IGNORECASE)
 # A comma counts only as a thousands separator, so "$149," stays "$149".
@@ -64,6 +66,11 @@ CORRECT_A_WRONG_PRICE = (
     "If they state a price that differs from the pages, speak to them directly "
     "and give the price from the pages, for example: A drain cleaning is $149. "
     "Do not mention the customer, and do not repeat their price."
+)
+# A listed price is enough. The pages do not have to say "we do" as well.
+PRICED_SERVICE_IS_OFFERED = (
+    "If a service has a price on these pages, that service is offered. "
+    "Say yes, include that price, and name the page."
 )
 _WORD = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
 # The page reader keeps the navigation in the visible text, glued to the
@@ -862,7 +869,9 @@ def build_instructions(question, pages, text=None):
     sentence when the pages don't cover the question. When someone states
     a price that differs from the pages, they say to speak to that person
     directly, give the price from the pages, and not mention the customer
-    or repeat their price. The text of every page is included.
+    or repeat their price. When a service has a price on the pages, they
+    say to treat that service as offered, say yes, include the price, and
+    name the page. The text of every page is included.
     """
     callback = callback_reply(text)
     example = _source_example(pages)
@@ -873,6 +882,7 @@ def build_instructions(question, pages, text=None):
         "End the answer with exactly From <Page name>.",
         f"For example, From {example}.",
         CORRECT_A_WRONG_PRICE,
+        PRICED_SERVICE_IS_OFFERED,
         "When the pages don't cover the question, reply with exactly this sentence:",
         callback,
         "",
@@ -917,6 +927,76 @@ def _hours_answer(question, pages, instructions):
     return _with_source(lines, page.get("name"))
 
 
+def _asks_whether_offered(question):
+    """True when the customer is asking if a service is offered."""
+    if not isinstance(question, str):
+        return False
+    bare = _without_surrounding_marks(question)
+    return re.match(r"(?:do you|can you|will you)\b", bare.casefold()) is not None
+
+
+def _service_name(snippet, amount):
+    """Return the service words in a price sentence, without the amount."""
+    text = snippet.replace(amount, " ")
+    text = re.sub(r"[.!?]", " ", text)
+    text = " ".join(text.split())
+    text = re.sub(r"^(?:a|an|the)\s+", "", text, flags=re.IGNORECASE)
+    text = re.sub(r"\s+\b(?:is|are|costs|cost)\b.*$", "", text, flags=re.IGNORECASE)
+    name = text.strip()
+    if not name or not re.search(r"[a-z]", name, re.IGNORECASE):
+        return None
+    return name
+
+
+def _states_yes_or_no(sentences):
+    """True when these lines already say yes or no."""
+    text = " ".join(sentences).casefold()
+    return re.search(r"\b(yes|no)\b", text) is not None
+
+
+def _priced_service_reply(question, pages, instructions):
+    """Say yes when a page lists a price for the service asked about.
+
+    The pages do not have to say "we do" that job in other words. The
+    price has to sit in one sentence, near the service. Returns None
+    when this is not a "do you" question, or when no page lists a price
+    for it.
+    """
+    if not _asks_whether_offered(question) or not isinstance(instructions, str):
+        return None
+    words = price_reply.service_words(question)
+    if not words:
+        return None
+    best = None
+    for page in pages or []:
+        if not isinstance(page, dict) or page.get("status") != "read":
+            continue
+        name = page.get("name")
+        page_text = page.get("text") or ""
+        if not isinstance(name, str) or not name.strip():
+            continue
+        if not page_text or page_text not in instructions:
+            continue
+        for snippet in _snippets(page_text):
+            amounts = price_reply.find_amounts(snippet)
+            if len(amounts) != 1:
+                continue
+            amount = amounts[0]
+            if not price_reply.price_is_near_service(snippet, amount, words):
+                continue
+            service = _service_name(snippet, amount)
+            if not service:
+                continue
+            score = (len(words), len(service))
+            if best is not None and score <= best[0]:
+                continue
+            reply = _with_source([f"Yes, we do {service}. It's {amount}."], name)
+            best = (score, reply)
+    if best is None:
+        return None
+    return best[1]
+
+
 def stand_in_writer(question, instructions, pages, text=None):
     """Answer the agreed test questions. This is not a real AI.
 
@@ -926,8 +1006,11 @@ def stand_in_writer(question, instructions, pages, text=None):
     question. A plain question about opening hours is answered from the
     Hours page the same way. When someone states a price that differs
     from the pages, the answer is the sentence beside that service,
-    spoken to them, and their amount is not repeated. Anything the
-    pages don't cover gets the callback sentence.
+    spoken to them, and their amount is not repeated. When a question
+    asks whether a service is offered, and a page lists a price for it,
+    the answer says yes, includes that price, and names the page. The
+    pages do not have to say "we do" that job in other words. A service
+    the pages never mention gets the callback sentence.
     """
     callback = callback_reply(text)
     if not isinstance(question, str) or not question.strip():
@@ -941,26 +1024,32 @@ def stand_in_writer(question, instructions, pages, text=None):
             break
     if row is not None and row["group"] != ANSWERED_GROUP:
         return callback
+    offered = _priced_service_reply(question, pages, instructions)
     if row is None:
         return (
             _hours_answer(question, pages, instructions)
             or _correct_stated_price(question, pages, instructions)
+            or offered
             or callback
         )
     name = _source_page(row["detail"])
     if not name:
-        return callback
+        return offered or callback
     page = None
     for item in pages or []:
         if item.get("name") == name:
             page = item
             break
     if page is None or page.get("status") != "read":
-        return callback
+        return offered or callback
     page_text = page.get("text") or ""
     if not page_text or page_text not in instructions:
-        return callback
+        return offered or callback
     sentences = _supporting(page_text, question, row["detail"])
+    if sentences and _states_yes_or_no(sentences):
+        return _with_source(sentences, name)
+    if offered:
+        return offered
     if not sentences:
         return callback
     return _with_source(sentences, name)
@@ -1107,7 +1196,9 @@ def write_answer(question, pages, writer=None, text=None, client=None):
     was. The customer's message and the key are not in that note. The
     outage reply is not the callback sentence.
     With no key and no client, the stand-in answers the agreed test questions.
-    A plumbing question the pages don't cover still gets the callback reply.
+    A service with a price on the pages is offered: the reply says yes,
+    includes that price, and names the page. A plumbing question the
+    pages don't cover still gets the callback reply.
 
     A page-based answer is rewritten so it ends with exactly
     'From <Page name>.'. The callback reply and the outage reply are

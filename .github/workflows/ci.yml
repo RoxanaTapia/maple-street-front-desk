@@ -205,6 +205,21 @@ jobs:
       - name: Run checks
         run: python3 scripts/run_checks.py tests/test_answers.py:HoursFaqAnswerChecks
 
+  priced-service:
+    name: A priced service is offered
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Run checks
+        run: python3 scripts/run_checks.py tests/test_answers.py:PricedServiceChecks
+
   wrapped-question:
     name: A wrapped question matches the plain one
     runs-on: ubuntu-latest

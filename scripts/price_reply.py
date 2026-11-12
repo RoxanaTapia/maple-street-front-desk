@@ -3,10 +3,12 @@
 Reads your pages with the page reader and keeps an amount only when it
 is written there, exactly as written. When the customer's question is
 given, the amount also has to be on the same page, near the service
-they asked about. If an answer contains any other amount, the whole
-answer is replaced with the callback reply from your agreements. An
-answer with no amount is left as it is. An urgent message is handled
-first, and your pages are not read for it.
+they asked about. A plural or an -ing form of a service word still
+counts, so drains matches drain and clean matches cleaning. If an
+answer contains any other amount, the whole answer is replaced with
+the callback reply from your agreements. An answer with no amount is
+left as it is. An urgent message is handled first, and your pages are
+not read for it.
 
 Usage: python3 scripts/price_reply.py "answer" [site address]
        python3 scripts/price_reply.py --asked "question" "answer" [site address]
@@ -238,15 +240,42 @@ def _words_near(text, start, end):
     return left[-NEAR_WORDS:] + right[:NEAR_WORDS]
 
 
+def _service_stem(word):
+    """Return a simpler form so a plural or an -ing word matches.
+
+    drains and drain match. clean and cleaning match. A short leftover
+    is not stripped, so a tiny word stays whole.
+    """
+    stem = word
+    if len(stem) > 4 and stem.endswith("s") and not stem.endswith("ss"):
+        stem = stem[:-1]
+    if len(stem) > 5 and stem.endswith("ing"):
+        shorter = stem[:-3]
+        if len(shorter) >= 4:
+            stem = shorter
+    return stem
+
+
+def _same_service_word(left, right):
+    """True when two words name the same service."""
+    if left == right:
+        return True
+    return _service_stem(left) == _service_stem(right)
+
+
 def price_is_near_service(page_text, amount, words):
-    """True when this amount is on the page, near every service word."""
+    """True when this amount is on the page, near every service word.
+
+    A plural or an -ing form still matches, so drains matches drain
+    and clean matches cleaning.
+    """
     if not words or not isinstance(page_text, str) or not amount:
         return False
     for match in _AMOUNT.finditer(page_text):
         if match.group(0) != amount:
             continue
         nearby = _words_near(page_text, match.start(), match.end())
-        if all(word in nearby for word in words):
+        if all(any(_same_service_word(word, near) for near in nearby) for word in words):
             return True
     return False
 

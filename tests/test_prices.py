@@ -48,7 +48,7 @@ def question_rows():
         if line.startswith("## "):
             if in_section:
                 break
-            in_section = line[3:].strip() == "The 15 test questions"
+            in_section = line[3:].strip() == "The 16 test questions"
             continue
         if not in_section:
             continue

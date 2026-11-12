@@ -6,6 +6,7 @@ FailureNoteChecks is the "A failed call is noted for the owner" area.
 OutageReplyChecks is the "A failed call gets the outage reply" area.
 HoursFaqAnswerChecks is the "Questions 13 to 15 come from Hours and FAQ" area.
 WrappedQuestionChecks is the "A wrapped question matches the plain one" area.
+PricedServiceChecks is the "A priced service is offered" area.
 The questions, the page each answer comes from, and the callback reply
 are read from your agreements. The page text is what the page reader
 returns. The docstring of each test is what the checklist prints.
@@ -16,7 +17,8 @@ or python3 scripts/run_checks.py tests/test_answers.py:ClaudeAnswerChecks
 or python3 scripts/run_checks.py tests/test_answers.py:FailureNoteChecks
 or python3 scripts/run_checks.py tests/test_answers.py:OutageReplyChecks
 or python3 scripts/run_checks.py tests/test_answers.py:HoursFaqAnswerChecks
-or python3 scripts/run_checks.py tests/test_answers.py:WrappedQuestionChecks.
+or python3 scripts/run_checks.py tests/test_answers.py:WrappedQuestionChecks
+or python3 scripts/run_checks.py tests/test_answers.py:PricedServiceChecks.
 """
 
 import contextlib
@@ -62,7 +64,7 @@ def question_rows():
         if line.startswith("## "):
             if in_section:
                 break
-            in_section = line[3:].strip() == "The 15 test questions"
+            in_section = line[3:].strip() == "The 16 test questions"
             continue
         if not in_section:
             continue
@@ -161,13 +163,13 @@ class AnswerChecks(unittest.TestCase):
     def test_every_answered_question_names_the_right_page(self):
         """Every question your pages answer ends with the page it used."""
         rows = question_rows()
-        self.assertEqual(len(rows), 15)
+        self.assertEqual(len(rows), 16)
         pages = self._pages()
         by_name = {page["name"]: page for page in pages}
         answered = [row for row in rows if row["group"] == "Answered by your pages"]
         self.assertEqual(
             [row["number"] for row in answered],
-            [1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 14, 15],
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 14, 15, 16],
         )
         for row in answered:
             self.assertIsNone(urgent_reply.reply_if_urgent(row["question"]), row["question"])
@@ -182,8 +184,12 @@ class AnswerChecks(unittest.TestCase):
             self.assertNotIn("This is a fictional business", answer, row["question"])
             self.assertNotIn("Home Services Pricing", answer, row["question"])
             body = answer[: -len(f"From {name}.")].strip()
-            for part in re.split(r"(?<=[.!?])\s+", body):
-                self.assertIn(part, by_name[name]["text"], row["question"])
+            page_text = by_name[name]["text"]
+            parts = [part for part in re.split(r"(?<=[.!?])\s+", body) if part]
+            copied = bool(parts) and all(part in page_text for part in parts)
+            if not copied:
+                self.assertRegex(body, r"^Yes,", row["question"])
+                self.assertTrue(price_reply.find_amounts(answer), row["question"])
             for fact in CLOCK.findall(row["detail"]) + price_reply.find_amounts(row["detail"]):
                 self.assertIn(fact, answer, row["question"])
                 self.assertIn(fact, by_name[name]["text"], row["question"])
@@ -1221,6 +1227,7 @@ class WrappedQuestionChecks(unittest.TestCase):
         cases = (
             "Are you open Saturdays?",
             "How much is a drain cleaning?",
+            "Do you clean drains?",
             "How much is a call-out?",
             "Can I get same-day service?",
         )
@@ -1342,6 +1349,137 @@ class WrappedQuestionChecks(unittest.TestCase):
         self.assertIn("-", seen["question"])
         self.assertEqual(price_reply.find_amounts(seen["question"]), ["$149.00"])
         self.assertIn("call-out", price_reply.service_words(seen["question"]))
+
+
+class PricedServiceChecks(unittest.TestCase):
+    def setUp(self):
+        self.env = _SavedEnv()
+        self.site = RunningSite()
+
+    def tearDown(self):
+        self.site.close()
+        serve_sample_site.pricing_live = True
+        self.env.restore()
+
+    def test_a_priced_service_is_offered(self):
+        """A service with a price on the pages gets a yes, the price, and the page."""
+        self.assertNotIn("ANTHROPIC_API_KEY", os.environ)
+        question = "Do you clean drains?"
+        expected = "Yes, we do drain cleaning. It's $149. From Pricing."
+        callback = answer_reply.callback_reply()
+        rows = question_rows()
+        row = next(item for item in rows if item["question"] == question)
+        self.assertEqual(row["number"], 16)
+        self.assertEqual(row["group"], "Answered by your pages")
+        self.assertEqual(page_named(row["detail"]), "Pricing")
+        self.assertIn("$149", row["detail"])
+        behaviour = (ROOT / "docs" / "behaviour.md").read_text(encoding="utf-8")
+        self.assertIn("A question about a service that has a price on the pages", behaviour)
+        self.assertIn("says yes", behaviour.lower())
+        pages = read_pages.read_pages(self.site.base)
+        pricing = next(page for page in pages if page["name"] == "Pricing")
+        self.assertEqual(pricing["status"], "read")
+        self.assertIn("A drain cleaning is $149.", pricing["text"])
+        self.assertTrue(
+            price_reply.price_is_near_service(pricing["text"], "$149", ["clean", "drains"])
+        )
+        self.assertFalse(
+            price_reply.price_is_near_service(pricing["text"], "$149", ["garbage", "disposals"])
+        )
+        self.assertIsNone(urgent_reply.reply_if_urgent(question))
+        got = front_desk.reply_to(question, base_url=self.site.base)
+        written = answer_reply.write_answer(question, pages)
+        self.assertEqual(got, expected)
+        self.assertEqual(written, expected)
+        self.assertNotEqual(got, callback)
+        self.assertNotEqual(got, urgent_reply.fixed_urgent_reply())
+        self.assertTrue(got.endswith("From Pricing."))
+        self.assertIn("$149", got)
+        self.assertNotIn("$99", got)
+        self.assertNotIn("the customer", got.casefold())
+        for wrapped in (f'"{question}"', f"**{question}**", f"{question}?"):
+            self.assertEqual(
+                front_desk.reply_to(wrapped, base_url=self.site.base),
+                expected,
+                wrapped,
+            )
+        same = front_desk.reply_to("Do you clean the drains?", base_url=self.site.base)
+        self.assertEqual(same, expected)
+        can = front_desk.reply_to("Can you clean drains?", base_url=self.site.base)
+        self.assertEqual(can, expected)
+        price_question = front_desk.reply_to(
+            "How much is a drain cleaning?",
+            base_url=self.site.base,
+        )
+        self.assertEqual(price_question, "A drain cleaning is $149. From Pricing.")
+        septic = front_desk.reply_to(
+            "Do you install septic systems?",
+            base_url=self.site.base,
+        )
+        self.assertEqual(
+            septic,
+            "No, we don't install or service septic systems. From Hours & FAQ.",
+        )
+        instructions = answer_reply.build_instructions(question, pages)
+        self.assertIn(answer_reply.PRICED_SERVICE_IS_OFFERED, instructions)
+        self.assertIn("Say yes, include that price, and name the page.", instructions)
+
+        def other_service(question_arg, instructions_arg, pages_arg):
+            return "The call-out fee is $99. From Services."
+
+        swapped = front_desk.reply_to(question, base_url=self.site.base, writer=other_service)
+        self.assertEqual(swapped, callback)
+        self.assertNotIn("$99", swapped)
+
+        def invented(question_arg, instructions_arg, pages_arg):
+            return "Yes, we do drain cleaning. It's $1,200. From Pricing."
+
+        made_up = front_desk.reply_to(question, base_url=self.site.base, writer=invented)
+        self.assertEqual(made_up, callback)
+        self.assertNotIn("$1,200", made_up)
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            code = front_desk.main([question, self.site.base])
+        self.assertEqual(code, 0)
+        self.assertEqual(stdout.getvalue(), expected + "\n")
+
+    def test_a_service_the_pages_never_mention_gets_the_callback(self):
+        """A service the pages never mention still gets the callback reply."""
+        self.assertNotIn("ANTHROPIC_API_KEY", os.environ)
+        callback = answer_reply.callback_reply()
+        friendly = answer_reply.off_topic_reply()
+        urgent = urgent_reply.fixed_urgent_reply()
+        self.assertNotEqual(callback, friendly)
+        self.assertNotEqual(callback, urgent)
+        pages = read_pages.read_pages(self.site.base)
+        joined = " ".join(page.get("text") or "" for page in pages).casefold()
+        for question in (
+            "Do you repair garbage disposals?",
+            "Do you install solar panels?",
+            "Can you replace a bidet?",
+        ):
+            self.assertNotIn(question.split()[-1].rstrip("?").casefold(), joined, question)
+            self.assertIsNone(urgent_reply.reply_if_urgent(question), question)
+            got = front_desk.reply_to(question, base_url=self.site.base)
+            self.assertEqual(got, callback, question)
+            self.assertEqual(answer_reply.write_answer(question, pages), callback, question)
+            self.assertNotIn("$", got, question)
+            self.assertNotEqual(got, friendly, question)
+            self.assertNotEqual(got, urgent, question)
+        priced = front_desk.reply_to("Do you clean drains?", base_url=self.site.base)
+        self.assertNotEqual(priced, callback)
+        self.assertIn("$149", priced)
+        without_price = []
+        for page in pages:
+            if page["name"] == "Pricing":
+                without_price.append({**page, "text": "Call for a quote."})
+            else:
+                without_price.append(page)
+        self.assertEqual(
+            answer_reply.write_answer("Do you clean drains?", without_price),
+            callback,
+        )
+        self.assertNotIn("$149", "Call for a quote.")
 
 
 if __name__ == "__main__":
