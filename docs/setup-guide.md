@@ -83,6 +83,10 @@ The customer gets the outage reply, from When the assistant can't look it up, so
 Each failure adds a line to `logs/claude-failures.log` on the computer that runs the assistant: the time and the kind of error, with no customer message and no key.
 A warning with the kind of error is also printed where the assistant is running.
 
+**What if a page can't be opened?**
+The customer gets the same reply as before. A question that needed that page gets the callback sentence. A question another page answers, such as Hours & FAQ, is still answered.
+The same file, `logs/claude-failures.log`, gets one line: the time, the page name, and the kind of error. The customer's message is not written there. The same page is noted once an hour.
+
 ## Handing over the code
 
 The code is handed over once the work is approved and paid.

@@ -45,7 +45,8 @@ def reply_to(message, base_url=None, writer=None, client=None):
     says yes and includes that price. A question the pages don't cover
     still gets the callback reply.
     The outage reply is returned as written, so a failed call is not
-    replaced with the callback reply.
+    replaced with the callback reply. A page that can't be read is
+    noted for the owner. That note does not change this reply.
 
     client, when given, stands in for the Claude call inside the answer
     step. writer, when given, stands in for the whole answer step, so a

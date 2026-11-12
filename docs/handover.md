@@ -55,7 +55,6 @@ Settled on the call: call-us replies use your [main line](agreements.md#main-lin
 
 - Call-us replies cannot be edited on the agreements page alone. [#65](https://github.com/RoxanaTapia/maple-street-front-desk/issues/65)
 - Misspellings, or prices with no `$`, can still go wrong. [#57](https://github.com/RoxanaTapia/maple-street-front-desk/issues/57)
-- You won't get an alert if the assistant stops working. [#58](https://github.com/RoxanaTapia/maple-street-front-desk/issues/58)
 
 ## Keeping it live
 
