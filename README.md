@@ -20,6 +20,7 @@ It prints `Demo chat at http://127.0.0.1:8080`. Open that address. The practice 
 |---|---|---|
 | "I have a burst pipe" | A message to call the owner right away, with the business number | ✅ |
 | "How much is a water heater replacement?" | An offer of a callback, since that price isn't on the business's pages | ✅ |
+| "Do you clean drains?" | A yes, with the price, from the Pricing page | ✅ |
 | "Do you sell pizza?" | A reply that points them back to plumbing, since that isn't a plumbing question | ✅ |
 | "Are you open Saturdays?" | A short answer from the Hours & FAQ page | ✅ |
 
@@ -63,6 +64,6 @@ An emergency is caught first. A price is checked last. A number the pages don't 
 - [How the assistant works](docs/how-it-works.md): the path of a message, and how to try the sample site.
 - [Setup guide](docs/setup-guide.md): how to run it.
 - [Handover notes](docs/handover.md): what you have, and how to change it yourself.
-- [Live test results](docs/test-results.md): the 15 questions and the urgent words, from the live demo on Nov 4.
+- [Live test results](docs/test-results.md): the 16 questions and the urgent words, from the live demo on Nov 4.
 
 **Next up:** the owner's notes from the demo call.

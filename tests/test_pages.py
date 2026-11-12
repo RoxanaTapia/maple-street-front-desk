@@ -289,9 +289,9 @@ FIRST_QUESTIONS = [
     "Do you service tankless water heaters?",
     "Are you open Saturdays?",
     "How much is a drain cleaning?",
+    "Do you clean drains?",
     "Do you cover Cherry Hill?",
     "Can I get same-day service?",
-    "Do you offer financing?",
 ]
 GROUP_HEADING = re.compile(r"^\*\*(.+?)\*\*$")
 QUESTION_LINE = re.compile(r"^(\d+)\.\s+(.+)$")
@@ -373,7 +373,11 @@ class QuestionCoverageChecks(unittest.TestCase):
         rows = question_rows()
         agreed = {page["name"]: page["path"] for page in read_pages.agreed_pages()}
         self.assertEqual(len(rows), 16)
-        self.assertEqual([row["number"] for row in rows], list(range(1, 17)))
+        self.assertEqual(
+            [row["number"] for row in rows],
+            [1, 2, 3, 16, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
+        )
+        self.assertEqual(sorted(row["number"] for row in rows), list(range(1, 17)))
         self.assertEqual([row["question"] for row in rows[:6]], FIRST_QUESTIONS)
         groups = []
         for row in rows:
@@ -392,7 +396,7 @@ class QuestionCoverageChecks(unittest.TestCase):
             by_group.setdefault(row["group"], []).append(row)
         self.assertEqual(
             [row["number"] for row in by_group["Answered by your pages"]],
-            [1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 14, 15, 16],
+            [1, 2, 3, 16, 4, 5, 6, 7, 8, 9, 13, 14, 15],
         )
         self.assertEqual(len(by_group["Handled by a set reply"]), 3)
         self.assertNotIn("Yours to decide", _agreements_text())

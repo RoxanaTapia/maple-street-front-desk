@@ -169,7 +169,7 @@ class AnswerChecks(unittest.TestCase):
         answered = [row for row in rows if row["group"] == "Answered by your pages"]
         self.assertEqual(
             [row["number"] for row in answered],
-            [1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 14, 15, 16],
+            [1, 2, 3, 16, 4, 5, 6, 7, 8, 9, 13, 14, 15],
         )
         for row in answered:
             self.assertIsNone(urgent_reply.reply_if_urgent(row["question"]), row["question"])

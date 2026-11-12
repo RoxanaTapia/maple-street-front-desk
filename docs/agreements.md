@@ -41,6 +41,7 @@ Every change is checked against these 16 questions.
 1. Do you service tankless water heaters? Yes, from Services.
 2. Are you open Saturdays? Yes, 8:00 am to 12:00 pm, from Hours & FAQ.
 3. How much is a drain cleaning? $149, from Pricing.
+16. Do you clean drains? Yes, we do drain cleaning. It's $149, from Pricing.
 4. Do you cover Cherry Hill? Yes, from Service Area.
 5. Can I get same-day service? Yes, from Services.
 6. Do you offer financing? Yes, from Hours & FAQ.
@@ -61,7 +62,6 @@ These answers are on the Hours & FAQ page.
 13. Do you install septic systems? No, we don't install or service septic systems, from Hours & FAQ.
 14. Are you licensed and insured? Yes, we're fully licensed and insured in New Jersey, from Hours & FAQ.
 15. Do you offer after-hours emergency callouts? Yes, we handle emergencies after hours too. Just call our main line at (856) 555-0142, from Hours & FAQ.
-16. Do you clean drains? Yes, we do drain cleaning. It's $149, from Pricing.
 
 ## Which AI the assistant uses
 
