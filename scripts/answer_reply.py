@@ -50,16 +50,12 @@ import urllib.request
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
+import agreed
 import price_reply
 import read_pages
 
 ROOT = Path(__file__).resolve().parents[1]
-AGREEMENTS = ROOT / "docs" / "agreements.md"
-CALLBACK_HEADING = "When the pages don't say"
-OFF_TOPIC_HEADING = "Off-topic questions"
-OUTAGE_HEADING = "When the assistant can't look it up"
-QUESTIONS_HEADING = "The 18 test questions"
-ANSWERED_GROUP = "Answered by your pages"
+ANSWERED_GROUP = agreed.ANSWERED_GROUP
 _CLOCK = re.compile(r"\d{1,2}:\d{2} am to \d{1,2}:\d{2} pm", re.IGNORECASE)
 # A comma counts only as a thousands separator, so "$149," stays "$149".
 _MONEY = re.compile(r"\$(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?")
@@ -274,47 +270,9 @@ USAGE = (
 )
 
 
-def _agreements(text):
-    if text is None:
-        return AGREEMENTS.read_text(encoding="utf-8")
-    return text
-
-
-def _section(body, heading):
-    found = False
-    lines = []
-    for line in body.splitlines():
-        if line.startswith("## "):
-            title = line[3:].strip()
-            if found:
-                break
-            found = title == heading
-            continue
-        if found:
-            lines.append(line)
-    if not found:
-        raise ValueError(f"Your agreements have no section {heading}.")
-    return lines
-
-
-def _quoted(text, heading, missing):
-    """Return the block quote under heading."""
-    parts = []
-    for line in _section(_agreements(text), heading):
-        stripped = line.strip()
-        if not stripped.startswith(">"):
-            continue
-        part = stripped[1:].strip()
-        if part:
-            parts.append(part)
-    if not parts:
-        raise ValueError(missing)
-    return " ".join(parts)
-
-
 def callback_reply(text=None):
     """Return the callback sentence from your agreements."""
-    return _quoted(text, CALLBACK_HEADING, "The callback reply is missing from your agreements.")
+    return agreed.callback_reply(text)
 
 
 def outage_reply(text=None):
@@ -323,12 +281,12 @@ def outage_reply(text=None):
     This is the reply when a call fails. It is a different sentence
     from the callback reply.
     """
-    return _quoted(text, OUTAGE_HEADING, "The outage reply is missing from your agreements.")
+    return agreed.outage_reply(text)
 
 
 def off_topic_reply(text=None):
     """Return the off-topic sentence from your agreements."""
-    return _quoted(text, OFF_TOPIC_HEADING, "The off-topic reply is missing from your agreements.")
+    return agreed.off_topic_reply(text)
 
 
 def _singular(word):
@@ -371,30 +329,6 @@ def _is_off_topic(question):
             continue
         return False
     return True
-
-
-def _question_rows(body):
-    rows = []
-    group = None
-    for line in _section(body, QUESTIONS_HEADING):
-        bold = re.fullmatch(r"\*\*(.+?)\*\*", line.strip())
-        if bold:
-            group = bold.group(1).strip()
-            continue
-        match = re.match(r"^\d+\.\s+(.+)$", line.strip())
-        if not match or not group:
-            continue
-        text = match.group(1).strip()
-        mark = text.find("?")
-        if mark == -1:
-            question, detail = text, ""
-        else:
-            question = text[: mark + 1].strip()
-            detail = text[mark + 1 :].strip()
-        rows.append({"question": question, "detail": detail, "group": group})
-    if not rows:
-        raise ValueError("No test questions are listed in your agreements.")
-    return rows
 
 
 # Marks that only wrap a question. A dollar sign, a decimal point, and a
@@ -638,9 +572,9 @@ def _stated_price_numbers(question):
         return []
     numbers = []
     covered = []
-    for match in price_reply._AMOUNT.finditer(question):
-        covered.append(match.span())
-        number = _price_number(match.group(0))
+    for start, end, written in price_reply.amount_spans(question):
+        covered.append((start, end))
+        number = _price_number(written)
         if number is not None:
             numbers.append(number)
     for match in _BARE_NUMBER.finditer(question):
@@ -730,11 +664,11 @@ def _sentences(text):
     """Return the sentences in text, with the end mark kept."""
     parts = []
     start = 0
-    for mark in price_reply._SENTENCE_END.finditer(text):
-        piece = text[start : mark.end()].strip()
+    for end in price_reply.sentence_ends(text):
+        piece = text[start:end].strip()
         if piece:
             parts.append(piece)
-        start = mark.end()
+        start = end
     tail = text[start:].strip()
     if tail:
         parts.append(tail)
@@ -746,7 +680,7 @@ def _content_words(sentence):
     words = []
     for match in _WORD.finditer(sentence.casefold()):
         word = match.group(0)
-        if word in _STOP or word in price_reply._NOT_A_SERVICE or word == "customer":
+        if word in _STOP or word in price_reply.NOT_A_SERVICE or word == "customer":
             continue
         if word in _NARRATION_WORDS:
             continue
@@ -1098,21 +1032,21 @@ def _yes_matching_price(question, pages, instructions):
 
 def _has_small_misspelling(words, snippet, amount):
     """True when a service word is only a small misspelling of the sentence."""
-    nearby = price_reply._words_near_amount(snippet, amount)
+    nearby = price_reply.words_near_amount(snippet, amount)
     if not nearby:
         return False
     for word in words:
         exact = any(
-            word == near or price_reply._service_stem(word) == price_reply._service_stem(near)
+            word == near or price_reply.service_stem(word) == price_reply.service_stem(near)
             for near in nearby
         )
         if exact:
             continue
         slipped = any(
-            price_reply._one_edit(word, near)
-            or price_reply._one_edit(
-                price_reply._service_stem(word),
-                price_reply._service_stem(near),
+            price_reply.one_edit(word, near)
+            or price_reply.one_edit(
+                price_reply.service_stem(word),
+                price_reply.service_stem(near),
             )
             for near in nearby
         )
@@ -1161,7 +1095,7 @@ def stand_in_writer(question, instructions, pages, text=None):
     if not isinstance(instructions, str):
         return callback
     row = None
-    for item in _question_rows(_agreements(text)):
+    for item in agreed.question_rows(text):
         if _same_question(item["question"], question):
             row = item
             break

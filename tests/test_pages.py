@@ -30,6 +30,7 @@ SCRIPTS = ROOT / "scripts"
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
+import agreed
 import read_pages
 import serve_sample_site
 
@@ -293,78 +294,14 @@ FIRST_QUESTIONS = [
     "Can I get same-day service?",
     "Do you offer financing?",
 ]
-GROUP_HEADING = re.compile(r"^\*\*(.+?)\*\*$")
-QUESTION_LINE = re.compile(r"^(\d+)\.\s+(.+)$")
-FROM_PAGE = re.compile(r"\bfrom\s+(.+?)\.?$")
 AGREEMENTS = ROOT / "docs" / "agreements.md"
+question_rows = agreed.question_rows
+page_named = agreed.page_named
+blockquote = agreed.blockquote
 
 
 def _agreements_text():
     return AGREEMENTS.read_text(encoding="utf-8")
-
-
-def _section_lines(heading):
-    found = False
-    lines = []
-    for line in _agreements_text().splitlines():
-        if line.startswith("## "):
-            if found:
-                break
-            found = line[3:].strip() == heading
-            continue
-        if found:
-            lines.append(line)
-    if not found:
-        raise AssertionError(f"missing section {heading}")
-    return lines
-
-
-def blockquote(heading):
-    parts = []
-    for line in _section_lines(heading):
-        stripped = line.strip()
-        if not stripped.startswith(">"):
-            continue
-        part = stripped[1:].strip()
-        if part:
-            parts.append(part)
-    return " ".join(parts)
-
-
-def question_rows():
-    rows = []
-    group = None
-    for line in _section_lines("The 18 test questions"):
-        bold = GROUP_HEADING.match(line.strip())
-        if bold:
-            group = bold.group(1).strip()
-            continue
-        match = QUESTION_LINE.match(line.strip())
-        if not match or not group:
-            continue
-        text = match.group(2).strip()
-        mark = text.find("?")
-        if mark == -1:
-            question, detail = text, ""
-        else:
-            question = text[: mark + 1].strip()
-            detail = text[mark + 1 :].strip()
-        rows.append(
-            {
-                "number": int(match.group(1)),
-                "question": question,
-                "detail": detail,
-                "group": group,
-            }
-        )
-    return rows
-
-
-def page_named(detail):
-    match = FROM_PAGE.search(detail.strip())
-    if not match:
-        return None
-    return match.group(1).strip()
 
 
 class QuestionCoverageChecks(unittest.TestCase):

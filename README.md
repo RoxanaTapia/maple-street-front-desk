@@ -22,6 +22,9 @@ It prints `Demo chat at http://127.0.0.1:8080`. Open that address. The practice 
 | "How much is a water heater replacement?" | An offer of a callback, since that price isn't on the business's pages | ✅ |
 | "Do you sell pizza?" | A reply that points them back to plumbing, since that isn't a plumbing question | ✅ |
 | "Are you open Saturdays?" | A short answer from the Hours & FAQ page | ✅ |
+| "Do you clean drains?" | A short yes from the Pricing page, with the price written there | ✅ |
+| "How much is a drane cleaning?" | The drain cleaning price from the Pricing page | ✅ |
+| "Is drain cleaning 149?" | A short yes that names the price on the Pricing page | ✅ |
 
 What each kind of message gets back is in [How the assistant behaves](docs/behaviour.md).
 
@@ -64,6 +67,4 @@ An emergency is caught first. A price is checked last. A number the pages don't 
 - [Setup guide](docs/setup-guide.md): how to run it.
 - [Handover notes](docs/handover.md): what you have, and how to change it yourself.
 - Your error notes are in the handover notes, under Your error notes.
-- [Live test results](docs/test-results.md): the 15 questions and the urgent words, from the live demo on Nov 4.
-
-**Next up:** the owner's notes from the demo call.
+- [Live test results](docs/test-results.md): the Nov 4 live demo. The agreed list is 18 test questions.

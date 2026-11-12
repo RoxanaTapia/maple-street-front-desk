@@ -31,6 +31,7 @@ REQUIRED_FILES = (
     ".cursor/commands/pr-summary.md",
     ".github/pull_request_template.md",
     ".github/workflows/ci.yml",
+    "scripts/agreed.py",
     "scripts/read_pages.py",
     "scripts/serve_sample_site.py",
     "scripts/urgent_reply.py",

@@ -20,32 +20,16 @@ SCRIPTS = ROOT / "scripts"
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
+import agreed
 import front_desk
 import urgent_reply
 
-AGREEMENTS = ROOT / "docs" / "agreements.md"
 PHONE = re.compile(r"\(\d{3}\) \d{3}-\d{4}")
-
-
-def _section(heading):
-    found = False
-    lines = []
-    for line in AGREEMENTS.read_text(encoding="utf-8").splitlines():
-        if line.startswith("## "):
-            if found:
-                break
-            found = line[3:].strip() == heading
-            continue
-        if found:
-            lines.append(line)
-    if not found:
-        raise AssertionError(f"missing section {heading}")
-    return lines
 
 
 def quoted_urgent_words():
     words = []
-    for line in _section("Urgent messages"):
+    for line in agreed.section_lines("Urgent messages"):
         for word in re.findall(r"\*\*([^*]+)\*\*", line):
             word = word.strip()
             if word:
@@ -54,48 +38,14 @@ def quoted_urgent_words():
 
 
 def blockquote_reply():
-    parts = []
-    for line in _section("Urgent messages"):
-        stripped = line.strip()
-        if stripped.startswith(">"):
-            part = stripped[1:].strip()
-            if part:
-                parts.append(part)
-    return " ".join(parts)
+    return agreed.blockquote("Urgent messages")
 
 
 def _is_urgent_question(row):
     return row["group"] == "Handled by a set reply" and "urgent reply" in row["detail"].lower()
 
 
-def question_rows():
-    rows = []
-    in_section = False
-    group = None
-    for line in AGREEMENTS.read_text(encoding="utf-8").splitlines():
-        if line.startswith("## "):
-            if in_section:
-                break
-            in_section = line[3:].strip() == "The 18 test questions"
-            continue
-        if not in_section:
-            continue
-        bold = re.fullmatch(r"\*\*(.+?)\*\*", line.strip())
-        if bold:
-            group = bold.group(1).strip()
-            continue
-        match = re.match(r"^\d+\.\s+(.+)$", line.strip())
-        if not match or not group:
-            continue
-        text = match.group(1).strip()
-        mark = text.find("?")
-        if mark == -1:
-            question, detail = text, ""
-        else:
-            question = text[: mark + 1].strip()
-            detail = text[mark + 1 :].strip()
-        rows.append({"question": question, "detail": detail, "group": group})
-    return rows
+question_rows = agreed.question_rows
 
 
 def near_misses(word):

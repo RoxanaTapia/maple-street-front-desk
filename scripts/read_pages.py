@@ -18,8 +18,9 @@ from html import unescape
 from html.parser import HTMLParser
 from pathlib import Path
 
+import agreed
+
 ROOT = Path(__file__).resolve().parents[1]
-AGREEMENTS = ROOT / "docs" / "agreements.md"
 PAGES_HEADING = "Your pages"
 DEFAULT_SITE = "http://127.0.0.1:8000"
 _NAV_LINK = re.compile(r'<a href="([^"]+)">([^<]+)</a>')
@@ -71,23 +72,6 @@ def _collapse(parts):
     return " ".join("".join(parts).split())
 
 
-def _section(body, heading):
-    found = False
-    lines = []
-    for line in body.splitlines():
-        if line.startswith("## "):
-            title = line[3:].strip().strip("#").strip()
-            if found:
-                break
-            found = title == heading
-            continue
-        if found:
-            lines.append(line)
-    if not found:
-        raise ValueError(f"No pages found under {heading}")
-    return lines
-
-
 def _page_names(section_lines):
     text = " ".join(line.strip() for line in section_lines)
     match = _PAGE_LIST.search(text)
@@ -117,10 +101,14 @@ def _paths_on_the_sample_site():
 
 def agreed_pages(text=None):
     """Return each page's name and path from Your pages."""
-    body = AGREEMENTS.read_text(encoding="utf-8") if text is None else text
     paths = _paths_on_the_sample_site()
     pages = []
-    for name in _page_names(_section(body, PAGES_HEADING)):
+    lines = agreed.section_lines(
+        PAGES_HEADING,
+        text,
+        missing=f"No pages found under {PAGES_HEADING}",
+    )
+    for name in _page_names(lines):
         path = paths.get(name, "")
         if not path.startswith("/"):
             raise ValueError(f"{name} is missing a path in the page list")

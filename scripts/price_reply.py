@@ -23,14 +23,11 @@ service in the question.
 
 import re
 import sys
-from pathlib import Path
 
+import agreed
 import read_pages
 import urgent_reply
 
-ROOT = Path(__file__).resolve().parents[1]
-AGREEMENTS = ROOT / "docs" / "agreements.md"
-CALLBACK_HEADING = "When the pages don't say"
 # A dollar amount, or a number of dollars.
 # A comma is part of the amount only when it separates thousands.
 # A dollar amount is read whole: the match cannot end in the middle of a number,
@@ -109,6 +106,7 @@ _NOT_A_SERVICE = frozenset(
         "dollars",
     }
 )
+NOT_A_SERVICE = _NOT_A_SERVICE
 # Words that follow a street number. "149 Maple Street" is an address,
 # so that 149 is not a price.
 _STREET_WORDS = frozenset(
@@ -144,29 +142,6 @@ USAGE = (
     "Otherwise prints the callback reply.\n"
     f"With no address, reads {read_pages.DEFAULT_SITE}."
 )
-
-
-def _body(text):
-    if text is None:
-        return AGREEMENTS.read_text(encoding="utf-8")
-    return text
-
-
-def _section(body, heading):
-    found = False
-    lines = []
-    for line in body.splitlines():
-        if line.startswith("## "):
-            title = line[3:].strip()
-            if found:
-                break
-            found = title == heading
-            continue
-        if found:
-            lines.append(line)
-    if not found:
-        raise ValueError(f"Your agreements have no section {heading}.")
-    return lines
 
 
 def _looks_like_a_street_number(text, end):
@@ -209,17 +184,24 @@ def find_amounts(text):
 
 def callback_reply(text=None):
     """Return the callback reply from your agreements."""
-    parts = []
-    for line in _section(_body(text), CALLBACK_HEADING):
-        stripped = line.strip()
-        if not stripped.startswith(">"):
-            continue
-        part = stripped[1:].strip()
-        if part:
-            parts.append(part)
-    if not parts:
-        raise ValueError("The callback reply is missing from your agreements.")
-    return " ".join(parts)
+    return agreed.callback_reply(text)
+
+
+def amount_spans(text):
+    """Return (start, end, written) for each dollar amount or number of dollars.
+
+    A bare number such as 150 is not included here.
+    """
+    if not isinstance(text, str) or not text:
+        return []
+    return [(match.start(), match.end(), match.group(0)) for match in _AMOUNT.finditer(text)]
+
+
+def sentence_ends(text):
+    """Return the index just after each sentence-ending mark."""
+    if not isinstance(text, str) or not text:
+        return []
+    return [match.end() for match in _SENTENCE_END.finditer(text)]
 
 
 def _page_blobs(base_url=None, page_text=None, pages=None):
@@ -395,6 +377,21 @@ def _words_near_amount(text, amount):
             continue
         return _words_near(text, start, end)
     return []
+
+
+def words_near_amount(text, amount):
+    """Return the words just beside this amount, in its sentence."""
+    return _words_near_amount(text, amount)
+
+
+def service_stem(word):
+    """Return a simpler form so a plural or an -ing word matches."""
+    return _service_stem(word)
+
+
+def one_edit(left, right):
+    """True when two words are a small slip apart, so drane matches drain."""
+    return _one_edit(left, right)
 
 
 def price_is_near_service(page_text, amount, words):
