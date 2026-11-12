@@ -60,7 +60,7 @@ Settled on the call: call-us replies use your [main line](agreements.md#main-lin
 
 ## Keeping it live
 
-14 days after delivery, then offline. Ask for a quote to keep it.
+After the 14-day demo, the assistant needs a home to stay live for your customers. Your team hosts it by following the [setup guide](setup-guide.md), and I include one free 30-minute walkthrough call with whoever sets it up.
 
 ## Change the urgent words
 
