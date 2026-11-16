@@ -121,13 +121,13 @@ class AnswerChecks(unittest.TestCase):
     def test_every_answered_question_names_the_right_page(self):
         """Every question your pages answer ends with the page it used."""
         rows = question_rows()
-        self.assertEqual(len(rows), 18)
+        self.assertEqual(len(rows), 22)
         pages = self._pages()
         by_name = {page["name"]: page for page in pages}
         answered = [row for row in rows if row["group"] == "Answered by your pages"]
         self.assertEqual(
             [row["number"] for row in answered],
-            [1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 14, 15, 16, 17, 18],
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 14, 15, 16, 17, 18, 19, 20],
         )
         for row in answered:
             self.assertIsNone(urgent_reply.reply_if_urgent(row["question"]), row["question"])
@@ -146,7 +146,7 @@ class AnswerChecks(unittest.TestCase):
             parts = [part for part in re.split(r"(?<=[.!?])\s+", body) if part]
             copied = bool(parts) and all(part in page_text for part in parts)
             if not copied:
-                self.assertRegex(body, r"^Yes,", row["question"])
+                self.assertRegex(body, r"^(?:Yes|No),", row["question"])
                 self.assertTrue(price_reply.find_amounts(answer), row["question"])
             for fact in CLOCK.findall(row["detail"]) + price_reply.find_amounts(row["detail"]):
                 self.assertIn(fact, answer, row["question"])
@@ -175,9 +175,14 @@ class AnswerChecks(unittest.TestCase):
             if urgent_reply.reply_if_urgent(row["question"]) is not None:
                 continue
             uncovered.append(row)
-        self.assertEqual([row["number"] for row in uncovered], [11, 12])
+        self.assertEqual(
+            [row["number"] for row in uncovered if "callback" in row["detail"].lower()],
+            [11, 12],
+        )
         for row in uncovered:
             self.assertIsNone(page_named(row["detail"]), row["question"])
+            if "callback" not in row["detail"].lower():
+                continue
             got = front_desk.reply_to(row["question"], base_url=self.site.base)
             self.assertEqual(got, callback, row["question"])
             self.assertEqual(
@@ -1472,7 +1477,7 @@ class PricedServiceChecks(unittest.TestCase):
         self.assertEqual(stdout.getvalue(), expected + "\n")
 
     def test_a_service_the_pages_never_mention_gets_the_callback(self):
-        """A service the pages never mention still gets the callback reply."""
+        """A service the pages never mention says so, and gives the call-us number."""
         self.assertNotIn("ANTHROPIC_API_KEY", os.environ)
         callback = answer_reply.callback_reply()
         friendly = answer_reply.off_topic_reply()
@@ -1481,6 +1486,8 @@ class PricedServiceChecks(unittest.TestCase):
         self.assertNotEqual(callback, urgent)
         pages = read_pages.read_pages(self.site.base)
         joined = " ".join(page.get("text") or "" for page in pages).casefold()
+        unlisted = answer_reply.unlisted_service_reply()
+        self.assertNotEqual(unlisted, callback)
         for question in (
             "Do you repair garbage disposals?",
             "Do you install solar panels?",
@@ -1489,11 +1496,13 @@ class PricedServiceChecks(unittest.TestCase):
             self.assertNotIn(question.split()[-1].rstrip("?").casefold(), joined, question)
             self.assertIsNone(urgent_reply.reply_if_urgent(question), question)
             got = front_desk.reply_to(question, base_url=self.site.base)
-            self.assertEqual(got, callback, question)
-            self.assertEqual(answer_reply.write_answer(question, pages), callback, question)
+            self.assertEqual(got, unlisted, question)
+            self.assertEqual(answer_reply.write_answer(question, pages), unlisted, question)
             self.assertNotIn("$", got, question)
+            self.assertIn("don't list", got.lower(), question)
             self.assertNotEqual(got, friendly, question)
             self.assertNotEqual(got, urgent, question)
+            self.assertNotEqual(got, callback, question)
         priced = front_desk.reply_to("Do you clean drains?", base_url=self.site.base)
         self.assertNotEqual(priced, callback)
         self.assertIn("$149", priced)
@@ -1505,7 +1514,7 @@ class PricedServiceChecks(unittest.TestCase):
                 without_price.append(page)
         self.assertEqual(
             answer_reply.write_answer("Do you clean drains?", without_price),
-            callback,
+            answer_reply.unlisted_service_reply(),
         )
         self.assertNotIn("$149", "Call for a quote.")
 
@@ -1526,7 +1535,7 @@ class MisspellingAndPlainPriceChecks(unittest.TestCase):
         callback = answer_reply.callback_reply()
         pages = read_pages.read_pages(self.site.base)
         rows = question_rows()
-        self.assertEqual([row["number"] for row in rows], list(range(1, 19)))
+        self.assertEqual([row["number"] for row in rows], list(range(1, 23)))
         spelled = "How much is a drain cleaning?"
         misspelled = "How much is a drane cleaning?"
         plain = "Is drain cleaning 149?"

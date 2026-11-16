@@ -185,13 +185,22 @@ class OffTopicReplyChecks(unittest.TestCase):
             "Do you cover Moorestown?",
             "How much is a water heater replacement?",
             "How long is your warranty?",
-            "Do you repair garbage disposals?",
             "I have a leaky faucet",
             "My tap is dripping.",
             "Do you accept credit cards?",
-            "Can you replace a bidet?",
             "The aerator won't unscrew.",
         )
+        unlisted = answer_reply.unlisted_service_reply()
+        self.assertNotEqual(unlisted, callback)
+        for message in (
+            "Do you repair garbage disposals?",
+            "Can you replace a bidet?",
+        ):
+            self.assertIsNone(urgent_reply.reply_if_urgent(message), message)
+            got = self._reply(message)
+            self.assertEqual(got, unlisted, message)
+            self.assertNotEqual(got, callback, message)
+            self.assertNotEqual(got, friendly, message)
         for message in missing:
             self.assertIsNone(urgent_reply.reply_if_urgent(message), message)
             got = self._reply(message)
@@ -208,7 +217,7 @@ class OffTopicReplyChecks(unittest.TestCase):
         self.assertNotEqual(drain, friendly)
 
     def test_an_unknown_question_still_reaches_the_answer_path(self):
-        """A dripping tap, a card payment, and an unfamiliar job are still sent on."""
+        """A dripping tap and a card payment are still sent on. An unlisted service is not invented."""
         friendly = answer_reply.off_topic_reply()
         seen = []
 
@@ -222,7 +231,6 @@ class OffTopicReplyChecks(unittest.TestCase):
         for message in (
             "My tap is dripping.",
             "Do you accept credit cards?",
-            "Can you replace a bidet?",
         ):
             before = len(seen)
             got = self._reply(message, client=client)
@@ -230,10 +238,17 @@ class OffTopicReplyChecks(unittest.TestCase):
             self.assertIn(message, seen[-1])
             self.assertNotEqual(got, friendly, message)
             self.assertNotIn("From ", got)
+        bidet = "Can you replace a bidet?"
+        before = len(seen)
+        got = self._reply(bidet, client=client)
+        self.assertEqual(len(seen), before, bidet)
+        self.assertEqual(got, answer_reply.unlisted_service_reply())
+        self.assertNotEqual(got, friendly)
+        self.assertNotIn("From ", got)
         pizza = "Do you sell pizza on Saturday?"
         got = self._reply(pizza, writer=writer, client=client)
         self.assertEqual(got, friendly)
-        self.assertEqual(len(seen), 3)
+        self.assertEqual(len(seen), 2)
         mixed = self._reply("Do you sell pizza and my tap is dripping?")
         self.assertEqual(mixed, answer_reply.callback_reply())
         self.assertNotEqual(mixed, friendly)
@@ -252,7 +267,7 @@ class OffTopicReplyChecks(unittest.TestCase):
             "What's the weather during your hours?": friendly,
             "My tap is dripping.": callback,
             "Do you accept credit cards?": callback,
-            "Can you replace a bidet?": callback,
+            "Can you replace a bidet?": answer_reply.unlisted_service_reply(),
         }
         try:
             for message, expected in cases.items():

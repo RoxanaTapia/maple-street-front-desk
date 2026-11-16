@@ -10,8 +10,10 @@ without a dollar sign, such as 150, or as 150 dollars, is still a
 price. If an answer contains any other amount, the whole answer is
 replaced with the callback reply from your agreements. An address, a
 phone number, and a time are not prices. An answer with no amount is
-left as it is. An urgent message is handled first, and your pages are
-not read for it.
+left as it is. A yes or no question that states a wrong amount does
+not get a yes: the answer says no and keeps the price from the pages.
+A how much question loses a leading yes. An urgent message is handled
+first, and your pages are not read for it.
 
 Usage: python3 scripts/price_reply.py "answer" [site address]
        python3 scripts/price_reply.py --asked "question" "answer" [site address]
@@ -412,13 +414,163 @@ def price_is_near_service(page_text, amount, words):
     return False
 
 
+_HOW_MUCH = re.compile(r"\bhow\s+much\b", re.IGNORECASE)
+_YES_OR_NO = re.compile(
+    r"^(?:is|are|do|does|did|can|could|will|would)\b",
+    re.IGNORECASE,
+)
+_LEADING_YES = re.compile(r"^yes\b", re.IGNORECASE)
+_LEADING_NO = re.compile(r"^no\b", re.IGNORECASE)
+_FROM_PAGE = re.compile(r"\s+(From\s+\S.*?)$")
+
+
+def _amount_number(amount):
+    """Return the number in a written price, or None when it isn't one."""
+    if not isinstance(amount, str):
+        return None
+    cleaned = re.sub(r"[^\d.]", "", amount)
+    if not cleaned or cleaned == "." or cleaned.count(".") > 1:
+        return None
+    return float(cleaned)
+
+
+def stated_price_numbers(text):
+    """Return each price in text as a number, including a bare number such as 150."""
+    numbers = []
+    for _start, _end, amount in _amount_matches(text):
+        number = _amount_number(amount)
+        if number is not None:
+            numbers.append(number)
+    return numbers
+
+
+def _plain_question(message):
+    """Return the question without a trailing run of question marks."""
+    text = " ".join(message.split())
+    while text.endswith("?"):
+        text = text[:-1].rstrip()
+    return text
+
+
+def _page_amount_for(blobs, words):
+    """Return the one amount that sits near these service words, or None."""
+    found = []
+    for blob in blobs:
+        for amount in find_amounts(blob):
+            if amount in found:
+                continue
+            if price_is_near_service(blob, amount, words):
+                found.append(amount)
+    if len(found) == 1:
+        return found[0]
+    return None
+
+
+def _mentions_service(text, words):
+    """True when every service word appears in text, allowing a plural or -ing."""
+    if not words or not isinstance(text, str):
+        return False
+    nearby = [match.group(0).casefold() for match in _WORD.finditer(text)]
+    return all(any(_same_service_word(word, near) for near in nearby) for word in words)
+
+
+def _split_from_page(answer):
+    """Return the answer body and a trailing 'From Page.' tag, separately."""
+    text = answer.strip()
+    match = _FROM_PAGE.search(text)
+    if not match:
+        return text, ""
+    source = match.group(1).strip()
+    if not source.endswith("."):
+        return text, ""
+    return text[: match.start()].strip(), source
+
+
+def _strip_leading_yes(answer):
+    """Drop a leading Yes and capitalise the sentence that remains."""
+    text = answer.strip()
+    rest = re.sub(r"^yes\b\s*,?\s*", "", text, count=1, flags=re.IGNORECASE)
+    if not rest or rest == text:
+        return answer
+    if rest[0].islower():
+        rest = rest[0].upper() + rest[1:]
+    return rest
+
+
+def _yes_to_no(answer):
+    """Replace a leading Yes with No. The rest of the sentence stays."""
+    return re.sub(r"^yes\b", "No", answer.strip(), count=1, flags=re.IGNORECASE)
+
+
+def _prefix_no(answer):
+    """Put No in front of a price sentence spoken to the customer."""
+    body, source = _split_from_page(answer)
+    if body[:1].isupper():
+        body = body[:1].lower() + body[1:]
+    prefixed = f"No, {body}"
+    if source:
+        return f"{prefixed} {source}"
+    return prefixed
+
+
+def _prices_match(numbers, page_number):
+    return bool(numbers) and page_number is not None and all(number == page_number for number in numbers)
+
+
+def adjust_stated_price(answer, message, pages=None, blobs=None):
+    """Say no to a wrong amount, and drop a leading yes on a how much question.
+
+    A yes or no question that states an amount the pages don't show for
+    that service gets a clear no when the answer already states the page
+    price. A how much question is not a yes or no question, so a leading
+    yes comes off. An answer that names some other amount is left as it
+    is, so the price check can replace it. An answer with no message is
+    left as it is.
+    """
+    if not isinstance(answer, str) or not isinstance(message, str) or not message.strip():
+        return answer
+    if blobs is None:
+        blobs = _page_blobs(pages=pages)
+    words = service_words(message)
+    plain = _plain_question(message)
+    if _HOW_MUCH.search(plain) and _LEADING_YES.match(answer.strip()):
+        page_amount = _page_amount_for(blobs, words) if words else None
+        page_number = _amount_number(page_amount) if page_amount else None
+        stripped = _strip_leading_yes(answer)
+        stripped_numbers = stated_price_numbers(stripped)
+        if not stripped_numbers or _prices_match(stripped_numbers, page_number):
+            return stripped
+        return answer
+    if not words or _YES_OR_NO.match(plain) is None:
+        return answer
+    stated = stated_price_numbers(message)
+    if not stated:
+        return answer
+    page_amount = _page_amount_for(blobs, words)
+    page_number = _amount_number(page_amount) if page_amount else None
+    if page_number is None or _prices_match(stated, page_number):
+        return answer
+    if _LEADING_NO.match(answer.strip()):
+        return answer
+    answer_numbers = stated_price_numbers(answer)
+    if answer_numbers and not _prices_match(answer_numbers, page_number):
+        return answer
+    if _LEADING_YES.match(answer.strip()):
+        return _yes_to_no(answer)
+    if _mentions_service(answer, words):
+        return _prefix_no(answer)
+    return answer
+
+
 def checked_answer(answer, base_url=None, page_text=None, text=None, message=None, pages=None):
     """Return the answer, or the callback reply when a price cannot be confirmed.
 
     An answer with no amount is returned unchanged. A published amount
     must match the pages character for character. When message is the
     customer's question, the amount also has to be on the same page,
-    near the service they asked about.
+    near the service they asked about. A yes or no question that states
+    a different amount does not keep a yes. A how much question does
+    not keep a leading yes.
     """
     if not isinstance(answer, str):
         return answer
@@ -437,7 +589,7 @@ def checked_answer(answer, base_url=None, page_text=None, text=None, message=Non
     for amount in amounts:
         if not any(price_is_near_service(blob, amount, words) for blob in blobs):
             return callback_reply(text)
-    return answer
+    return adjust_stated_price(answer, message, blobs=blobs)
 
 
 def answer_for(message, answer, base_url=None, page_text=None, text=None, pages=None):

@@ -26,7 +26,12 @@ states a price that differs from the pages, the stand-in speaks to them
 directly with the sentence on the pages and does not repeat their amount.
 A small misspelling of a service the pages list still finds that service.
 When they write a price without a dollar sign and it matches the pages,
-the reply is a short yes spoken to them. The stand-in is not a real AI,
+the reply is a short yes spoken to them. A yes or no question that states
+a different amount gets a clear no, and a wrong amount never gets a yes.
+A how much question gets the price with no leading yes. A request to
+ignore the rules, or for a discount, gets the discount reply. A service
+the pages don't list gets that reply, and nothing is invented. The
+stand-in is not a real AI,
 and it does not call one. The checks use that path, so they do not show
 what a live call would write.
 Quotes or markdown around the whole question are set aside before that
@@ -85,6 +90,38 @@ PLAIN_PRICE = (
     "If they write a price without a dollar sign and it matches these pages, "
     "answer with a short yes that includes the price as the pages write it. "
     "Speak to them directly, and do not mention the customer."
+)
+# A yes or no question that states the wrong amount gets a clear no.
+WRONG_AMOUNT_GETS_A_NO = (
+    "If they ask a yes or no question and state a price that differs from the pages, "
+    "say no, give the price from the pages, and do not say yes."
+)
+# How much is not a yes or no question.
+HOW_MUCH_IS_NOT_YES = (
+    "If they ask how much, give the price from the pages with no leading yes."
+)
+# Verbs that ask whether a service is offered. The words after them name it.
+_SERVICE_VERBS = frozenset(
+    {
+        "fix",
+        "fixes",
+        "fixing",
+        "repair",
+        "repairs",
+        "repairing",
+        "install",
+        "installs",
+        "installing",
+        "replace",
+        "replaces",
+        "replacing",
+        "service",
+        "services",
+        "servicing",
+        "clean",
+        "cleans",
+        "cleaning",
+    }
 )
 _WORD = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
 # The page reader keeps the navigation in the visible text, glued to the
@@ -303,6 +340,32 @@ def _singular(word):
 def _unrelated_subject(word):
     """True when this word is one of the clearly unrelated subjects."""
     return word in _UNRELATED or _singular(word) in _UNRELATED
+
+
+def _asks_for_discount(question):
+    """True when someone asks to ignore the rules, or for a discount.
+
+    The pages are not read for this. A discount the pages don't offer,
+    and a request to ignore the rules, both get the discount reply.
+    """
+    if not isinstance(question, str) or not question.strip():
+        return False
+    folded = " ".join(question.casefold().split())
+    if re.search(r"\bdiscounts?\b", folded):
+        return True
+    if re.search(r"\bignore\b(?:\s+\w+){0,6}\s+rules\b", folded):
+        return True
+    return False
+
+
+def discount_reply(text=None):
+    """Return the discount sentence from your agreements."""
+    return agreed.discount_reply(text)
+
+
+def unlisted_service_reply(text=None):
+    """Return the sentence used when the pages don't list that service."""
+    return agreed.unlisted_service_reply(text)
 
 
 def _is_off_topic(question):
@@ -834,8 +897,10 @@ def build_instructions(question, pages, text=None):
     say to treat that service as offered, say yes, include the price, and
     name the page. A small misspelling of a service still means that
     service. A price written without a dollar sign, when it matches the
-    pages, gets a short yes spoken to the person. The text of every page
-    is included.
+    pages, gets a short yes spoken to the person. A yes or no question
+    that states a different price gets a no, and that wrong amount never
+    gets a yes. A how much question gets the price with no leading yes.
+    The text of every page is included.
     """
     callback = callback_reply(text)
     example = _source_example(pages)
@@ -849,6 +914,8 @@ def build_instructions(question, pages, text=None):
         PRICED_SERVICE_IS_OFFERED,
         MISSPELLED_SERVICE,
         PLAIN_PRICE,
+        WRONG_AMOUNT_GETS_A_NO,
+        HOW_MUCH_IS_NOT_YES,
         "When the pages don't cover the question, reply with exactly this sentence:",
         callback,
         "",
@@ -899,6 +966,74 @@ def _asks_whether_offered(question):
         return False
     bare = _without_surrounding_marks(question)
     return re.match(r"(?:do you|can you|will you)\b", bare.casefold()) is not None
+
+
+def _asks_how_much(question):
+    """True when the customer asks how much, which is not a yes or no question."""
+    if not isinstance(question, str):
+        return False
+    bare = _without_surrounding_marks(question)
+    return re.search(r"\bhow\s+much\b", bare, re.IGNORECASE) is not None
+
+
+def _is_service_verb(word):
+    """True when this word asks us to do a job, such as fix or install."""
+    stem = price_reply.service_stem(word)
+    return word in _SERVICE_VERBS or stem in _SERVICE_VERBS
+
+
+def _listed_word(word, page_words):
+    """True when this word, or a small slip of it, is written on the pages."""
+    for other in page_words:
+        if word == other or price_reply.service_stem(word) == price_reply.service_stem(other):
+            return True
+        if price_reply.one_edit(word, other) or price_reply.one_edit(
+            price_reply.service_stem(word),
+            price_reply.service_stem(other),
+        ):
+            return True
+    return False
+
+
+def _service_is_unlisted(question, pages):
+    """True when they ask us to do a job the pages never name.
+
+    "Do you fix roofs?" is that case. "Do you cover Moorestown?" is not,
+    because cover is not one of these jobs. A job the pages do name,
+    such as drain cleaning, is not this case either.
+    """
+    if not _asks_whether_offered(question):
+        return False
+    # A page we could not read might be the one that lists the service.
+    # Don't claim it is missing until every page has been read.
+    for page in pages or []:
+        if isinstance(page, dict) and page.get("status") != "read":
+            return False
+    bare = _without_surrounding_marks(question).casefold()
+    names = []
+    verbs = False
+    for word in _WORD.findall(bare):
+        if word in _STOP or len(word) < 3:
+            continue
+        if _is_service_verb(word):
+            verbs = True
+            continue
+        names.append(word)
+    if not verbs or not names:
+        return False
+    page_words = []
+    seen = set()
+    for page in pages or []:
+        if not isinstance(page, dict) or page.get("status") != "read":
+            continue
+        blob = f"{page.get('name', '')} {page.get('title', '')} {page.get('text', '')}"
+        for match in _WORD.finditer(blob.casefold()):
+            word = match.group(0)
+            if word in seen:
+                continue
+            seen.add(word)
+            page_words.append(word)
+    return any(not _listed_word(word, page_words) for word in names)
 
 
 def _service_name(snippet, amount):
@@ -1055,6 +1190,23 @@ def _has_small_misspelling(words, snippet, amount):
     return False
 
 
+def _how_much_reply(question, pages, instructions):
+    """Return the page price for a how much question, with no leading yes.
+
+    "how much drain clean???" is that case. A question that already
+    states an amount is left for the yes or no price path. Returns None
+    when this is not a how much question, or when no page lists a price
+    for it.
+    """
+    if not _asks_how_much(question) or _stated_price_numbers(question):
+        return None
+    found = _priced_snippet(question, pages, instructions)
+    if found is None:
+        return None
+    snippet, name, _amount = found
+    return _with_source([snippet], name)
+
+
 def _misspelled_price(question, pages, instructions):
     """Return the page price when the service is only slightly misspelled.
 
@@ -1109,6 +1261,7 @@ def stand_in_writer(question, instructions, pages, text=None):
             or _yes_matching_price(question, pages, instructions)
             or offered
             or _misspelled_price(question, pages, instructions)
+            or _how_much_reply(question, pages, instructions)
             or callback
         )
     name = _source_page(row["detail"])
@@ -1133,7 +1286,11 @@ def stand_in_writer(question, instructions, pages, text=None):
     if offered:
         return offered
     if not sentences:
-        return _misspelled_price(question, pages, instructions) or callback
+        return (
+            _how_much_reply(question, pages, instructions)
+            or _misspelled_price(question, pages, instructions)
+            or callback
+        )
     return _with_source(sentences, name)
 
 
@@ -1384,6 +1541,10 @@ def write_answer(question, pages, writer=None, text=None, client=None):
         logging.warning("The failure note could not be saved.")
     if _is_off_topic(question):
         return off_topic_reply(text)
+    if _asks_for_discount(question):
+        return discount_reply(text)
+    if _service_is_unlisted(question, pages):
+        return unlisted_service_reply(text)
     instructions = build_instructions(question, pages, text=text)
     callback = callback_reply(text)
     outage = outage_reply(text)
@@ -1404,7 +1565,8 @@ def write_answer(question, pages, writer=None, text=None, client=None):
         return outage
     reply = normalize_source_line(reply, pages, callback)
     reply = _plain_customer_price(question, reply, pages, instructions)
-    return _direct_price_reply(question, reply, pages, instructions, callback)
+    reply = _direct_price_reply(question, reply, pages, instructions, callback)
+    return price_reply.adjust_stated_price(reply, question, pages=pages)
 
 
 def _split_site(args):

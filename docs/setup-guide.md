@@ -47,12 +47,15 @@ export ANTHROPIC_API_KEY='...'
 | The callback sentence | The `>` lines under When the pages don't say | Ask again |
 | The off-topic reply | The `>` lines under Off-topic questions | Ask again |
 | The outage sentence | The `>` lines under When the assistant can't look it up | Ask again |
-| Your test questions | Numbered lines under The 18 test questions, with the question ending at `?` | Run the checks |
+| The discount reply | The `>` lines under Discounts | Ask again |
+| A service the pages don't list | The `>` lines under A service the pages don't list | Ask again |
+| Your call-us number and your emergency number | The phone number in the everyday replies, and the phone number in the urgent reply. The steps are in the [handover notes](handover.md#set-your-call-us-number-and-your-emergency-number) | Ask again |
+| Your test questions | Numbered lines under The 18 test questions. The question ends at `?`, and a line with no `?` is the whole question | Run the checks |
 
 Each page name needs the same link text in `sample-site/index.html`.
 A line that is only bold is a group name, and `from` plus a page name picks the page.
 
-The stand-in reads your test questions. Claude reads your pages and the callback sentence, not that list. A clearly unrelated question uses the off-topic reply and is not sent to Claude. A question we do not recognize still uses the callback sentence. The outage sentence is used when a call fails, and when the demo cannot safely show a reply.
+The stand-in reads your test questions. Claude reads your pages and the callback sentence, not that list. A clearly unrelated question uses the off-topic reply and is not sent to Claude. A request to ignore the rules, or for a discount, uses the discount reply and is not sent to Claude. A service the pages don't list uses that reply and is not sent to Claude. A question we do not recognize still uses the callback sentence. The outage sentence is used when a call fails, and when the demo cannot safely show a reply.
 
 ## Check it still works
 

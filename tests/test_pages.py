@@ -309,8 +309,8 @@ class QuestionCoverageChecks(unittest.TestCase):
         """Every test question has an answer plan, an answered question names one of your pages, and the drain-cleaning question is answered from Pricing."""
         rows = question_rows()
         agreed = {page["name"]: page["path"] for page in read_pages.agreed_pages()}
-        self.assertEqual(len(rows), 18)
-        self.assertEqual([row["number"] for row in rows], list(range(1, 19)))
+        self.assertEqual(len(rows), 22)
+        self.assertEqual([row["number"] for row in rows], list(range(1, 23)))
         self.assertEqual([row["question"] for row in rows[:6]], FIRST_QUESTIONS)
         groups = []
         for row in rows:
@@ -322,6 +322,7 @@ class QuestionCoverageChecks(unittest.TestCase):
                 "Answered by your pages",
                 "Handled by a set reply",
                 "Answered by your pages",
+                "Handled by a set reply",
             ],
         )
         by_group = {}
@@ -329,9 +330,12 @@ class QuestionCoverageChecks(unittest.TestCase):
             by_group.setdefault(row["group"], []).append(row)
         self.assertEqual(
             [row["number"] for row in by_group["Answered by your pages"]],
-            [1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 14, 15, 16, 17, 18],
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 14, 15, 16, 17, 18, 19, 20],
         )
-        self.assertEqual(len(by_group["Handled by a set reply"]), 3)
+        self.assertEqual(
+            [row["number"] for row in by_group["Handled by a set reply"]],
+            [10, 11, 12, 21, 22],
+        )
         self.assertNotIn("Yours to decide", _agreements_text())
 
         for row in by_group["Answered by your pages"]:
@@ -347,8 +351,23 @@ class QuestionCoverageChecks(unittest.TestCase):
         callback_rows = [row for row in handled if "callback" in row["detail"].lower()]
         self.assertEqual(len(urgent_rows), 1)
         self.assertEqual(len(callback_rows), 2)
+        discount_rows = [
+            row
+            for row in handled
+            if "discount" in row["question"].lower() or "discount" in row["detail"].lower()
+        ]
+        unlisted_rows = [
+            row
+            for row in handled
+            if "don't list" in row["detail"].lower() and "callback" not in row["detail"].lower()
+        ]
+        self.assertEqual([row["number"] for row in discount_rows], [21])
+        self.assertEqual([row["number"] for row in unlisted_rows], [22])
         handled_questions = {row["question"] for row in handled}
-        covered = {row["question"] for row in urgent_rows + callback_rows}
+        covered = {
+            row["question"]
+            for row in urgent_rows + callback_rows + discount_rows + unlisted_rows
+        }
         self.assertEqual(covered, handled_questions)
 
         urgent_quote = blockquote("Urgent messages")

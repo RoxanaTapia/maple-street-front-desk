@@ -174,16 +174,17 @@ class DemoChatChecks(unittest.TestCase):
         self.assertNotIn("<", raw)
 
     def test_a_plumbing_gap_gets_the_callback(self):
-        """A garbage disposal repair gets the callback reply."""
-        callback = answer_reply.callback_reply()
+        """A garbage disposal repair says the pages don't list that service."""
+        unlisted = answer_reply.unlisted_service_reply()
         question = "Do you repair garbage disposals?"
-        self.assertNotEqual(callback, answer_reply.off_topic_reply())
+        self.assertNotEqual(unlisted, answer_reply.off_topic_reply())
+        self.assertNotEqual(unlisted, answer_reply.callback_reply())
         self.assertEqual(
             front_desk.reply_to(question, base_url=self.demo.base),
-            callback,
+            unlisted,
         )
         raw, got = self._reply(question)
-        self.assertEqual(got, callback)
+        self.assertEqual(got, unlisted)
         self.assertNotIn("<", raw)
 
     def test_the_demo_http_keeps_unknown_questions_on_the_callback(self):
@@ -195,7 +196,7 @@ class DemoChatChecks(unittest.TestCase):
             "What's the weather during your hours?": friendly,
             "My tap is dripping.": callback,
             "Do you accept credit cards?": callback,
-            "Can you replace a bidet?": callback,
+            "Can you replace a bidet?": answer_reply.unlisted_service_reply(),
         }
         for message, expected in cases.items():
             desk = front_desk.reply_to(message, base_url=self.demo.base)

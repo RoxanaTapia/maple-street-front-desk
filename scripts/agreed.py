@@ -1,8 +1,9 @@
 """Read the agreed sentences and the test questions.
 
-The urgent reply, the two call-us sentences, the off-topic reply, and
-the 18 test questions all live in docs/agreements.md. This module is
-the one reader, so the other scripts do not keep their own copy.
+The urgent reply, the call-us sentences, the off-topic reply, the
+discount reply, the reply for a service the pages don't list, and the
+test questions all live in docs/agreements.md. This module is the one
+reader, so the other scripts do not keep their own copy.
 
 Usage is through the other scripts. There is nothing to run here.
 """
@@ -96,6 +97,24 @@ def off_topic_reply(text=None):
     )
 
 
+def discount_reply(text=None):
+    """Return the reply for a discount, or for a request to ignore the rules."""
+    return require_blockquote(
+        "Discounts",
+        text,
+        "The discount reply is missing from your agreements.",
+    )
+
+
+def unlisted_service_reply(text=None):
+    """Return the reply used when the pages don't list that service."""
+    return require_blockquote(
+        "A service the pages don't list",
+        text,
+        "The unlisted service reply is missing from your agreements.",
+    )
+
+
 def fixed_urgent_reply(text=None):
     """Return the fixed urgent reply from your agreements."""
     return require_blockquote(
@@ -127,8 +146,11 @@ def question_rows(text=None):
         if mark == -1:
             question, detail = raw, ""
         else:
-            question = raw[: mark + 1].strip()
-            detail = raw[mark + 1 :].strip()
+            end = mark + 1
+            while end < len(raw) and raw[end] == "?":
+                end += 1
+            question = raw[:end].strip()
+            detail = raw[end:].strip()
         rows.append(
             {
                 "number": int(match.group(1)),

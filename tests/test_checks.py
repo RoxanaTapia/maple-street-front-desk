@@ -79,6 +79,7 @@ class ProjectChecks(unittest.TestCase):
             "tests/test_answers.py:HoursFaqAnswerChecks",
             "tests/test_answers.py:WrappedQuestionChecks",
             "tests/test_answers.py:PricedServiceChecks",
+            "tests/test_run_through.py:RunThroughReplyChecks",
             "tests/test_off_topic.py:OffTopicReplyChecks",
             "tests/test_demo.py:DemoChatChecks",
         ):
