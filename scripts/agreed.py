@@ -124,11 +124,30 @@ def fixed_urgent_reply(text=None):
     )
 
 
+def _split_question(raw):
+    """Return the question and the detail from one numbered line."""
+    mark = raw.find("?")
+    if mark != -1:
+        end = mark + 1
+        while end < len(raw) and raw[end] == "?":
+            end += 1
+        return raw[:end].strip(), raw[end:].strip()
+    period = raw.find(". ")
+    if period != -1:
+        question = raw[:period].strip()
+        detail = raw[period + 1 :].strip()
+        if question and detail:
+            return question, detail
+    return raw, ""
+
+
 def question_rows(text=None):
     """Return each agreed test question, in the order it is written.
 
     A bold line is the group name. The question ends at the question
-    mark, and the rest of the line is the detail. number is the
+    mark, and the rest of the line is the detail. A line with no
+    question mark is the whole question, unless a second sentence
+    follows, and that second sentence is the detail. number is the
     number written on the line.
     """
     rows = []
@@ -142,15 +161,7 @@ def question_rows(text=None):
         if not match or not group:
             continue
         raw = match.group(2).strip()
-        mark = raw.find("?")
-        if mark == -1:
-            question, detail = raw, ""
-        else:
-            end = mark + 1
-            while end < len(raw) and raw[end] == "?":
-                end += 1
-            question = raw[:end].strip()
-            detail = raw[end:].strip()
+        question, detail = _split_question(raw)
         rows.append(
             {
                 "number": int(match.group(1)),

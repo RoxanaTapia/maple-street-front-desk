@@ -121,13 +121,13 @@ class AnswerChecks(unittest.TestCase):
     def test_every_answered_question_names_the_right_page(self):
         """Every question your pages answer ends with the page it used."""
         rows = question_rows()
-        self.assertEqual(len(rows), 22)
+        self.assertEqual(len(rows), 28)
         pages = self._pages()
         by_name = {page["name"]: page for page in pages}
         answered = [row for row in rows if row["group"] == "Answered by your pages"]
         self.assertEqual(
             [row["number"] for row in answered],
-            [1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 14, 15, 16, 17, 18, 19, 20],
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 14, 15, 16, 17, 18, 19, 20, 23],
         )
         for row in answered:
             self.assertIsNone(urgent_reply.reply_if_urgent(row["question"]), row["question"])
@@ -177,7 +177,7 @@ class AnswerChecks(unittest.TestCase):
             uncovered.append(row)
         self.assertEqual(
             [row["number"] for row in uncovered if "callback" in row["detail"].lower()],
-            [11, 12],
+            [11, 12, 26, 27],
         )
         for row in uncovered:
             self.assertIsNone(page_named(row["detail"]), row["question"])
@@ -1535,7 +1535,7 @@ class MisspellingAndPlainPriceChecks(unittest.TestCase):
         callback = answer_reply.callback_reply()
         pages = read_pages.read_pages(self.site.base)
         rows = question_rows()
-        self.assertEqual([row["number"] for row in rows], list(range(1, 23)))
+        self.assertEqual([row["number"] for row in rows], list(range(1, 29)))
         spelled = "How much is a drain cleaning?"
         misspelled = "How much is a drane cleaning?"
         plain = "Is drain cleaning 149?"

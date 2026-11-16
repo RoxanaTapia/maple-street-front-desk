@@ -309,8 +309,8 @@ class QuestionCoverageChecks(unittest.TestCase):
         """Every test question has an answer plan, an answered question names one of your pages, and the drain-cleaning question is answered from Pricing."""
         rows = question_rows()
         agreed = {page["name"]: page["path"] for page in read_pages.agreed_pages()}
-        self.assertEqual(len(rows), 22)
-        self.assertEqual([row["number"] for row in rows], list(range(1, 23)))
+        self.assertEqual(len(rows), 28)
+        self.assertEqual([row["number"] for row in rows], list(range(1, 29)))
         self.assertEqual([row["question"] for row in rows[:6]], FIRST_QUESTIONS)
         groups = []
         for row in rows:
@@ -323,6 +323,8 @@ class QuestionCoverageChecks(unittest.TestCase):
                 "Handled by a set reply",
                 "Answered by your pages",
                 "Handled by a set reply",
+                "Answered by your pages",
+                "Handled by a set reply",
             ],
         )
         by_group = {}
@@ -330,11 +332,11 @@ class QuestionCoverageChecks(unittest.TestCase):
             by_group.setdefault(row["group"], []).append(row)
         self.assertEqual(
             [row["number"] for row in by_group["Answered by your pages"]],
-            [1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 14, 15, 16, 17, 18, 19, 20],
+            [1, 2, 3, 4, 5, 6, 7, 8, 9, 13, 14, 15, 16, 17, 18, 19, 20, 23],
         )
         self.assertEqual(
             [row["number"] for row in by_group["Handled by a set reply"]],
-            [10, 11, 12, 21, 22],
+            [10, 11, 12, 21, 22, 24, 25, 26, 27, 28],
         )
         self.assertNotIn("Yours to decide", _agreements_text())
 
@@ -349,8 +351,8 @@ class QuestionCoverageChecks(unittest.TestCase):
         handled = by_group["Handled by a set reply"]
         urgent_rows = [row for row in handled if "urgent reply" in row["detail"].lower()]
         callback_rows = [row for row in handled if "callback" in row["detail"].lower()]
-        self.assertEqual(len(urgent_rows), 1)
-        self.assertEqual(len(callback_rows), 2)
+        self.assertEqual(len(urgent_rows), 2)
+        self.assertEqual(len(callback_rows), 4)
         discount_rows = [
             row
             for row in handled
@@ -362,7 +364,7 @@ class QuestionCoverageChecks(unittest.TestCase):
             if "don't list" in row["detail"].lower() and "callback" not in row["detail"].lower()
         ]
         self.assertEqual([row["number"] for row in discount_rows], [21])
-        self.assertEqual([row["number"] for row in unlisted_rows], [22])
+        self.assertEqual([row["number"] for row in unlisted_rows], [22, 24, 28])
         handled_questions = {row["question"] for row in handled}
         covered = {
             row["question"]

@@ -250,6 +250,21 @@ jobs:
       - name: Run checks
         run: python3 scripts/run_checks.py tests/test_run_through.py:RunThroughReplyChecks
 
+  second-run-through:
+    name: A second run-through reply is right
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Run checks
+        run: python3 scripts/run_checks.py tests/test_run_through.py:SecondRunThroughChecks
+
   plain-price:
     name: A misspelling and a plain price are answered
     runs-on: ubuntu-latest
