@@ -31,7 +31,7 @@ Issues, pull requests, and other client-facing writing use no em dashes and no s
 | Client-facing | [AGENTS.md](AGENTS.md) | This guide |
 | Client-facing | [sample-site/](sample-site/) | A small fictional sample of the business's public pages |
 | Client-facing | [scripts/serve_sample_site.py](scripts/serve_sample_site.py) | Serves that sample like a website |
-| Client-facing | [scripts/agreed.py](scripts/agreed.py) | Reads the agreed sentences, the call-us replies, and the 18 test questions from the agreements page. The other scripts use this one reader. |
+| Client-facing | [scripts/agreed.py](scripts/agreed.py) | Reads the agreed sentences, the call-us replies, and the test questions from the agreements page. The other scripts use this one reader. |
 | Client-facing | [scripts/read_pages.py](scripts/read_pages.py) | Reads the agreed pages and prints the page list. See [Read the pages](docs/how-it-works.md#2-·-read-the-pages). |
 | Client-facing | [scripts/urgent_reply.py](scripts/urgent_reply.py) | Checks a customer message for the urgent words and prints the fixed reply. See [Spot an emergency](docs/how-it-works.md#1-·-spot-an-emergency). |
 | Client-facing | [scripts/price_reply.py](scripts/price_reply.py) | Checks an answer and keeps a price only when the business's pages state it, near the service asked about. See [Check every price](docs/how-it-works.md#4-·-check-every-price). |

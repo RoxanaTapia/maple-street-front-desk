@@ -15,6 +15,7 @@ Live demo: [maple-demo.roxanatapia.dev](https://maple-demo.roxanatapia.dev), onl
 - On your account, never stored here: [Your Claude key](setup-guide.md#your-claude-key)
 - [How to change the urgent words](#change-the-urgent-words)
 - [How to change the call-us sentences](#change-the-call-us-sentences)
+- [How to set your call-us number and your emergency number](#set-your-call-us-number-and-your-emergency-number)
 
 ## Your error notes
 
@@ -111,6 +112,23 @@ You edit a copy, then approve it. You can change the words or the phone number. 
 4. Click **Create pull request**.
 5. Wait until every check is green.
 6. Click **Merge pull request**, then **Confirm merge**.
+
+If a check turns red, don't merge; ask Roxana in the PR.
+
+## Set your call-us number and your emergency number
+
+The call-us number and the emergency number are separate. You set both on the agreements page. Use the same call-us number in every everyday reply. The emergency number is the one in the urgent reply, and it can be a different number.
+
+1. Open [docs/agreements.md](agreements.md) and click **Edit this file**.
+2. Set your call-us number in the reply under When the pages don't say. Change the phone number, and keep the `>`.
+3. Set that same call-us number in the reply under When the assistant can't look it up. Keep the `>`.
+4. Set that same call-us number in the reply under Discounts. Keep the `>`.
+5. Set that same call-us number in the reply under A service the pages don't list. Keep the `>`.
+6. Set your emergency number in the reply under Urgent messages. This can be a different number. Keep the `>`.
+7. **Commit changes**, name a branch, then **Propose changes**.
+8. Click **Create pull request**.
+9. Wait until every check is green.
+10. Click **Merge pull request**, then **Confirm merge**.
 
 If a check turns red, don't merge; ask Roxana in the PR.
 
