@@ -10,10 +10,12 @@ without a dollar sign, such as 150, or as 150 dollars, is still a
 price. If an answer contains any other amount, the whole answer is
 replaced with the callback reply from your agreements. An address, a
 phone number, and a time are not prices. An answer with no amount is
-left as it is. A yes or no question that states a wrong amount does
-not get a yes: the answer says no and keeps the price from the pages.
-A how much question loses a leading yes. An urgent message is handled
-first, and your pages are not read for it.
+left as it is. A question that asks about two services keeps a price
+when that price sits near the service it answers. A yes or no question
+that states a wrong amount does not get a yes: the answer says no and
+keeps the price from the pages. A how much question loses a leading
+yes. An urgent message is handled first, and your pages are not read
+for it.
 
 Usage: python3 scripts/price_reply.py "answer" [site address]
        python3 scripts/price_reply.py --asked "question" "answer" [site address]
@@ -262,6 +264,32 @@ def service_words(message):
         if word not in words:
             words.append(word)
     return words
+
+
+def service_clauses(message):
+    """Return the service words of each part of the question.
+
+    "Do you clean drains and fix water heaters?" is two parts. A
+    question with one part is a list of one. With no service to name,
+    the list is empty.
+    """
+    if not isinstance(message, str) or not message.strip():
+        return []
+    plain = _plain_question(message)
+    match = re.match(
+        r"^(?:do|can|will)\s+you\s+(.+?)\s+and\s+(.+)$",
+        plain,
+        re.IGNORECASE,
+    )
+    if match:
+        left = service_words(f"do you {match.group(1).strip(' ,')}")
+        right = service_words(f"do you {match.group(2).strip(' ,')}")
+        if left and right:
+            return [left, right]
+    words = service_words(message)
+    if not words:
+        return []
+    return [words]
 
 
 def _sentence_bounds(text, index):
@@ -568,9 +596,10 @@ def checked_answer(answer, base_url=None, page_text=None, text=None, message=Non
     An answer with no amount is returned unchanged. A published amount
     must match the pages character for character. When message is the
     customer's question, the amount also has to be on the same page,
-    near the service they asked about. A yes or no question that states
-    a different amount does not keep a yes. A how much question does
-    not keep a leading yes.
+    near the service they asked about. A question with two parts keeps
+    an amount that sits near the part it answers. A yes or no question
+    that states a different amount does not keep a yes. A how much
+    question does not keep a leading yes.
     """
     if not isinstance(answer, str):
         return answer
@@ -583,11 +612,15 @@ def checked_answer(answer, base_url=None, page_text=None, text=None, message=Non
         allowed.update(find_amounts(blob))
     if not all(amount in allowed for amount in amounts):
         return callback_reply(text)
-    words = service_words(message)
-    if not words:
+    clauses = service_clauses(message)
+    if not clauses:
         return answer
     for amount in amounts:
-        if not any(price_is_near_service(blob, amount, words) for blob in blobs):
+        if not any(
+            price_is_near_service(blob, amount, clause)
+            for clause in clauses
+            for blob in blobs
+        ):
             return callback_reply(text)
     return adjust_stated_price(answer, message, blobs=blobs)
 

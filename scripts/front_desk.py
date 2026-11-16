@@ -5,17 +5,21 @@
 2. Read your pages.
 3. Write the answer. A question that is clearly about something else
    gets the off-topic reply. A service with a price on the pages is
-   offered, so the reply    says yes and includes that price. A small
+   offered, so the reply says yes and includes that price. A small
    misspelling of that service still gets the same answer. A yes or no
    question that states a wrong price gets a no and the real price.
    A how much question does not start with yes. A request to ignore
    the rules, or for a discount, gets the discount reply. A service
-   the pages don't list gets that reply. Anything else the pages
-   don't cover gets the callback reply.
+   the pages don't list gets that reply. A question that asks for an
+   email the pages don't list says so, then gives the callback reply.
+   A question in two parts answers the part the pages cover and says
+   the pages don't list the other part. An internal note is left out.
+   Anything else the pages don't cover gets the callback reply.
 4. Check every price. An amount that isn't on your pages, or that isn't
    near the service the customer asked about, is replaced with the
-   callback reply. A price written without a dollar sign counts as an
-   amount. The outage reply is left as it is.
+   callback reply. A question with two parts keeps a price that sits
+   near the part it answers. A price written without a dollar sign
+   counts as an amount. The outage reply is left as it is.
 
 Usage: python3 scripts/front_desk.py "customer message" [site address]
 
@@ -50,8 +54,12 @@ def reply_to(message, base_url=None, writer=None, client=None):
     reply. A service with a price on the pages is offered, so the reply
     says yes and includes that price. A small misspelling of that service
     still gets the same answer. A price written without a dollar sign is
-    still checked. A question the pages don't cover still gets the
-    callback reply.
+    still checked. A question that asks for an email the pages don't
+    list says so, then gives the callback reply. A question in two
+    parts answers the covered part and says the pages don't list the
+    other part. A question the pages don't cover still gets the
+    callback reply. An internal note is removed before the reply is
+    returned.
     The outage reply is returned as written, so a failed call is not
     replaced with the callback reply. A page that can't be read is
     noted for the owner. That note does not change this reply.
@@ -69,7 +77,11 @@ def reply_to(message, base_url=None, writer=None, client=None):
     answer = answer_reply.write_answer(message, pages, writer=writer, client=client)
     if answer == answer_reply.outage_reply():
         return answer
-    return price_reply.checked_answer(answer, pages=pages, message=message)
+    checked = price_reply.checked_answer(answer, pages=pages, message=message)
+    cleaned = answer_reply.without_internal_notes(checked)
+    if not isinstance(cleaned, str) or not cleaned.strip():
+        return answer_reply.callback_reply()
+    return cleaned
 
 
 def _split_site(args):
