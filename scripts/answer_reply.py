@@ -26,6 +26,9 @@ says yes, includes the price, and names the page. When someone
 states a price that differs from the pages, the stand-in speaks to them
 directly with the sentence on the pages and does not repeat their amount.
 A small misspelling of a service the pages list still finds that service.
+A how much question about a leaky faucet, including a small slip such as
+leeky, names the leak and gives the call-us number when the pages list
+no price. Nothing is invented.
 When they write a price without a dollar sign and it matches the pages,
 the reply is a short yes spoken to them. A yes or no question that states
 a different amount gets a clear no, and a wrong amount never gets a yes.
@@ -66,6 +69,7 @@ from pathlib import Path
 import agreed
 import price_reply
 import read_pages
+import urgent_reply
 
 ROOT = Path(__file__).resolve().parents[1]
 ANSWERED_GROUP = agreed.ANSWERED_GROUP
@@ -2075,6 +2079,59 @@ def _two_part_reply(question, pages, instructions, text=None):
     return f"{covered[0]} The pages don't list {missing}. {callback_reply(text)}"
 
 
+def _normalize_leaky_words(question):
+    """Return the question with a leaky slip written as leaky.
+
+    leeky and the right spelling then follow the same path. The urgent
+    spellings are left as written, because they are handled earlier.
+    """
+    if not isinstance(question, str) or not question:
+        return question
+
+    def swap(match):
+        word = match.group(0)
+        if urgent_reply._is_leaky_word(word):
+            return "leaky"
+        return word
+
+    return re.sub(r"[A-Za-z]+", swap, question)
+
+
+def _asks_about_a_price(question):
+    """True when the customer is asking what something costs."""
+    if _asks_how_much(question):
+        return True
+    if not isinstance(question, str):
+        return False
+    bare = _without_surrounding_marks(question)
+    return re.search(r"\b(?:charge|charges|cost|costs|price|prices)\b", bare, re.IGNORECASE) is not None
+
+
+def _mentions_faucet_leak(question):
+    """True when the question is about a leaky faucet, including a small slip."""
+    if not isinstance(question, str):
+        return False
+    if re.search(r"\bfaucets?\b", question, re.IGNORECASE) is None:
+        return False
+    return any(urgent_reply._is_leaky_word(word) for word in re.findall(r"[A-Za-z]+", question))
+
+
+def _leak_price_reply(question, pages, instructions, text=None):
+    """Reply when a faucet leak has no price on the pages.
+
+    The reply names the leak, gives no amount, and gives the call-us
+    number. A price the pages do list is left for the usual price path.
+    Returns None when this is not that question.
+    """
+    if not _mentions_faucet_leak(question) or not _asks_about_a_price(question):
+        return None
+    if not isinstance(instructions, str) or not _every_page_was_read(pages):
+        return None
+    if _priced_snippet(question, pages, instructions):
+        return None
+    return f"The pages don't list a price for a leak. {callback_reply(text)}"
+
+
 def write_answer(question, pages, writer=None, text=None, client=None):
     """Write an answer for question from the page text.
 
@@ -2105,6 +2162,11 @@ def write_answer(question, pages, writer=None, text=None, client=None):
     includes that price, and names the page. A plumbing question the
     pages don't cover still gets the callback reply.
 
+    A how much question about a leaky faucet, including a small slip
+    such as leeky, names the leak and gives the call-us number when
+    the pages list no price. Nothing is invented. A price the pages
+    do list is still given in the usual way.
+
     An internal note is removed before the customer sees the reply.
     A paragraph or sentence that starts with Note: is that kind of note,
     even when it ends with a page name. The customer sentences stay.
@@ -2128,6 +2190,7 @@ def write_answer(question, pages, writer=None, text=None, client=None):
         _note_unreadable_pages(pages)
     except Exception:
         logging.warning("The failure note could not be saved.")
+    question = _normalize_leaky_words(question)
     if _is_off_topic(question):
         return off_topic_reply(text)
     if _asks_for_discount(question):
@@ -2141,6 +2204,9 @@ def write_answer(question, pages, writer=None, text=None, client=None):
     combined = _two_part_reply(question, pages, instructions, text)
     if combined:
         return combined
+    leak = _leak_price_reply(question, pages, instructions, text)
+    if leak:
+        return leak
     callback = callback_reply(text)
     outage = outage_reply(text)
     if writer is not None:

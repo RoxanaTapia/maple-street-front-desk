@@ -9,6 +9,7 @@ SaturdayBookingChecks is the "A Saturday booking names every page" area.
 WrappedQuestionChecks is the "A wrapped question matches the plain one" area.
 PricedServiceChecks is the "A priced service is offered" area.
 MisspellingAndPlainPriceChecks is the "A misspelling and a plain price are answered" area.
+MisspelledLeakChecks is the "A misspelled leak question is recognised" area.
 The questions, the page each answer comes from, and the callback reply
 are read from your agreements. The page text is what the page reader
 returns. The docstring of each test is what the checklist prints.
@@ -22,7 +23,8 @@ or python3 scripts/run_checks.py tests/test_answers.py:HoursFaqAnswerChecks
 or python3 scripts/run_checks.py tests/test_answers.py:SaturdayBookingChecks
 or python3 scripts/run_checks.py tests/test_answers.py:WrappedQuestionChecks
 or python3 scripts/run_checks.py tests/test_answers.py:PricedServiceChecks
-or python3 scripts/run_checks.py tests/test_answers.py:MisspellingAndPlainPriceChecks.
+or python3 scripts/run_checks.py tests/test_answers.py:MisspellingAndPlainPriceChecks
+or python3 scripts/run_checks.py tests/test_answers.py:MisspelledLeakChecks.
 """
 
 import contextlib
@@ -1889,6 +1891,117 @@ class SaturdayBookingChecks(unittest.TestCase):
             self.assertEqual(got, expected, model_reply)
             self.assertEqual(len(re.findall(r"(?<!\S)From\s+", got)), 1, got)
             self.assertIn("from 8:00 am", got)
+
+
+class MisspelledLeakChecks(unittest.TestCase):
+    def setUp(self):
+        self.env = _SavedEnv()
+        self.site = RunningSite()
+
+    def tearDown(self):
+        self.site.close()
+        serve_sample_site.pricing_live = True
+        self.env.restore()
+
+    def test_a_misspelled_faucet_price_uses_the_leak_reply(self):
+        """A misspelled faucet price question gets the leak reply, with no price."""
+        self.assertNotIn("ANTHROPIC_API_KEY", os.environ)
+        behaviour = (ROOT / "docs" / "behaviour.md").read_text(encoding="utf-8")
+        self.assertIn("faucet problem", behaviour.lower())
+        self.assertIn("small misspelling of that problem", behaviour.lower())
+        callback = answer_reply.callback_reply()
+        urgent = urgent_reply.fixed_urgent_reply()
+        leak_reply = f"The pages don't list a price for a leak. {callback}"
+        spelled = "how much do u charge for a leaky faucet"
+        misspelled = "how much do u charge for a leeky faucet"
+        self.assertIsNone(urgent_reply.reply_if_urgent(spelled))
+        self.assertIsNone(urgent_reply.reply_if_urgent(misspelled))
+        called = {"writer": 0}
+
+        def writer(question, instructions, pages):
+            called["writer"] += 1
+            return "A leaky faucet is $40."
+
+        for question in (
+            spelled,
+            misspelled,
+            "HOW MUCH DO U CHARGE FOR A LEEKY FAUCET",
+            "how much do u charge for a leeky faucet???",
+            "what do you charge for a leeky faucet",
+        ):
+            got = front_desk.reply_to(question, base_url=self.site.base, writer=writer)
+            self.assertEqual(got, leak_reply, question)
+            self.assertIn("leak", got.casefold(), question)
+            self.assertNotIn("leek", got.casefold(), question)
+            self.assertNotIn("$", got, question)
+            self.assertEqual(price_reply.find_amounts(got), [], question)
+            self.assertIn("(856) 555-0142", got, question)
+            self.assertNotEqual(got, callback, question)
+            self.assertNotEqual(got, urgent, question)
+        self.assertEqual(called["writer"], 0)
+        pages = read_pages.read_pages(self.site.base)
+        self.assertEqual(answer_reply.write_answer(misspelled, pages), leak_reply)
+        self.assertEqual(answer_reply.write_answer(spelled, pages), leak_reply)
+        self.assertNotIn("faucet", " ".join(page.get("text") or "" for page in pages).casefold())
+        stated = "I have a leaky faucet"
+        slipped = "I have a leeky faucet"
+        self.assertEqual(front_desk.reply_to(stated, base_url=self.site.base), callback)
+        self.assertEqual(front_desk.reply_to(slipped, base_url=self.site.base), callback)
+        self.assertIsNone(urgent_reply.reply_if_urgent(stated))
+        self.assertIsNone(urgent_reply.reply_if_urgent(slipped))
+        drain = front_desk.reply_to("How much is a drain cleaning?", base_url=self.site.base)
+        self.assertEqual(drain, "A drain cleaning is $149. From Pricing.")
+        priced = []
+        for page in pages:
+            if page["name"] == "Pricing":
+                priced.append({**page, "text": page["text"] + " A leaky faucet repair is $75."})
+            else:
+                priced.append(page)
+        listed = answer_reply.write_answer(misspelled, priced)
+        self.assertIn("$75", listed)
+        self.assertNotIn("don't list a price", listed.lower())
+        self.assertTrue(listed.endswith("From Pricing."))
+
+    def test_a_leak_slip_matches_the_urgent_spelling_only(self):
+        """A slip of an urgent leak spelling gets the urgent reply, and a near miss does not."""
+        urgent = urgent_reply.fixed_urgent_reply()
+        leak = front_desk.reply_to("I have a leak under the sink")
+        leaking = front_desk.reply_to("The pipe is leaking")
+        self.assertEqual(leak, urgent)
+        self.assertEqual(leaking, urgent)
+        for message in (
+            "I have a leek under the sink",
+            "how much do u charge for a leek",
+            "The pipe is leeking",
+            "The pipe is leakng",
+            "The pipe is leakin",
+            "The pipe is leakign",
+            "The pipe is leaaking",
+        ):
+            self.assertEqual(urgent_reply.reply_if_urgent(message), urgent, message)
+            self.assertEqual(front_desk.reply_to(message), urgent, message)
+        self.assertEqual(
+            front_desk.reply_to("I have a leek under the sink"),
+            leak,
+        )
+        self.assertEqual(front_desk.reply_to("The pipe is leeking"), leaking)
+        for message in (
+            "leakx",
+            "xleak",
+            "leakingx",
+            "xleaking",
+            "I have leaks",
+            "The faucet is sleek",
+            "How much is a weekly drain cleaning?",
+            "I have a leaky faucet",
+            "how much do u charge for a leeky faucet",
+        ):
+            self.assertIsNone(urgent_reply.reply_if_urgent(message), message)
+        weekly = front_desk.reply_to(
+            "How much is a weekly drain cleaning?",
+            base_url=self.site.base,
+        )
+        self.assertNotIn("don't list a price for a leak", weekly.lower())
 
 
 if __name__ == "__main__":

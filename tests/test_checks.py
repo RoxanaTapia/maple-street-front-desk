@@ -80,6 +80,7 @@ class ProjectChecks(unittest.TestCase):
             "tests/test_answers.py:SaturdayBookingChecks",
             "tests/test_answers.py:WrappedQuestionChecks",
             "tests/test_answers.py:PricedServiceChecks",
+            "tests/test_answers.py:MisspelledLeakChecks",
             "tests/test_run_through.py:RunThroughReplyChecks",
             "tests/test_run_through.py:SecondRunThroughChecks",
             "tests/test_off_topic.py:OffTopicReplyChecks",
