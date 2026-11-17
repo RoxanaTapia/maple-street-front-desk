@@ -1853,6 +1853,43 @@ class SaturdayBookingChecks(unittest.TestCase):
             self.assertLessEqual(len(sources), 1, reply)
             self.assertNotRegex(reply, r"\n\s*From\s+")
 
+    def test_a_reversed_source_line_is_written_once(self):
+        """A model source line in another order is replaced by one fixed line."""
+        question = "How do I book a visit for Saturday morning?"
+        draft = (
+            "To book, call our main line at (856) 555-0142. "
+            "We're open Saturdays from 8:00 am to 12:00 pm.\n\n"
+            "From Contact and Hours & FAQ."
+        )
+        missing_period = (
+            "To book, call our main line at (856) 555-0142. "
+            "We're open Saturdays from 8:00 am to 12:00 pm.\n\n"
+            "From Contact and Hours & FAQ"
+        )
+        joined_with_ampersand = (
+            "To book, call our main line at (856) 555-0142. "
+            "We're open Saturdays from 8:00 am to 12:00 pm.\n\n"
+            "From Contact & Hours & FAQ."
+        )
+        expected = (
+            "To book, call our main line at (856) 555-0142. "
+            "We're open Saturdays from 8:00 am to 12:00 pm. "
+            "From Hours & FAQ and Contact."
+        )
+
+        def client(payload, text):
+            return {"content": [{"type": "text", "text": text}]}
+
+        for model_reply in (draft, missing_period, joined_with_ampersand):
+            got = front_desk.reply_to(
+                question,
+                base_url=self.site.base,
+                client=lambda payload, text=model_reply: client(payload, text),
+            )
+            self.assertEqual(got, expected, model_reply)
+            self.assertEqual(len(re.findall(r"(?<!\S)From\s+", got)), 1, got)
+            self.assertIn("from 8:00 am", got)
+
 
 if __name__ == "__main__":
     unittest.main()

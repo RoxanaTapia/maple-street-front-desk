@@ -715,68 +715,120 @@ def _read_named(pages, needle):
     return None
 
 
-def _parse_cited(cited, names):
-    """Return the page names in a trailing citation, or None."""
-    found = []
-    for part in re.split(r"\s*,\s*|\s+and\s+", cited.strip()):
-        name = _canonical_name(part.strip(), names) if part.strip() else None
-        if name is None:
-            return None
-        if name not in found:
-            found.append(name)
-    return found or None
+def _flexible_name_pattern(name):
+    """Match a page name with loose spacing, and 'and' for '&'."""
+    tokens = name.split()
+    parts = []
+    for index, token in enumerate(tokens):
+        if token == "&":
+            parts.append(r"\s*(?:&|and)\s*")
+            continue
+        if index and tokens[index - 1] != "&":
+            parts.append(r"\s+")
+        parts.append(re.escape(token))
+    return "".join(parts)
 
 
-def _citation_pattern(names):
-    """Match a source line that names one or more of these pages.
+def _compiled_page_names(names):
+    compiled = []
+    for name in sorted(names, key=len, reverse=True):
+        compiled.append((name, re.compile(_flexible_name_pattern(name), re.IGNORECASE)))
+    return compiled
 
-    'From Hours & FAQ and Contact.' matches. 'from 8:00 am' does not,
-    because that is a time, not a page name.
+
+def _page_at(text, compiled):
+    """Return the page name and the end index when text starts with one."""
+    the = re.match(r"(?i)the\s+", text)
+    start = the.end() if the else 0
+    hit = None
+    for name, pattern in compiled:
+        got = pattern.match(text, start)
+        if got and (hit is None or got.end() > hit[0]):
+            hit = (got.end(), name)
+    if hit is None:
+        return None
+    end, name = hit
+    page_word = re.match(r"(?i)\s+pages?\b", text[end:])
+    if page_word:
+        end += page_word.end()
+    return name, end
+
+
+def _match_citation(text, compiled):
+    """Return the end index and page names when text starts with a source sentence.
+
+    The pages may be in any order, with commas, 'and', or '&' between
+    them, and the closing period is optional. 'from 8:00 am' is not a
+    source sentence.
     """
-    longest = sorted(names, key=len, reverse=True)
-    one = "|".join(re.escape(name) for name in longest)
-    page = rf"(?:the\s+)?(?:{one})(?:\s+page)?"
-    return re.compile(
-        rf"(?<!\S)From\s+{page}(?:(?:\s*,\s*|\s+and\s+)+{page})*\s*\.",
-        re.IGNORECASE,
-    )
+    opener = re.match(r"(?i)from\s+", text)
+    if not opener or not compiled:
+        return None
+    pos = opener.end()
+    found = []
+    while pos <= len(text):
+        hit = _page_at(text[pos:], compiled)
+        if hit is None:
+            return None
+        name, end = hit
+        found.append(name)
+        pos += end
+        tail = text[pos:]
+        sep = re.match(r"(?i)\s*(?:,|&|\band\b)\s*", tail)
+        if sep and _page_at(text[pos + sep.end() :], compiled):
+            pos += sep.end()
+            continue
+        period = re.match(r"\s*\.", tail)
+        if period:
+            return pos + period.end(), found
+        spaces = re.match(r"[ \t]*", tail)
+        rest = tail[spaces.end() :]
+        if rest == "" or rest.startswith("\n"):
+            return pos + spaces.end(), found
+        return None
 
 
-def _names_from_citation(text, names):
-    """Return the page names written in one source line."""
-    inner = re.sub(r"(?i)^from\s+", "", text.strip()).rstrip(".").strip()
-    inner = re.sub(r"(?i)\s+page\b", "", inner)
-    inner = re.sub(r"(?i)\bthe\s+", "", inner)
-    inner = " ".join(inner.split())
-    parsed = _parse_cited(inner, names)
-    return parsed or []
+def _source_spans(text, names):
+    """Return each source sentence as start, end, and the pages it names."""
+    compiled = _compiled_page_names(names)
+    opener = re.compile(r"(?i)(?<!\S)from\s+")
+    spans = []
+    cursor = 0
+    while cursor < len(text):
+        match = opener.search(text, cursor)
+        if not match:
+            break
+        parsed = _match_citation(text[match.start() :], compiled)
+        if not parsed:
+            cursor = match.end()
+            continue
+        end, found = parsed
+        spans.append((match.start(), match.start() + end, found))
+        cursor = match.start() + end
+    return spans
 
 
 def _without_source_lines(text, names):
-    """Drop every source line and return the page names it used.
+    """Drop every source sentence and return the page names it used.
 
-    A source line in its own paragraph is dropped with that paragraph.
-    A repeated source line is dropped each time. The customer sentences
-    stay, including a blank line between real paragraphs.
+    A source sentence is dropped whatever order or spacing it uses, and
+    whether or not it ends with a period. One in its own paragraph is
+    dropped with that paragraph. The customer sentences stay, including
+    a blank line between real paragraphs. 'from 8:00 am' stays, because
+    that is a time, not a page name.
     """
-    pattern = _citation_pattern(names)
     found = []
-
-    def replace(match):
-        parsed = _names_from_citation(match.group(0), names)
-        if not parsed:
-            return match.group(0)
-        found.extend(parsed)
-        return " "
-
+    cleaned = text
+    for start, end, pages in reversed(_source_spans(text, names)):
+        found[0:0] = pages
+        cleaned = cleaned[:start] + " " + cleaned[end:]
     kept = []
-    for paragraph in re.split(r"\n\s*\n", text.strip()):
+    for paragraph in re.split(r"\n\s*\n", cleaned.strip()):
         lines = []
         for line in paragraph.split("\n"):
-            cleaned = pattern.sub(replace, line)
-            cleaned = re.sub(r"[^\S\n]{2,}", " ", cleaned).strip()
-            if cleaned:
-                lines.append(cleaned)
+            line = re.sub(r"[^\S\n]{2,}", " ", line).strip()
+            if line:
+                lines.append(line)
         if lines:
             kept.append("\n".join(lines))
     return "\n\n".join(kept).strip(), found
@@ -842,9 +894,9 @@ def _name_every_page_used(reply, pages):
     Opening hours come from Hours & FAQ. A booking line comes from
     Contact. A reply that uses both ends with both names, for example
     'From Hours & FAQ and Contact.' A reply that uses one page keeps
-    that one name. A source line that was repeated, or written in its
-    own paragraph, is removed and written once at the end of the answer.
-    The callback reply is not changed here.
+    that one name. Any source sentence the model writes is removed,
+    whatever order or spacing it uses, and one source line is written
+    in page order. The callback reply is not changed here.
     """
     if not isinstance(reply, str):
         return reply
