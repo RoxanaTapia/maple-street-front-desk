@@ -1710,7 +1710,7 @@ class SaturdayBookingChecks(unittest.TestCase):
         """How do I book a visit for Saturday morning names Hours & FAQ and Contact."""
         question = "How do I book a visit for Saturday morning?"
         expected = (
-            "Yes, we're open Saturdays from 8:00 am to 12:00 pm. "
+            "We're open Saturdays from 8:00 am to 12:00 pm. "
             "To book, call our main line at (856) 555-0142. "
             "From Hours & FAQ and Contact."
         )
@@ -1757,6 +1757,48 @@ class SaturdayBookingChecks(unittest.TestCase):
             expected,
         )
         self.assertEqual(answer_reply.write_answer(question, pages, writer=writer), expected)
+
+    def test_a_how_question_does_not_start_with_yes(self):
+        """A how question does not start with Yes. A yes or no question still does."""
+        question = "How do I book a visit for Saturday morning?"
+        expected = (
+            "We're open Saturdays from 8:00 am to 12:00 pm. "
+            "To book, call our main line at (856) 555-0142. "
+            "From Hours & FAQ and Contact."
+        )
+        behaviour = (ROOT / "docs" / "behaviour.md").read_text(encoding="utf-8")
+        self.assertIn("starts with the fact", behaviour)
+        self.assertIn("yes or no question", behaviour)
+        got = front_desk.reply_to(question, base_url=self.site.base)
+        self.assertEqual(got, expected)
+        self.assertFalse(re.match(r"(?i)yes\b", got))
+        self.assertFalse(got.startswith("Yes"))
+        saturday = front_desk.reply_to("Are you open on Saturday?", base_url=self.site.base)
+        self.assertIn("Yes, we are open Saturdays.", saturday)
+        self.assertTrue(saturday.endswith("From Hours & FAQ."))
+        self.assertNotEqual(saturday, answer_reply.callback_reply())
+        agreed = front_desk.reply_to("Are you open Saturdays?", base_url=self.site.base)
+        self.assertEqual(agreed, saturday)
+        drafted = (
+            "Yes, we're open Saturdays from 8:00 am to 12:00 pm. "
+            "To book, call our main line at (856) 555-0142. "
+            "From Hours & FAQ and Contact."
+        )
+
+        def writer(question_arg, instructions_arg, pages_arg):
+            if question_arg.startswith("How"):
+                return drafted
+            return "Yes, we are open Saturdays. From Hours & FAQ."
+
+        rewritten = front_desk.reply_to(question, base_url=self.site.base, writer=writer)
+        self.assertEqual(rewritten, expected)
+        self.assertFalse(rewritten.startswith("Yes"))
+        kept = front_desk.reply_to(
+            "Are you open on Saturday?",
+            base_url=self.site.base,
+            writer=writer,
+        )
+        self.assertTrue(kept.startswith("Yes"))
 
     def test_no_reply_contains_its_source_line_twice(self):
         """No reply contains its source line twice."""

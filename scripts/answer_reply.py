@@ -36,7 +36,9 @@ that asks for an email the pages don't list says so, then uses the
 callback sentence. A question in two parts answers the part the pages
 cover, and says the pages don't list the other part. A Saturday booking
 uses the Saturday hours and the booking line, and names both pages.
-An internal note is never part of the reply. The
+A how, what, when, or where question starts with the fact. Yes is
+added only for a yes or no question. An internal note is never part of
+the reply. The
 stand-in is not a real AI,
 and it does not call one. The checks use that path, so they do not show
 what a live call would write.
@@ -105,6 +107,11 @@ WRONG_AMOUNT_GETS_A_NO = (
 # How much is not a yes or no question.
 HOW_MUCH_IS_NOT_YES = (
     "If they ask how much, give the price from the pages with no leading yes."
+)
+# How, what, when, and where start with the fact.
+FACT_FIRST = (
+    "If they ask how, what, when, or where, start with the fact and do not add Yes. "
+    "Add Yes only when they ask a yes or no question, such as are you, do you, or can I."
 )
 # A note is for the owner. It must not be written into the reply.
 NO_INTERNAL_NOTE = (
@@ -477,6 +484,33 @@ def _same_question(left, right):
         return " ".join(bare.casefold().split()).rstrip("?")
 
     return norm(left) == norm(right)
+
+
+def _saturday_hours_question(question):
+    """True when this is a yes or no question about being open on Saturday."""
+    if not isinstance(question, str):
+        return False
+    bare = _without_surrounding_marks(question)
+    if re.match(r"^are you open\b", bare, re.IGNORECASE) is None:
+        return False
+    return re.search(r"\bsaturdays?\b", bare, re.IGNORECASE) is not None
+
+
+def _matched_question(question, text):
+    """Return the agreed question this message asks, or None.
+
+    "Are you open on Saturday?" is the same question as "Are you open Saturdays?".
+    """
+    rows = list(agreed.question_rows(text))
+    if isinstance(question, str):
+        for item in rows:
+            if _same_question(item["question"], question):
+                return item
+    if _saturday_hours_question(question):
+        for item in rows:
+            if _same_question(item["question"], "Are you open Saturdays?"):
+                return item
+    return None
 
 
 def _source_page(detail):
@@ -1129,8 +1163,9 @@ def build_instructions(question, pages, text=None):
     pages, gets a short yes spoken to the person.     A yes or no question
     that states a different price gets a no, and that wrong amount never
     gets a yes. A how much question gets the price with no leading yes.
-    They also say not to add an internal note. The text of every page
-    is included.
+    A how, what, when, or where question starts with the fact, and Yes
+    is added only for a yes or no question. They also say not to add an
+    internal note. The text of every page is included.
     """
     callback = callback_reply(text)
     example = _source_example(pages)
@@ -1147,6 +1182,7 @@ def build_instructions(question, pages, text=None):
         PLAIN_PRICE,
         WRONG_AMOUNT_GETS_A_NO,
         HOW_MUCH_IS_NOT_YES,
+        FACT_FIRST,
         NO_INTERNAL_NOTE,
         "When the pages don't cover the question, reply with exactly this sentence:",
         callback,
@@ -1206,6 +1242,35 @@ def _asks_how_much(question):
         return False
     bare = _without_surrounding_marks(question)
     return re.search(r"\bhow\s+much\b", bare, re.IGNORECASE) is not None
+
+
+def _asks_for_a_fact(question):
+    """True when the question is how, what, when, or where.
+
+    Those start with the fact. Are you, do you, and can I stay yes or no
+    questions, so this returns false for them.
+    """
+    if not isinstance(question, str):
+        return False
+    bare = _without_surrounding_marks(question)
+    return re.match(r"(?:how|what|when|where)\b", bare, re.IGNORECASE) is not None
+
+
+def _fact_first(question, reply):
+    """Drop a leading Yes when the question asks how, what, when, or where.
+
+    "Yes, we're open Saturdays." becomes "We're open Saturdays." A yes
+    or no question is left as it is.
+    """
+    if not isinstance(reply, str) or not _asks_for_a_fact(question):
+        return reply
+    text = reply.strip()
+    rest = re.sub(r"^yes\b\s*,?\s*", "", text, count=1, flags=re.IGNORECASE)
+    if not rest or rest == text:
+        return reply
+    if rest[0].islower():
+        rest = rest[0].upper() + rest[1:]
+    return rest
 
 
 def _is_service_verb(word):
@@ -1499,7 +1564,7 @@ def _saturday_booking_reply(question, pages, instructions):
     if not hours_name or not contact_name:
         return None
     body = (
-        f"Yes, we're open Saturdays from {clock}. "
+        f"We're open Saturdays from {clock}. "
         f"To book, call our main line at {phone.group(0)}."
     )
     names = [name for name in _ordered_names(pages) if name in {hours_name, contact_name}]
@@ -1516,8 +1581,11 @@ def stand_in_writer(question, instructions, pages, text=None):
     answer. Quotes or markdown around that question count as the same
     question. A plain question about opening hours is answered from the
     Hours page the same way. A Saturday booking uses the Saturday hours
-    and the booking line, and names both pages. When someone states a
-    price that differs from the pages, the answer is the sentence beside
+    and the booking line, and names both pages. A how, what, when, or
+    where question starts with the fact. Yes is added only for a yes or
+    no question. "Are you open on Saturday?" is the Saturday hours
+    question. When someone states a price that differs from the pages,
+    the answer is the sentence beside
     that service, spoken to them, and their amount is not repeated. When they state
     the price the pages already show, even without a dollar sign, the
     answer is a short yes that uses the page's price. A small misspelling
@@ -1532,11 +1600,7 @@ def stand_in_writer(question, instructions, pages, text=None):
         return callback
     if not isinstance(instructions, str):
         return callback
-    row = None
-    for item in agreed.question_rows(text):
-        if _same_question(item["question"], question):
-            row = item
-            break
+    row = _matched_question(question, text)
     if row is not None and row["group"] != ANSWERED_GROUP:
         return callback
     offered = _priced_service_reply(question, pages, instructions)
@@ -1995,8 +2059,9 @@ def write_answer(question, pages, writer=None, text=None, client=None):
 
     A page-based answer is rewritten so it ends with exactly
     'From <Page name>.'. A reply that uses facts from more than one
-    page names every page it used. The callback reply and the outage
-    reply are left as they are. A wrong-price note that already states only the
+    page names every page it used. A how, what, when, or where question
+    loses a leading yes, and a yes or no question keeps it. The callback
+    reply and the outage reply are left as they are. A wrong-price note that already states only the
     page price may lose the words "the customer", and the other sentences
     stay. A note that agrees with the stated price, or names another
     amount, is not replaced with the page price. When the price they
@@ -2055,7 +2120,7 @@ def write_answer(question, pages, writer=None, text=None, client=None):
         return callback
     if reply.strip() == outage:
         return outage
-    return _name_every_page_used(reply, pages)
+    return _fact_first(question, _name_every_page_used(reply, pages))
 
 
 def _split_site(args):
