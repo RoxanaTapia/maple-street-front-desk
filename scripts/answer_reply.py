@@ -693,15 +693,59 @@ def _parse_cited(cited, names):
     return found or None
 
 
-def _split_cited(text, names):
-    """Return the answer body and the pages already named at the end."""
-    match = re.search(r"^(?P<body>.*)\s+From\s+(?P<cited>[^.]+)\.\s*$", text)
-    if not match:
-        return text, []
-    cited = _parse_cited(match.group("cited"), names)
-    if not cited:
-        return text, []
-    return match.group("body").strip(), cited
+def _citation_pattern(names):
+    """Match a source line that names one or more of these pages.
+
+    'From Hours & FAQ and Contact.' matches. 'from 8:00 am' does not,
+    because that is a time, not a page name.
+    """
+    longest = sorted(names, key=len, reverse=True)
+    one = "|".join(re.escape(name) for name in longest)
+    page = rf"(?:the\s+)?(?:{one})(?:\s+page)?"
+    return re.compile(
+        rf"(?<!\S)From\s+{page}(?:(?:\s*,\s*|\s+and\s+)+{page})*\s*\.",
+        re.IGNORECASE,
+    )
+
+
+def _names_from_citation(text, names):
+    """Return the page names written in one source line."""
+    inner = re.sub(r"(?i)^from\s+", "", text.strip()).rstrip(".").strip()
+    inner = re.sub(r"(?i)\s+page\b", "", inner)
+    inner = re.sub(r"(?i)\bthe\s+", "", inner)
+    inner = " ".join(inner.split())
+    parsed = _parse_cited(inner, names)
+    return parsed or []
+
+
+def _without_source_lines(text, names):
+    """Drop every source line and return the page names it used.
+
+    A source line in its own paragraph is dropped with that paragraph.
+    A repeated source line is dropped each time. The customer sentences
+    stay, including a blank line between real paragraphs.
+    """
+    pattern = _citation_pattern(names)
+    found = []
+
+    def replace(match):
+        parsed = _names_from_citation(match.group(0), names)
+        if not parsed:
+            return match.group(0)
+        found.extend(parsed)
+        return " "
+
+    kept = []
+    for paragraph in re.split(r"\n\s*\n", text.strip()):
+        lines = []
+        for line in paragraph.split("\n"):
+            cleaned = pattern.sub(replace, line)
+            cleaned = re.sub(r"[^\S\n]{2,}", " ", cleaned).strip()
+            if cleaned:
+                lines.append(cleaned)
+        if lines:
+            kept.append("\n".join(lines))
+    return "\n\n".join(kept).strip(), found
 
 
 def _source_tag(names):
@@ -759,12 +803,14 @@ def _uses_booking(body, page):
 
 
 def _name_every_page_used(reply, pages):
-    """Name every page whose facts the reply uses.
+    """Name every page whose facts the reply uses, once.
 
     Opening hours come from Hours & FAQ. A booking line comes from
     Contact. A reply that uses both ends with both names, for example
     'From Hours & FAQ and Contact.' A reply that uses one page keeps
-    that one name. The callback reply is not changed here.
+    that one name. A source line that was repeated, or written in its
+    own paragraph, is removed and written once at the end of the answer.
+    The callback reply is not changed here.
     """
     if not isinstance(reply, str):
         return reply
@@ -774,8 +820,11 @@ def _name_every_page_used(reply, pages):
     names = _ordered_names(pages)
     if not names:
         return text
-    body, cited = _split_cited(text, names)
-    used = list(cited)
+    body, cited = _without_source_lines(text, names)
+    used = []
+    for name in cited:
+        if name not in used:
+            used.append(name)
     hours = _read_named(pages, "hours")
     contact = _read_named(pages, "contact")
     if hours is not None and _uses_opening_hours(body, hours):
@@ -787,11 +836,12 @@ def _name_every_page_used(reply, pages):
         if name and name not in used:
             used.append(name)
     ordered = [name for name in names if name in used]
-    if ordered == cited:
-        return reply
     if not ordered:
         return reply
-    return _with_pages(body, ordered)
+    rebuilt = _with_pages(body, ordered)
+    if rebuilt == text:
+        return reply
+    return rebuilt
 
 
 def _price_number(amount):

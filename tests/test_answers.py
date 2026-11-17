@@ -1758,6 +1758,59 @@ class SaturdayBookingChecks(unittest.TestCase):
         )
         self.assertEqual(answer_reply.write_answer(question, pages, writer=writer), expected)
 
+    def test_no_reply_contains_its_source_line_twice(self):
+        """No reply contains its source line twice."""
+        question = "How do I book a visit for Saturday morning?"
+        pages = read_pages.read_pages(self.site.base)
+        replies = []
+        for row in question_rows():
+            replies.append(front_desk.reply_to(row["question"], base_url=self.site.base))
+        replies.append(front_desk.reply_to(question, base_url=self.site.base))
+        duplicated = (
+            "We're open Saturday from 8:00 am to 12:00 pm. "
+            "To book, call our main line at (856) 555-0142.\n\n"
+            "From Hours & FAQ and Contact. From Hours & FAQ and Contact."
+        )
+        on_its_own_line = (
+            "We're open Saturday from 8:00 am to 12:00 pm. "
+            "To book, call our main line at (856) 555-0142.\n\n"
+            "From Hours & FAQ and Contact."
+        )
+        named_apart = (
+            "We're open Saturday from 8:00 am to 12:00 pm. From Hours & FAQ.\n\n"
+            "To book, call our main line at (856) 555-0142. From Contact."
+        )
+        once = (
+            "We're open Saturday from 8:00 am to 12:00 pm. "
+            "To book, call our main line at (856) 555-0142. "
+            "From Hours & FAQ and Contact."
+        )
+        named_once = (
+            "We're open Saturday from 8:00 am to 12:00 pm.\n\n"
+            "To book, call our main line at (856) 555-0142. "
+            "From Hours & FAQ and Contact."
+        )
+
+        def client(payload, text):
+            return {"content": [{"type": "text", "text": text}]}
+
+        for draft, expected in (
+            (duplicated, once),
+            (on_its_own_line, once),
+            (named_apart, named_once),
+        ):
+            got = front_desk.reply_to(
+                question,
+                base_url=self.site.base,
+                client=lambda payload, text=draft: client(payload, text),
+            )
+            self.assertEqual(got, expected, draft)
+            replies.append(got)
+        for reply in replies:
+            sources = re.findall(r"(?<!\S)From\s+", reply)
+            self.assertLessEqual(len(sources), 1, reply)
+            self.assertNotRegex(reply, r"\n\s*From\s+")
+
 
 if __name__ == "__main__":
     unittest.main()
