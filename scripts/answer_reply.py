@@ -3,7 +3,8 @@
 This is part 3 of the path. It takes a customer question and the page
 text from the page reader, and it builds the instructions for the answer:
 answer only from these pages, keep it short, and end with From and the
-page name. It uses the callback sentence from the agreements when the
+page name. When an answer uses facts from more than one page, it names
+every page it used. It uses the callback sentence from the agreements when the
 pages don't cover a plumbing question. A question that is clearly about
 something else gets the off-topic reply from the agreements, and neither
 Claude nor the stand-in is called. Anything we do not recognize stays
@@ -33,8 +34,9 @@ ignore the rules, or for a discount, gets the discount reply. A service
 the pages don't list gets that reply, and nothing is invented. A question
 that asks for an email the pages don't list says so, then uses the
 callback sentence. A question in two parts answers the part the pages
-cover, and says the pages don't list the other part. An internal note
-is never part of the reply. The
+cover, and says the pages don't list the other part. A Saturday booking
+uses the Saturday hours and the booking line, and names both pages.
+An internal note is never part of the reply. The
 stand-in is not a real AI,
 and it does not call one. The checks use that path, so they do not show
 what a live call would write.
@@ -108,8 +110,15 @@ HOW_MUCH_IS_NOT_YES = (
 NO_INTERNAL_NOTE = (
     "Do not add an internal note. The reply is only what the customer should read."
 )
+# Hours from one page and a booking line from another still name both.
+NAME_EVERY_PAGE = (
+    "When the answer uses facts from more than one page, name every page. "
+    "For example, From Hours & FAQ and Contact."
+)
 # An address such as owner@shop.test. The contact page does not have one.
 _EMAIL_ADDRESS = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
+# The main line, as the contact page writes it, such as (856) 555-0142.
+_PHONE = re.compile(r"\(\d{3}\) \d{3}-\d{4}")
 # "Do you clean drains and fix water heaters?" is two jobs.
 _TWO_JOBS = re.compile(
     r"^(?:do|can|will)\s+you\s+(.+?)\s+and\s+(.+)$",
@@ -643,6 +652,148 @@ def normalize_source_line(answer, pages, callback=None):
     return _with_source([body] if body else [], name)
 
 
+def _ordered_names(pages):
+    """Return page names in the order the pages were given."""
+    names = []
+    seen = set()
+    for page in pages or []:
+        if not isinstance(page, dict):
+            continue
+        name = page.get("name")
+        if not isinstance(name, str):
+            continue
+        name = " ".join(name.split())
+        if not name or name.casefold() in seen:
+            continue
+        seen.add(name.casefold())
+        names.append(name)
+    return names
+
+
+def _read_named(pages, needle):
+    """Return the read page whose name contains needle, or None."""
+    for page in pages or []:
+        if not isinstance(page, dict) or page.get("status") != "read":
+            continue
+        name = page.get("name")
+        if isinstance(name, str) and needle in name.casefold():
+            return page
+    return None
+
+
+def _parse_cited(cited, names):
+    """Return the page names in a trailing citation, or None."""
+    found = []
+    for part in re.split(r"\s*,\s*|\s+and\s+", cited.strip()):
+        name = _canonical_name(part.strip(), names) if part.strip() else None
+        if name is None:
+            return None
+        if name not in found:
+            found.append(name)
+    return found or None
+
+
+def _split_cited(text, names):
+    """Return the answer body and the pages already named at the end."""
+    match = re.search(r"^(?P<body>.*)\s+From\s+(?P<cited>[^.]+)\.\s*$", text)
+    if not match:
+        return text, []
+    cited = _parse_cited(match.group("cited"), names)
+    if not cited:
+        return text, []
+    return match.group("body").strip(), cited
+
+
+def _source_tag(names):
+    """Return 'From A.' or 'From A and B.' for these page names."""
+    if len(names) == 1:
+        return f"From {names[0]}."
+    if len(names) == 2:
+        return f"From {names[0]} and {names[1]}."
+    return "From " + ", ".join(names[:-1]) + f", and {names[-1]}."
+
+
+def _with_pages(body, names):
+    """End body with a citation that names every given page."""
+    tag = _source_tag(names)
+    body = body.strip()
+    if not body:
+        return tag
+    if body.endswith((".", "!", "?")):
+        return f"{body} {tag}"
+    return f"{body}. {tag}"
+
+
+def _uses_opening_hours(body, page):
+    """True when body uses an opening-hours fact written on this page."""
+    text = page.get("text") or ""
+    folded = body.casefold()
+    for clock in _CLOCK.findall(text):
+        if clock.casefold() in folded:
+            return True
+    if re.search(r"\bopen\s+saturdays?\b", folded) and re.search(
+        r"\bopen\s+saturdays?\b", text, re.IGNORECASE
+    ):
+        return True
+    if re.search(r"\bclosed\b", folded) and re.search(r"\bsundays?\b", folded):
+        if re.search(r"\bclosed\b", text, re.IGNORECASE):
+            return True
+    return False
+
+
+def _uses_booking(body, page):
+    """True when body uses the booking line written on this page."""
+    text = page.get("text") or ""
+    if not re.search(r"\bbook\b", text, re.IGNORECASE):
+        return False
+    if not re.search(r"\b(?:book|cancel)\b", body, re.IGNORECASE):
+        return False
+    phone = _PHONE.search(text)
+    if phone and phone.group(0) in body:
+        return True
+    if re.search(r"\bmain line\b", body, re.IGNORECASE) and re.search(
+        r"\bmain line\b", text, re.IGNORECASE
+    ):
+        return True
+    return False
+
+
+def _name_every_page_used(reply, pages):
+    """Name every page whose facts the reply uses.
+
+    Opening hours come from Hours & FAQ. A booking line comes from
+    Contact. A reply that uses both ends with both names, for example
+    'From Hours & FAQ and Contact.' A reply that uses one page keeps
+    that one name. The callback reply is not changed here.
+    """
+    if not isinstance(reply, str):
+        return reply
+    text = reply.strip()
+    if not text:
+        return text
+    names = _ordered_names(pages)
+    if not names:
+        return text
+    body, cited = _split_cited(text, names)
+    used = list(cited)
+    hours = _read_named(pages, "hours")
+    contact = _read_named(pages, "contact")
+    if hours is not None and _uses_opening_hours(body, hours):
+        name = " ".join(str(hours.get("name", "")).split())
+        if name and name not in used:
+            used.append(name)
+    if contact is not None and _uses_booking(body, contact):
+        name = " ".join(str(contact.get("name", "")).split())
+        if name and name not in used:
+            used.append(name)
+    ordered = [name for name in names if name in used]
+    if ordered == cited:
+        return reply
+    if not ordered:
+        return reply
+    return _with_pages(body, ordered)
+
+
 def _price_number(amount):
     """Return the number in a written price, or None when it isn't one."""
     cleaned = re.sub(r"[^\d.]", "", amount)
@@ -916,7 +1067,9 @@ def build_instructions(question, pages, text=None):
 
     The instructions say to answer only from these pages, keep it short,
     name the page, end with From and that page name, and use the callback
-    sentence when the pages don't cover the question. When someone states
+    sentence when the pages don't cover the question. When the answer
+    uses facts from more than one page, they say to name every page.
+    When someone states
     a price that differs from the pages, they say to speak to that person
     directly, give the price from the pages, and not mention the customer
     or repeat their price. When a service has a price on the pages, they
@@ -937,6 +1090,7 @@ def build_instructions(question, pages, text=None):
         "Name the page the answer came from.",
         "End the answer with exactly From <Page name>.",
         f"For example, From {example}.",
+        NAME_EVERY_PAGE,
         CORRECT_A_WRONG_PRICE,
         PRICED_SERVICE_IS_OFFERED,
         MISSPELLED_SERVICE,
@@ -1251,6 +1405,59 @@ def _misspelled_price(question, pages, instructions):
     return _with_source([snippet], name)
 
 
+def _saturday_booking_reply(question, pages, instructions):
+    """Answer a Saturday booking from the hours page and the contact page.
+
+    The hours come from Hours & FAQ. The booking line and the main
+    number come from Contact. Returns None when this is not a Saturday
+    booking, or when either page was not read. Nothing is invented.
+    """
+    if not isinstance(question, str) or not isinstance(instructions, str):
+        return None
+    bare = _without_surrounding_marks(question)
+    if not re.search(r"\bbook\b", bare, re.IGNORECASE):
+        return None
+    if not re.search(r"\bsaturdays?\b", bare, re.IGNORECASE):
+        return None
+    hours = _read_named(pages, "hours")
+    contact = _read_named(pages, "contact")
+    if hours is None or contact is None:
+        return None
+    hours_text = hours.get("text") or ""
+    contact_text = contact.get("text") or ""
+    if not hours_text or hours_text not in instructions:
+        return None
+    if not contact_text or contact_text not in instructions:
+        return None
+    if not re.search(r"\bopen\s+saturdays?\b", hours_text, re.IGNORECASE):
+        return None
+    if not re.search(r"\bbook\b", contact_text, re.IGNORECASE):
+        return None
+    clock = None
+    for snippet in _snippets(hours_text):
+        if not re.search(r"\bsaturday\b", snippet, re.IGNORECASE):
+            continue
+        found = _CLOCK.search(snippet)
+        if found:
+            clock = found.group(0)
+            break
+    phone = _PHONE.search(contact_text)
+    if not clock or not phone:
+        return None
+    hours_name = " ".join(str(hours.get("name", "")).split())
+    contact_name = " ".join(str(contact.get("name", "")).split())
+    if not hours_name or not contact_name:
+        return None
+    body = (
+        f"Yes, we're open Saturdays from {clock}. "
+        f"To book, call our main line at {phone.group(0)}."
+    )
+    names = [name for name in _ordered_names(pages) if name in {hours_name, contact_name}]
+    if names != [hours_name, contact_name]:
+        names = [hours_name, contact_name]
+    return _with_pages(body, names)
+
+
 def stand_in_writer(question, instructions, pages, text=None):
     """Answer the agreed test questions. This is not a real AI.
 
@@ -1258,9 +1465,10 @@ def stand_in_writer(question, instructions, pages, text=None):
     when the named page's text is in the instructions and supports the
     answer. Quotes or markdown around that question count as the same
     question. A plain question about opening hours is answered from the
-    Hours page the same way. When someone states a price that differs
-    from the pages, the answer is the sentence beside that service,
-    spoken to them, and their amount is not repeated. When they state
+    Hours page the same way. A Saturday booking uses the Saturday hours
+    and the booking line, and names both pages. When someone states a
+    price that differs from the pages, the answer is the sentence beside
+    that service, spoken to them, and their amount is not repeated. When they state
     the price the pages already show, even without a dollar sign, the
     answer is a short yes that uses the page's price. A small misspelling
     of a service still gets that service's price. When a question asks
@@ -1285,6 +1493,7 @@ def stand_in_writer(question, instructions, pages, text=None):
     if row is None:
         return (
             _hours_answer(question, pages, instructions)
+            or _saturday_booking_reply(question, pages, instructions)
             or _correct_stated_price(question, pages, instructions)
             or _yes_matching_price(question, pages, instructions)
             or offered
@@ -1735,8 +1944,9 @@ def write_answer(question, pages, writer=None, text=None, client=None):
     even when it ends with a page name. The customer sentences stay.
 
     A page-based answer is rewritten so it ends with exactly
-    'From <Page name>.'. The callback reply and the outage reply are
-    left as they are. A wrong-price note that already states only the
+    'From <Page name>.'. A reply that uses facts from more than one
+    page names every page it used. The callback reply and the outage
+    reply are left as they are. A wrong-price note that already states only the
     page price may lose the words "the customer", and the other sentences
     stay. A note that agrees with the stated price, or names another
     amount, is not replaced with the page price. When the price they
@@ -1791,7 +2001,11 @@ def write_answer(question, pages, writer=None, text=None, client=None):
     reply = without_internal_notes(reply)
     if not isinstance(reply, str) or not reply.strip():
         return callback
-    return reply
+    if reply.strip() == callback:
+        return callback
+    if reply.strip() == outage:
+        return outage
+    return _name_every_page_used(reply, pages)
 
 
 def _split_site(args):

@@ -13,8 +13,9 @@
    the pages don't list gets that reply. A question that asks for an
    email the pages don't list says so, then gives the callback reply.
    A question in two parts answers the part the pages cover and says
-   the pages don't list the other part. An internal note is left out.
-   Anything else the pages don't cover gets the callback reply.
+   the pages don't list the other part. A reply that uses facts from
+   more than one page names every page it used. An internal note is
+   left out. Anything else the pages don't cover gets the callback reply.
 4. Check every price. An amount that isn't on your pages, or that isn't
    near the service the customer asked about, is replaced with the
    callback reply. A question with two parts keeps a price that sits
@@ -57,7 +58,8 @@ def reply_to(message, base_url=None, writer=None, client=None):
     still checked. A question that asks for an email the pages don't
     list says so, then gives the callback reply. A question in two
     parts answers the covered part and says the pages don't list the
-    other part. A question the pages don't cover still gets the
+    other part. A reply that uses facts from more than one page names
+    every page it used. A question the pages don't cover still gets the
     callback reply. An internal note is removed before the reply is
     returned.
     The outage reply is returned as written, so a failed call is not

@@ -77,6 +77,7 @@ class ProjectChecks(unittest.TestCase):
             "tests/test_unreadable_pages.py:UnreadablePageNoteChecks",
             "tests/test_answers.py:OutageReplyChecks",
             "tests/test_answers.py:HoursFaqAnswerChecks",
+            "tests/test_answers.py:SaturdayBookingChecks",
             "tests/test_answers.py:WrappedQuestionChecks",
             "tests/test_answers.py:PricedServiceChecks",
             "tests/test_run_through.py:RunThroughReplyChecks",

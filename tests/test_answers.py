@@ -5,6 +5,7 @@ ClaudeAnswerChecks is the "Claude writes the answer" area.
 FailureNoteChecks is the "A failed call is noted for the owner" area.
 OutageReplyChecks is the "A failed call gets the outage reply" area.
 HoursFaqAnswerChecks is the "Questions 13 to 15 come from Hours and FAQ" area.
+SaturdayBookingChecks is the "A Saturday booking names every page" area.
 WrappedQuestionChecks is the "A wrapped question matches the plain one" area.
 PricedServiceChecks is the "A priced service is offered" area.
 MisspellingAndPlainPriceChecks is the "A misspelling and a plain price are answered" area.
@@ -18,6 +19,7 @@ or python3 scripts/run_checks.py tests/test_answers.py:ClaudeAnswerChecks
 or python3 scripts/run_checks.py tests/test_answers.py:FailureNoteChecks
 or python3 scripts/run_checks.py tests/test_answers.py:OutageReplyChecks
 or python3 scripts/run_checks.py tests/test_answers.py:HoursFaqAnswerChecks
+or python3 scripts/run_checks.py tests/test_answers.py:SaturdayBookingChecks
 or python3 scripts/run_checks.py tests/test_answers.py:WrappedQuestionChecks
 or python3 scripts/run_checks.py tests/test_answers.py:PricedServiceChecks
 or python3 scripts/run_checks.py tests/test_answers.py:MisspellingAndPlainPriceChecks.
@@ -1692,6 +1694,69 @@ class MisspellingAndPlainPriceChecks(unittest.TestCase):
             )
         self.assertEqual(code, 0)
         self.assertEqual(stdout.getvalue(), callback + "\n")
+
+
+class SaturdayBookingChecks(unittest.TestCase):
+    def setUp(self):
+        self.env = _SavedEnv()
+        self.site = RunningSite()
+
+    def tearDown(self):
+        self.site.close()
+        serve_sample_site.pricing_live = True
+        self.env.restore()
+
+    def test_a_saturday_booking_names_hours_and_contact(self):
+        """How do I book a visit for Saturday morning names Hours & FAQ and Contact."""
+        question = "How do I book a visit for Saturday morning?"
+        expected = (
+            "Yes, we're open Saturdays from 8:00 am to 12:00 pm. "
+            "To book, call our main line at (856) 555-0142. "
+            "From Hours & FAQ and Contact."
+        )
+        self.assertNotIn("ANTHROPIC_API_KEY", os.environ)
+        behaviour = (ROOT / "docs" / "behaviour.md").read_text(encoding="utf-8")
+        self.assertIn("names every page it used", behaviour)
+        pages = read_pages.read_pages(self.site.base)
+        hours = next(page for page in pages if page["name"] == "Hours & FAQ")
+        contact = next(page for page in pages if page["name"] == "Contact")
+        self.assertEqual(hours["status"], "read")
+        self.assertEqual(contact["status"], "read")
+        self.assertIn("8:00 am to 12:00 pm", hours["text"])
+        self.assertIn("open Saturdays", hours["text"])
+        self.assertIn("book", contact["text"].lower())
+        self.assertIn("(856) 555-0142", contact["text"])
+        self.assertIsNone(urgent_reply.reply_if_urgent(question))
+        got = front_desk.reply_to(question, base_url=self.site.base)
+        self.assertEqual(got, expected)
+        self.assertEqual(answer_reply.write_answer(question, pages), expected)
+        self.assertTrue(got.endswith("From Hours & FAQ and Contact."))
+        self.assertNotEqual(got, answer_reply.callback_reply())
+        saturday = front_desk.reply_to("Are you open Saturdays?", base_url=self.site.base)
+        self.assertTrue(saturday.endswith("From Hours & FAQ."))
+        self.assertNotIn("Contact", saturday)
+        booking = front_desk.reply_to(
+            "How do I book or cancel an appointment?",
+            base_url=self.site.base,
+        )
+        self.assertTrue(booking.endswith("From Contact."))
+        self.assertNotIn("Hours & FAQ", booking)
+        instructions = answer_reply.build_instructions(question, pages)
+        self.assertIn("From Hours & FAQ and Contact.", instructions)
+        self.assertIn("name every page", instructions.casefold())
+        buggy = (
+            "Yes, we're open Saturdays from 8:00 am to 12:00 pm. "
+            "To book, call our main line at (856) 555-0142. From Contact."
+        )
+
+        def writer(question_arg, instructions_arg, pages_arg):
+            return buggy
+
+        self.assertEqual(
+            front_desk.reply_to(question, base_url=self.site.base, writer=writer),
+            expected,
+        )
+        self.assertEqual(answer_reply.write_answer(question, pages, writer=writer), expected)
 
 
 if __name__ == "__main__":
