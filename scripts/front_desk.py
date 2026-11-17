@@ -15,6 +15,9 @@
    A question in two parts answers the part the pages cover and says
    the pages don't list the other part. An internal note is left out.
    Anything else the pages don't cover gets the callback reply.
+   A how much question about a leaky faucet, including a small slip
+   such as leeky, names the leak and gives the call-us number when
+   the pages list no price.
 4. Check every price. An amount that isn't on your pages, or that isn't
    near the service the customer asked about, is replaced with the
    callback reply. A question with two parts keeps a price that sits
@@ -58,8 +61,10 @@ def reply_to(message, base_url=None, writer=None, client=None):
     list says so, then gives the callback reply. A question in two
     parts answers the covered part and says the pages don't list the
     other part. A question the pages don't cover still gets the
-    callback reply. An internal note is removed before the reply is
-    returned.
+    callback reply. A how much question about a leaky faucet, including
+    a small slip such as leeky, names the leak and gives the call-us
+    number when the pages list no price. An internal note is removed
+    before the reply is returned.
     The outage reply is returned as written, so a failed call is not
     replaced with the callback reply. A page that can't be read is
     noted for the owner. That note does not change this reply.

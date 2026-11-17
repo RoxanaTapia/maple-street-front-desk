@@ -32,14 +32,17 @@ flowchart LR
 
 - Reads the urgent words and the fixed reply in [Urgent messages](agreements.md#urgent-messages).
 - When one of those words is present, the customer gets only that reply. The pages are not read.
-- A spelling named beside a word counts as that word. Leaking counts. "I have a leaky faucet" does not, and neither does a plural such as "frozen pipes".
+- A spelling named beside a word counts as that word. Leaking counts. A vowel slip counts too, so leek counts as leak and leeking counts as leaking. One dropped, doubled, or swapped letter in that longer spelling counts too. "I have a leaky faucet" does not, and neither does leeky, and neither does a plural such as "frozen pipes".
 
 **Try it**
 
 ```
 python3 scripts/urgent_reply.py 'I have a burst pipe'
 python3 scripts/urgent_reply.py 'The pipe is leaking'
+python3 scripts/urgent_reply.py 'The pipe is leeking'
+python3 scripts/urgent_reply.py 'I have a leek under the sink'
 python3 scripts/urgent_reply.py 'I have a leaky faucet'
+python3 scripts/urgent_reply.py 'I have a leeky faucet'
 python3 scripts/urgent_reply.py 'Are you open Saturdays?'
 ```
 
@@ -47,7 +50,10 @@ python3 scripts/urgent_reply.py 'Are you open Saturdays?'
 |---|---|
 | I have a burst pipe | The fixed urgent reply |
 | The pipe is leaking | The fixed urgent reply |
+| The pipe is leeking | The fixed urgent reply |
+| I have a leek under the sink | The fixed urgent reply |
 | I have a leaky faucet | `This message is not urgent.` |
+| I have a leeky faucet | `This message is not urgent.` |
 | Are you open Saturdays? | `This message is not urgent.` |
 
 The phone number in the fixed urgent reply is not a price.
@@ -86,6 +92,7 @@ Every sample page shows a banner that this business is fictional.
 - A price written without a dollar sign, when it matches the pages, gets a short yes spoken to the customer.
 - A yes or no question that states a wrong price gets a clear no, the price from the pages, and the page name. A wrong amount never gets a yes.
 - A how much question gets that price with no leading yes. "how much drain clean???" is that case.
+- A how much question about a leaky faucet, including a misspelling such as leeky, names the leak, gives no price, and gives the call-us number. The pages do not list a faucet price.
 - A request to ignore the rules, or for a discount the pages don't offer, gets the discount reply from [Discounts](agreements.md#discounts).
 - A service the pages don't list gets the reply from [A service the pages don't list](agreements.md#a-service-the-pages-dont-list). Nothing is invented.
 - A question that asks for an email the pages don't list says so, then gives the call-us reply. No note is added.
@@ -107,6 +114,7 @@ python3 scripts/front_desk.py 'How much is a drane cleaning?'
 python3 scripts/front_desk.py 'Is drain cleaning 149?'
 python3 scripts/front_desk.py 'Is drain cleaning 150?'
 python3 scripts/front_desk.py 'how much drain clean???'
+python3 scripts/front_desk.py 'how much do u charge for a leeky faucet'
 python3 scripts/front_desk.py 'Do you clean drains?'
 python3 scripts/front_desk.py 'Do you cover Moorestown?'
 python3 scripts/front_desk.py 'Do you fix roofs?'
@@ -126,6 +134,7 @@ python3 scripts/front_desk.py 'I have a burst pipe'
 | Is drain cleaning 149? | `Yes, a drain cleaning is $149. From Pricing.` |
 | Is drain cleaning 150? | `No, a drain cleaning is $149. From Pricing.` |
 | how much drain clean??? | `A drain cleaning is $149. From Pricing.` |
+| how much do u charge for a leeky faucet | The pages don't list a price for a leak, then the call-us reply |
 | Do you clean drains? | `Yes, we do drain cleaning. It's $149. From Pricing.` |
 | Do you cover Moorestown? | The callback reply |
 | Do you fix roofs? | Our pages don't list that service, plus the call-us number |
@@ -211,6 +220,7 @@ Each check prints ok, and the run ends with OK. The same checks run on every pul
 - The test questions
 - A priced service is offered
 - A misspelling and a plain price
+- A misspelled leak question
 - A delivery run-through reply
 - A second run-through reply
 - Urgent words
