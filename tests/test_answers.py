@@ -5,6 +5,7 @@ ClaudeAnswerChecks is the "Claude writes the answer" area.
 FailureNoteChecks is the "A failed call is noted for the owner" area.
 OutageReplyChecks is the "A failed call gets the outage reply" area.
 HoursFaqAnswerChecks is the "Questions 13 to 15 come from Hours and FAQ" area.
+SaturdayBookingChecks is the "A Saturday booking names every page" area.
 WrappedQuestionChecks is the "A wrapped question matches the plain one" area.
 PricedServiceChecks is the "A priced service is offered" area.
 MisspellingAndPlainPriceChecks is the "A misspelling and a plain price are answered" area.
@@ -19,6 +20,7 @@ or python3 scripts/run_checks.py tests/test_answers.py:ClaudeAnswerChecks
 or python3 scripts/run_checks.py tests/test_answers.py:FailureNoteChecks
 or python3 scripts/run_checks.py tests/test_answers.py:OutageReplyChecks
 or python3 scripts/run_checks.py tests/test_answers.py:HoursFaqAnswerChecks
+or python3 scripts/run_checks.py tests/test_answers.py:SaturdayBookingChecks
 or python3 scripts/run_checks.py tests/test_answers.py:WrappedQuestionChecks
 or python3 scripts/run_checks.py tests/test_answers.py:PricedServiceChecks
 or python3 scripts/run_checks.py tests/test_answers.py:MisspellingAndPlainPriceChecks
@@ -1694,6 +1696,201 @@ class MisspellingAndPlainPriceChecks(unittest.TestCase):
             )
         self.assertEqual(code, 0)
         self.assertEqual(stdout.getvalue(), callback + "\n")
+
+
+class SaturdayBookingChecks(unittest.TestCase):
+    def setUp(self):
+        self.env = _SavedEnv()
+        self.site = RunningSite()
+
+    def tearDown(self):
+        self.site.close()
+        serve_sample_site.pricing_live = True
+        self.env.restore()
+
+    def test_a_saturday_booking_names_hours_and_contact(self):
+        """How do I book a visit for Saturday morning names Hours & FAQ and Contact."""
+        question = "How do I book a visit for Saturday morning?"
+        expected = (
+            "We're open Saturdays from 8:00 am to 12:00 pm. "
+            "To book, call our main line at (856) 555-0142. "
+            "From Hours & FAQ and Contact."
+        )
+        self.assertNotIn("ANTHROPIC_API_KEY", os.environ)
+        behaviour = (ROOT / "docs" / "behaviour.md").read_text(encoding="utf-8")
+        self.assertIn("names every page it used", behaviour)
+        pages = read_pages.read_pages(self.site.base)
+        hours = next(page for page in pages if page["name"] == "Hours & FAQ")
+        contact = next(page for page in pages if page["name"] == "Contact")
+        self.assertEqual(hours["status"], "read")
+        self.assertEqual(contact["status"], "read")
+        self.assertIn("8:00 am to 12:00 pm", hours["text"])
+        self.assertIn("open Saturdays", hours["text"])
+        self.assertIn("book", contact["text"].lower())
+        self.assertIn("(856) 555-0142", contact["text"])
+        self.assertIsNone(urgent_reply.reply_if_urgent(question))
+        got = front_desk.reply_to(question, base_url=self.site.base)
+        self.assertEqual(got, expected)
+        self.assertEqual(answer_reply.write_answer(question, pages), expected)
+        self.assertTrue(got.endswith("From Hours & FAQ and Contact."))
+        self.assertNotEqual(got, answer_reply.callback_reply())
+        saturday = front_desk.reply_to("Are you open Saturdays?", base_url=self.site.base)
+        self.assertTrue(saturday.endswith("From Hours & FAQ."))
+        self.assertNotIn("Contact", saturday)
+        booking = front_desk.reply_to(
+            "How do I book or cancel an appointment?",
+            base_url=self.site.base,
+        )
+        self.assertTrue(booking.endswith("From Contact."))
+        self.assertNotIn("Hours & FAQ", booking)
+        instructions = answer_reply.build_instructions(question, pages)
+        self.assertIn("From Hours & FAQ and Contact.", instructions)
+        self.assertIn("name every page", instructions.casefold())
+        buggy = (
+            "Yes, we're open Saturdays from 8:00 am to 12:00 pm. "
+            "To book, call our main line at (856) 555-0142. From Contact."
+        )
+
+        def writer(question_arg, instructions_arg, pages_arg):
+            return buggy
+
+        self.assertEqual(
+            front_desk.reply_to(question, base_url=self.site.base, writer=writer),
+            expected,
+        )
+        self.assertEqual(answer_reply.write_answer(question, pages, writer=writer), expected)
+
+    def test_a_how_question_does_not_start_with_yes(self):
+        """A how question does not start with Yes. A yes or no question still does."""
+        question = "How do I book a visit for Saturday morning?"
+        expected = (
+            "We're open Saturdays from 8:00 am to 12:00 pm. "
+            "To book, call our main line at (856) 555-0142. "
+            "From Hours & FAQ and Contact."
+        )
+        behaviour = (ROOT / "docs" / "behaviour.md").read_text(encoding="utf-8")
+        self.assertIn("starts with the fact", behaviour)
+        self.assertIn("yes or no question", behaviour)
+        got = front_desk.reply_to(question, base_url=self.site.base)
+        self.assertEqual(got, expected)
+        self.assertFalse(re.match(r"(?i)yes\b", got))
+        self.assertFalse(got.startswith("Yes"))
+        saturday = front_desk.reply_to("Are you open on Saturday?", base_url=self.site.base)
+        self.assertIn("Yes, we are open Saturdays.", saturday)
+        self.assertTrue(saturday.endswith("From Hours & FAQ."))
+        self.assertNotEqual(saturday, answer_reply.callback_reply())
+        agreed = front_desk.reply_to("Are you open Saturdays?", base_url=self.site.base)
+        self.assertEqual(agreed, saturday)
+        drafted = (
+            "Yes, we're open Saturdays from 8:00 am to 12:00 pm. "
+            "To book, call our main line at (856) 555-0142. "
+            "From Hours & FAQ and Contact."
+        )
+
+        def writer(question_arg, instructions_arg, pages_arg):
+            if question_arg.startswith("How"):
+                return drafted
+            return "Yes, we are open Saturdays. From Hours & FAQ."
+
+        rewritten = front_desk.reply_to(question, base_url=self.site.base, writer=writer)
+        self.assertEqual(rewritten, expected)
+        self.assertFalse(rewritten.startswith("Yes"))
+        kept = front_desk.reply_to(
+            "Are you open on Saturday?",
+            base_url=self.site.base,
+            writer=writer,
+        )
+        self.assertTrue(kept.startswith("Yes"))
+
+    def test_no_reply_contains_its_source_line_twice(self):
+        """No reply contains its source line twice."""
+        question = "How do I book a visit for Saturday morning?"
+        pages = read_pages.read_pages(self.site.base)
+        replies = []
+        for row in question_rows():
+            replies.append(front_desk.reply_to(row["question"], base_url=self.site.base))
+        replies.append(front_desk.reply_to(question, base_url=self.site.base))
+        duplicated = (
+            "We're open Saturday from 8:00 am to 12:00 pm. "
+            "To book, call our main line at (856) 555-0142.\n\n"
+            "From Hours & FAQ and Contact. From Hours & FAQ and Contact."
+        )
+        on_its_own_line = (
+            "We're open Saturday from 8:00 am to 12:00 pm. "
+            "To book, call our main line at (856) 555-0142.\n\n"
+            "From Hours & FAQ and Contact."
+        )
+        named_apart = (
+            "We're open Saturday from 8:00 am to 12:00 pm. From Hours & FAQ.\n\n"
+            "To book, call our main line at (856) 555-0142. From Contact."
+        )
+        once = (
+            "We're open Saturday from 8:00 am to 12:00 pm. "
+            "To book, call our main line at (856) 555-0142. "
+            "From Hours & FAQ and Contact."
+        )
+        named_once = (
+            "We're open Saturday from 8:00 am to 12:00 pm.\n\n"
+            "To book, call our main line at (856) 555-0142. "
+            "From Hours & FAQ and Contact."
+        )
+
+        def client(payload, text):
+            return {"content": [{"type": "text", "text": text}]}
+
+        for draft, expected in (
+            (duplicated, once),
+            (on_its_own_line, once),
+            (named_apart, named_once),
+        ):
+            got = front_desk.reply_to(
+                question,
+                base_url=self.site.base,
+                client=lambda payload, text=draft: client(payload, text),
+            )
+            self.assertEqual(got, expected, draft)
+            replies.append(got)
+        for reply in replies:
+            sources = re.findall(r"(?<!\S)From\s+", reply)
+            self.assertLessEqual(len(sources), 1, reply)
+            self.assertNotRegex(reply, r"\n\s*From\s+")
+
+    def test_a_reversed_source_line_is_written_once(self):
+        """A model source line in another order is replaced by one fixed line."""
+        question = "How do I book a visit for Saturday morning?"
+        draft = (
+            "To book, call our main line at (856) 555-0142. "
+            "We're open Saturdays from 8:00 am to 12:00 pm.\n\n"
+            "From Contact and Hours & FAQ."
+        )
+        missing_period = (
+            "To book, call our main line at (856) 555-0142. "
+            "We're open Saturdays from 8:00 am to 12:00 pm.\n\n"
+            "From Contact and Hours & FAQ"
+        )
+        joined_with_ampersand = (
+            "To book, call our main line at (856) 555-0142. "
+            "We're open Saturdays from 8:00 am to 12:00 pm.\n\n"
+            "From Contact & Hours & FAQ."
+        )
+        expected = (
+            "To book, call our main line at (856) 555-0142. "
+            "We're open Saturdays from 8:00 am to 12:00 pm. "
+            "From Hours & FAQ and Contact."
+        )
+
+        def client(payload, text):
+            return {"content": [{"type": "text", "text": text}]}
+
+        for model_reply in (draft, missing_period, joined_with_ampersand):
+            got = front_desk.reply_to(
+                question,
+                base_url=self.site.base,
+                client=lambda payload, text=model_reply: client(payload, text),
+            )
+            self.assertEqual(got, expected, model_reply)
+            self.assertEqual(len(re.findall(r"(?<!\S)From\s+", got)), 1, got)
+            self.assertIn("from 8:00 am", got)
 
 
 class MisspelledLeakChecks(unittest.TestCase):

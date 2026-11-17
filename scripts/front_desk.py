@@ -13,8 +13,9 @@
    the pages don't list gets that reply. A question that asks for an
    email the pages don't list says so, then gives the callback reply.
    A question in two parts answers the part the pages cover and says
-   the pages don't list the other part. An internal note is left out.
-   Anything else the pages don't cover gets the callback reply.
+   the pages don't list the other part. A reply that uses facts from
+   more than one page names every page it used. An internal note is
+   left out. Anything else the pages don't cover gets the callback reply.
    A how much question about a leaky faucet, including a small slip
    such as leeky, names the leak and gives the call-us number when
    the pages list no price.
@@ -60,7 +61,8 @@ def reply_to(message, base_url=None, writer=None, client=None):
     still checked. A question that asks for an email the pages don't
     list says so, then gives the callback reply. A question in two
     parts answers the covered part and says the pages don't list the
-    other part. A question the pages don't cover still gets the
+    other part. A reply that uses facts from more than one page names
+    every page it used. A question the pages don't cover still gets the
     callback reply. A how much question about a leaky faucet, including
     a small slip such as leeky, names the leak and gives the call-us
     number when the pages list no price. An internal note is removed
