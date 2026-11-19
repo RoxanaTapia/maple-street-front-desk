@@ -12,7 +12,7 @@ From the project folder:
 python3 scripts/demo_chat.py
 ```
 
-It prints `Demo chat at http://127.0.0.1:8080`. Open that address. The practice site starts with the chat, so there is nothing else to run. Stop it with Ctrl+C. The rest is in the [setup guide](docs/setup-guide.md).
+It prints `Demo chat at http://127.0.0.1:8080`. Open that address. The practice site starts with the chat, so there is nothing else to run. Stop it with Ctrl+C. The office uses the [setup guide](docs/setup-guide.md). Whoever installs or maintains it uses the [developer guide](docs/developer-guide.md).
 
 ## What customers get
 
@@ -64,7 +64,8 @@ An emergency is caught first. A price is checked last. A number the pages don't 
 - [What we've agreed](docs/agreements.md): the pages, the urgent words, the contact details, and the 18 test questions.
 - [How the assistant behaves](docs/behaviour.md): what a customer gets back.
 - [How the assistant works](docs/how-it-works.md): the path of a message, and how to try the sample site.
-- [Setup guide](docs/setup-guide.md): how to run it.
+- [Setup guide](docs/setup-guide.md): for the office.
+- [Developer guide](docs/developer-guide.md): for whoever installs or maintains it.
 - [Handover notes](docs/handover.md): what you have, and how to change it yourself.
 - Your error notes are in the handover notes, under Your error notes.
 - [Live test results](docs/test-results.md): the Nov 4 live demo. The agreed list is 18 test questions.

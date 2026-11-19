@@ -12,7 +12,7 @@ Live demo: [maple-demo.roxanatapia.dev](https://maple-demo.roxanatapia.dev), onl
 ## Run or change it
 
 - [Setup guide](setup-guide.md)
-- On your account, never stored here: [Your Claude key](setup-guide.md#your-claude-key)
+- On your account, never stored here: [Your Claude key](setup-guide.md#-running-it)
 - [How to change the urgent words](#change-the-urgent-words)
 - [How to change the call-us sentences](#change-the-call-us-sentences)
 - [How to set your call-us number and your emergency number](#set-your-call-us-number-and-your-emergency-number)
@@ -87,7 +87,7 @@ You can change either call-us sentence freely if:
 
 ## Keeping it live
 
-After the 14-day demo, the assistant needs a home to stay live for your customers. Your team hosts it by following the [setup guide](setup-guide.md), and I include one free 30-minute walkthrough call with whoever sets it up.
+After the 14-day demo, the assistant needs a home to stay live for your customers. Whoever installs it follows the [developer guide](developer-guide.md). Day to day, the office uses the [setup guide](setup-guide.md). One free 30-minute walkthrough call is included with whoever sets it up.
 
 ## Change the urgent words
 

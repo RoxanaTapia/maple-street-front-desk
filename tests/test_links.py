@@ -13,13 +13,25 @@ ROOT = Path(__file__).resolve().parents[1]
 
 # Same punctuation GitHub drops when it builds a heading anchor.
 _PUNCTUATION = re.compile(r"[\u2000-\u206F\u2E00-\u2E7F\\'\"!#$%&()*+,./:;<=>?@\[\]^`{|}~]")
+# GitHub drops emoji from a heading anchor, but not the space that followed
+# them, so that space still becomes a leading hyphen.
+_EMOJI = re.compile(
+    "["
+    "\U0001F1E6-\U0001F1FF"
+    "\U0001F300-\U0001FAFF"
+    "\U00002600-\U000027BF"
+    "\U0000FE00-\U0000FE0F"
+    "\U0000200D"
+    "]+"
+)
 _LINK = re.compile(r"!?\[[^\]]*\]\(\s*<?([^)\s>]+)>?")
 _HEADING = re.compile(r"^(#{1,6})\s+(.+?)\s*#*\s*$")
 _FENCE = re.compile(r"^(```|~~~)")
 
 
 def github_slug(text):
-    slug = _PUNCTUATION.sub("", text.lower().strip())
+    text = _EMOJI.sub("", text.lower().strip())
+    slug = _PUNCTUATION.sub("", text)
     return re.sub(r"\s", "-", slug)
 
 
@@ -105,6 +117,9 @@ class LinkChecks(unittest.TestCase):
         self.assertEqual(github_slug("Pages the assistant answers from"), "pages-the-assistant-answers-from")
         self.assertEqual(github_slug("How a change happens"), "how-a-change-happens")
         self.assertEqual(github_slug("Hours & FAQ"), "hours--faq")
+        self.assertEqual(github_slug("🧰 First install"), "-first-install")
+        self.assertEqual(github_slug("🚑 When something fails"), "-when-something-fails")
+        self.assertEqual(github_slug("🚀 Running it"), "-running-it")
 
     def test_relative_links_resolve(self):
         """Every link in the docs points at a real page and heading."""

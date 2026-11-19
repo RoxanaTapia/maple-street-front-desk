@@ -672,11 +672,14 @@ class FailureNoteChecks(unittest.TestCase):
         question = f"Are you open Saturdays? {token}"
         ignore = (ROOT / ".gitignore").read_text(encoding="utf-8")
         guide = (ROOT / "docs" / "setup-guide.md").read_text(encoding="utf-8")
+        notes = (ROOT / "docs" / "developer-guide.md").read_text(encoding="utf-8")
         self.assertEqual(self._saved_log, ROOT / "logs" / "error-notes.log")
         self.assertTrue(any(line.strip() == "logs/" for line in ignore.splitlines()))
-        self.assertIn("logs/error-notes.log", guide)
+        self.assertIn("logs/error-notes.log", notes)
         self.assertNotIn("sk-ant-", guide)
         self.assertNotIn(key, guide)
+        self.assertNotIn("sk-ant-", notes)
+        self.assertNotIn(key, notes)
 
         self._block_network()
         self.assertNotIn("ANTHROPIC_API_KEY", os.environ)

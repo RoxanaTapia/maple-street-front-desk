@@ -1,108 +1,33 @@
 # Setup guide
+👋 For the office: this page is yours. No technical knowledge needed.
 
-How to run the assistant for your business.
-The details for this project are in [docs/agreements.md](agreements.md).
+## 🚀 Running it
 
-## What you need
+You get a front desk that answers your customers.
+Installing means a developer sets it up for you once. That is not the office's job. Below, that person is called the installer.
 
-- A computer with Python 3, at the version named in [.python-version](../.python-version).
-- Nothing to install. The programs use only Python's own library.
-- A Claude key from your own Anthropic account, with a spend limit set there.
+1. Have your own Anthropic (Claude) account, and set a spend limit on it.
+2. Share access to that account with the installer. You agree how on one live 30-minute walkthrough call (not a recorded video), and the installer confirms it to you in writing afterwards, so you do not have to remember it.
+3. Open the chat and ask a question. A reply comes back.
 
-## Try it on your computer
+🛠️ Installer: your steps are in the [developer guide](developer-guide.md#-first-install).
 
-1. Open a terminal in the project folder.
-2. Start the chat:
+## ✅ Trusting it
 
-   ```
-   python3 scripts/demo_chat.py
-   ```
+You can see that it is working.
+The automated tests cover your agreed questions, urgent messages, and prices.
+If something looks wrong, tell the person who installed it.
 
-3. Open http://127.0.0.1:8080.
+## ✏️ Changing it
 
-You should see `Demo chat at http://127.0.0.1:8080`, then a page that says it is a demo.
-Type a message and a reply comes back. Stop the chat with Ctrl+C.
+You can update the hours, the FAQ, the prices, and the contact info yourself.
 
-The chat starts your pages for you, so there is no second program to run.
-If that port is already in use, stop the other copy, or set `DEMO_PORT` to another port.
+1. Open the page that holds those words: [Hours and FAQ](../sample-site/hours.html), [Prices](../sample-site/pricing.html), or [Contact](../sample-site/contact.html).
+2. Click the pencil, change the words a visitor reads, then choose Propose changes. That is a pull request: a proposed change you make in the browser.
+3. The automated tests run on it. It goes live only after it is approved and installed, which means the installer puts the approved change into your running front desk.
 
-## Your Claude key
+A bigger change is quoted as a new milestone.
 
-The Claude key is set on the machine that runs the assistant. It isn't written into the repo or shown in replies.
+---
 
-```
-export ANTHROPIC_API_KEY='...'
-```
-
-- Never put the key in the repo or in a chat.
-- `CLAUDE_MODEL` is optional, and the default is set in the code.
-- Without a key, a stand-in answers, which isn't AI.
-
-## Change what it says
-
-| To change | Edit | Then |
-|---|---|---|
-| Your pages | Visitor text in `sample-site/`, and the page names in the first sentence under Your pages | Ask again |
-| Urgent words | Bold phrases under Urgent messages, and the `>` lines in that section for the reply | Ask again |
-| The callback sentence | The `>` lines under When the pages don't say | Ask again |
-| The off-topic reply | The `>` lines under Off-topic questions | Ask again |
-| The outage sentence | The `>` lines under When the assistant can't look it up | Ask again |
-| The discount reply | The `>` lines under Discounts | Ask again |
-| A service the pages don't list | The `>` lines under A service the pages don't list | Ask again |
-| Your call-us number and your emergency number | The phone number in the everyday replies, and the phone number in the urgent reply. The steps are in the [handover notes](handover.md#set-your-call-us-number-and-your-emergency-number) | Ask again |
-| Your test questions | Numbered lines under The 18 test questions. The question ends at `?`. A line with no `?` is the whole question. When that line has a second sentence, the first sentence is the question and the second sentence is the detail | Run the checks |
-
-Each page name needs the same link text in `sample-site/index.html`.
-A line that is only bold is a group name, and `from` plus a page name picks the page.
-
-The stand-in reads your test questions. Claude reads your pages and the callback sentence, not that list. A clearly unrelated question uses the off-topic reply and is not sent to Claude. A request to ignore the rules, or for a discount, uses the discount reply and is not sent to Claude. A service the pages don't list uses that reply and is not sent to Claude. A question that asks for an email the pages don't list says so, then uses the callback sentence, and is not sent to Claude. A question in two parts answers the part the pages cover and says the other part is not listed. A reply that uses facts from more than one page names every page it used. An internal note is left out of the reply. A question we do not recognize still uses the callback sentence. The outage sentence is used when a call fails, and when the demo cannot safely show a reply.
-
-## Check it still works
-
-```
-python3 scripts/run_checks.py
-```
-
-- OK means every check passed.
-- A failure ends with FAILED and names the check that did not match.
-- Fix your pages, the agreements, or the assistant, then run the command again.
-
-## Questions
-
-**Where are the rules kept?**
-The code reads `docs/agreements.md` on every message: the urgent words and fixed urgent reply, the callback sentence, the off-topic reply, the outage sentence, and the test questions.
-You can edit it as plain text. Keep the headings, and run the checks after any change. Other files in docs/ are for reading only.
-
-**Can it make up a price?**
-No. Plain code, not AI (`scripts/price_reply.py`), checks every amount in an answer against your pages. The amount has to be written there, exactly as written, on the same page and near the service the customer asked about.
-If it isn't, the whole answer becomes the callback.
-
-**What does it cost to run?**
-Each question that is not clearly unrelated sends your pages to Claude. With the default small model that's a fraction of a cent per question, roughly a few cents a month for a few hundred questions.
-Urgent messages use no AI. A clearly unrelated question is not sent to Claude. See your exact costs on your Anthropic usage page. Hosting is separate.
-
-**What if Claude is down or the key expires?**
-The customer gets the outage reply, from When the assistant can't look it up, so they're never left without an answer. A fact the pages don't cover still uses the callback sentence, from When the pages don't say.
-Each failure adds a line to `logs/error-notes.log` on the computer that runs the assistant: the time and the kind of error, with no customer message and no key.
-A warning with the kind of error is also printed where the assistant is running.
-
-**What if a page can't be opened?**
-The customer gets the same reply as before. A question that needed that page gets the callback sentence. A question another page answers, such as Hours & FAQ, is still answered.
-The same file, `logs/error-notes.log`, gets one line: the time, the page name, and the kind of error. The customer's message is not written there. The same page is noted once an hour.
-
-## Handing over the code
-
-The code is handed over once the work is approved and paid.
-
-- Transfer the repo: Settings, then Danger Zone, then Transfer ownership.
-- Or invite a collaborator: Settings, then Collaborators, then Add people.
-
-After a transfer, the repo and the key are yours.
-
-## Versions it was tested on
-
-The assistant was checked with these versions.
-
-- The Claude model is `claude-haiku-5-5`, and you can change it with the `CLAUDE_MODEL` setting.
-- Anthropic API version `2023-06-01` is sent with each call.
-- Python 3.12 is the version the checks use.
+🛠️ Installing or maintaining it? That is the developer guide, not this page: [developer guide](developer-guide.md).
