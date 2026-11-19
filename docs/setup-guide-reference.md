@@ -6,10 +6,37 @@ Notes for an engineer. The office steps are in the [setup guide](setup-guide.md)
 
 Stop the other copy, or set `DEMO_PORT` to another port.
 
+## Start the chat
+
+Nothing else to install. The programs use only Python's own library.
+
+Put the key on the computer that runs the assistant. It is not saved in the project, and it is not shown in replies.
+
+```
+export ANTHROPIC_API_KEY='...'
+python3 scripts/demo_chat.py
+```
+
+You should see `Demo chat at http://127.0.0.1:8080`, then a page that says it is a demo.
+
+Stop with Ctrl+C. The chat starts the pages, so there is no second program.
+
+## See that it still works
+
+```
+python3 scripts/run_checks.py
+```
+
+OK means every automated test passed.
+
+A failure ends with FAILED and names the automated test.
+
+Fix the page or the agreements, then run the automated tests again.
+
 ## The key, the model, and the stand-in
 
 - `CLAUDE_MODEL` is optional. The default is set in the code.
-- The tested model, API version, and Python version are in the setup guide, under [Versions it was tested on](setup-guide.md#versions-it-was-tested-on).
+- The tested model, API version, and Python version are under [Versions it was tested on](#versions-it-was-tested-on).
 - Without a key, a stand-in answers. That stand-in is not the AI.
 - The stand-in reads the test questions.
 - Claude reads the pages and the callback sentence, not that list.
@@ -26,6 +53,8 @@ Stop the other copy, or set `DEMO_PORT` to another port.
 ## Change other replies
 
 The office guide covers hours, FAQ, prices, and contact info. These other edits live on the agreements page. Keep the headings. Ask again after a page edit. Run the automated tests after an agreements edit.
+
+Hours and FAQ are the visitor text in `sample-site/hours.html`. Prices are the visitor text in `sample-site/pricing.html`. Contact info on the site is the visitor text in `sample-site/contact.html`. A bigger change is quoted as a new milestone.
 
 | To change | Edit |
 |---|---|
@@ -104,3 +133,10 @@ The code is handed over once the work is approved and paid.
 - Or invite a collaborator: Settings, then Collaborators, then Add people.
 
 After a transfer, the repo and the key are yours.
+
+## Versions it was tested on
+
+- The Claude model is `claude-haiku-5-5`.
+- Change it with `CLAUDE_MODEL`.
+- The API version is `2023-06-01`.
+- Python 3.12 is for the automated tests.
