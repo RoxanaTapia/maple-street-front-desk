@@ -10,7 +10,7 @@ Installing means a developer sets it up for you once. That is not the office's j
 2. Share access to that account with the installer. You agree how on one live 30-minute walkthrough call (not a recorded video), and the installer confirms it to you in writing afterwards, so you do not have to remember it.
 3. Open the chat and ask a question. A reply comes back.
 
-🛠️ Installer: your steps are in the [developer guide](developer-guide.md#🧰-first-install).
+🛠️ Installer: your steps are in the [developer guide](developer-guide.md#-first-install).
 
 ## ✅ Trusting it
 

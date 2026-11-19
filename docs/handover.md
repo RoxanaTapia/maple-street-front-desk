@@ -12,7 +12,7 @@ Live demo: [maple-demo.roxanatapia.dev](https://maple-demo.roxanatapia.dev), onl
 ## Run or change it
 
 - [Setup guide](setup-guide.md)
-- On your account, never stored here: [Your Claude key](setup-guide.md#🚀-running-it)
+- On your account, never stored here: [Your Claude key](setup-guide.md#-running-it)
 - [How to change the urgent words](#change-the-urgent-words)
 - [How to change the call-us sentences](#change-the-call-us-sentences)
 - [How to set your call-us number and your emergency number](#set-your-call-us-number-and-your-emergency-number)
