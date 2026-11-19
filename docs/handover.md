@@ -87,7 +87,7 @@ You can change either call-us sentence freely if:
 
 ## Keeping it live
 
-After the 14-day demo, the assistant needs a home to stay live for your customers. Your team hosts it by following the [setup guide](setup-guide.md), and I include one free 30-minute walkthrough call with whoever sets it up.
+After the 14-day demo, the assistant needs a home to stay live for your customers. Whoever installs it follows the [developer guide](developer-guide.md). Day to day, the office uses the [setup guide](setup-guide.md). One free 30-minute walkthrough call is included with whoever sets it up.
 
 ## Change the urgent words
 

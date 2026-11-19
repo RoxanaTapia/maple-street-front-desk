@@ -1,12 +1,8 @@
-# Setup guide reference
+# Developer guide
 
-Notes for an engineer. The office steps are in the [setup guide](setup-guide.md).
+> 🛠️ Developer guide: for whoever installs or maintains the front desk. The office does not need this page. Their guide is the [setup guide](setup-guide.md).
 
-## If the port is in use
-
-Stop the other copy, or set `DEMO_PORT` to another port.
-
-## Start the chat
+## First install
 
 Nothing else to install. The programs use only Python's own library.
 
@@ -17,9 +13,15 @@ export ANTHROPIC_API_KEY='...'
 python3 scripts/demo_chat.py
 ```
 
+Open http://127.0.0.1:8080.
+
 You should see `Demo chat at http://127.0.0.1:8080`, then a page that says it is a demo.
 
 Stop with Ctrl+C. The chat starts the pages, so there is no second program.
+
+## If the port is in use
+
+Stop the other copy, or set `DEMO_PORT` to another port.
 
 ## See that it still works
 

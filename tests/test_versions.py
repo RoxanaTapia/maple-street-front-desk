@@ -1,4 +1,4 @@
-"""The setup reference names the versions the assistant was tested on.
+"""The developer guide names the versions the assistant was tested on.
 
 The Claude model and the API version are read from the answer script.
 The Python version is read from .python-version. The note has to name
@@ -20,7 +20,7 @@ if str(SCRIPTS) not in sys.path:
 
 import answer_reply
 
-SETUP = ROOT / "docs" / "setup-guide-reference.md"
+SETUP = ROOT / "docs" / "developer-guide.md"
 HEADING = "Versions it was tested on"
 
 
@@ -45,9 +45,9 @@ def names_exactly(text, value):
 
 class TestedVersionChecks(unittest.TestCase):
     def test_the_note_matches_the_tested_versions(self):
-        """The reference names the Claude model, the API version, and the Python version that were tested."""
+        """The developer guide names the Claude model, the API version, and the Python version that were tested."""
         note = versions_note()
-        self.assertTrue(note.strip(), "The setup reference has no versions note.")
+        self.assertTrue(note.strip(), "The developer guide has no versions note.")
         python_version = (ROOT / ".python-version").read_text(encoding="utf-8").strip()
         self.assertTrue(python_version)
         for value in (
