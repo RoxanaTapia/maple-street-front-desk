@@ -102,7 +102,7 @@ Every sample page shows a banner that this business is fictional.
 - An internal note is left out of every reply. Text that starts with Note: is that kind of note.
 - A question that is clearly about something else gets the off-topic reply from [Off-topic questions](agreements.md#off-topic-questions). Anything else the pages don't cover gets the call-us reply from [When the pages don't say](agreements.md#when-the-pages-dont-say).
 - If the call fails, the customer gets the outage reply from [When the assistant can't look it up](agreements.md#when-the-assistant-cant-look-it-up). A short note is kept for the owner.
-- A page that can't be read is written to those same notes. The line has the time, the page name, and the kind of error. The customer's message is not included. The same page is written once an hour. Where to read the notes is in the [handover notes](handover.md#your-error-notes) and the [developer guide](developer-guide.md#when-a-call-or-a-page-fails).
+- A page that can't be read is written to those same notes. The line has the time, the page name, and the kind of error. The customer's message is not included. The same page is written once an hour. Where to read the notes is in the [handover notes](handover.md#your-error-notes) and the [developer guide](developer-guide.md#🚑-when-something-fails).
 - The questions in [The 18 test questions](agreements.md#the-18-test-questions) each name a page, use the fixed urgent reply, offer a callback, or use one of the replies added after the delivery run-through.
 
 **Try it**
