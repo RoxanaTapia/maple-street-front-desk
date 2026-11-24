@@ -2006,6 +2006,38 @@ class MisspelledLeakChecks(unittest.TestCase):
         )
         self.assertNotIn("don't list a price for a leak", weekly.lower())
 
+    def test_a_non_leak_question_is_unaffected(self):
+        """A question that is not about a leak keeps its usual reply."""
+        self.assertNotIn("ANTHROPIC_API_KEY", os.environ)
+        callback = answer_reply.callback_reply()
+        urgent = urgent_reply.fixed_urgent_reply()
+        leak_reply = f"The pages don't list a price for a leak. {callback}"
+        drain = "How much is a drain cleaning?"
+        got = front_desk.reply_to(drain, base_url=self.site.base)
+        self.assertEqual(got, "A drain cleaning is $149. From Pricing.")
+        self.assertIsNone(urgent_reply.reply_if_urgent(drain))
+        self.assertNotIn("leak", got.casefold())
+        hours = "Are you open Saturdays?"
+        got = front_desk.reply_to(hours, base_url=self.site.base)
+        self.assertEqual(
+            got,
+            "Saturday: 8:00 am to 12:00 pm. Yes, we are open Saturdays. From Hours & FAQ.",
+        )
+        self.assertIsNone(urgent_reply.reply_if_urgent(hours))
+        for question in (
+            "how much do u charge for a sleek faucet",
+            "The faucet is sleek",
+            "The pipe is speaking",
+            "How much is a weekly drain cleaning?",
+        ):
+            got = front_desk.reply_to(question, base_url=self.site.base)
+            self.assertEqual(got, callback, question)
+            self.assertNotEqual(got, leak_reply, question)
+            self.assertNotEqual(got, urgent, question)
+            self.assertIsNone(urgent_reply.reply_if_urgent(question), question)
+            self.assertNotIn("$", got, question)
+            self.assertNotIn("don't list a price for a leak", got.lower(), question)
+
 
 if __name__ == "__main__":
     unittest.main()
