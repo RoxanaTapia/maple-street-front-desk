@@ -2,7 +2,7 @@
 
 Dave and Carla, this page is yours. Everything you have lives in this project.
 
-Live demo: [front-desk.roxanatapia.dev](https://front-desk.roxanatapia.dev).
+Live demo: [front-desk.roxanatapia.dev](https://front-desk.roxanatapia.dev). This live demo is kept online as a portfolio example. For a real client project, the live demo stays online for 15 days after delivery, so your team can try it while you set up your own copy from the code and the setup guide, and then it is taken down, with hosting staying with you.
 
 ## Use it
 
