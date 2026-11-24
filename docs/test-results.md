@@ -1,6 +1,6 @@
 # Live test results
 
-Wednesday, Nov 4, 2026. Live demo: <https://maple-demo.roxanatapia.dev>. Version: main at commit e0a24d6.
+Wednesday, Nov 4, 2026. Live demo: <https://front-desk.roxanatapia.dev>. Version: main at commit e0a24d6.
 
 The agreed list is 18 test questions. This page records the 15 that were sent to the live demo on Nov 4.
 

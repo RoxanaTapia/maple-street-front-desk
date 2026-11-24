@@ -2,11 +2,11 @@
 
 Dave and Carla, this page is yours. Everything you have lives in this project.
 
-Live demo: [maple-demo.roxanatapia.dev](https://maple-demo.roxanatapia.dev), online until Wed Nov 25, 2026.
+Live demo: [front-desk.roxanatapia.dev](https://front-desk.roxanatapia.dev).
 
 ## Use it
 
-- [maple-demo.roxanatapia.dev](https://maple-demo.roxanatapia.dev), until Wed Nov 25, 2026
+- [front-desk.roxanatapia.dev](https://front-desk.roxanatapia.dev)
 - How to run it and change it: [Walkthrough](https://youtu.be/nhAtGt-w8D4)
 
 ## Run or change it
