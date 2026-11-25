@@ -437,8 +437,19 @@ class DemoChatChecks(unittest.TestCase):
         self.assertIn("requestSubmit", script)
 
     def test_the_page_says_it_is_a_demo(self):
-        """The page says it is a demo that answers only from Maple Street Plumbing's pages."""
+        """The page says it is a portfolio demo that answers only from Maple Street Plumbing's pages."""
         status, _headers, body = self.demo.get("/")
         self.assertEqual(status, 200)
         self.assertIn(DEMO_LINE, body)
-        self.assertIn("Maple Street Front Desk", body)
+        self.assertIn("Maple Street front desk", body)
+        self.assertIn("Portfolio demo · fictional business", body)
+        self.assertNotIn("sample data", body)
+        self.assertIn("A live chat assistant. Voice is the next step.", body)
+        self.assertIn("Exit demo", body)
+        self.assertIn("Log out", body)
+        self.assertIn('id="theme-toggle"', body)
+        self.assertIn('id="demo-exit"', body)
+        self.assertIn('href="https://roxanatapia.dev/"', body)
+        self.assertIn("/demo-kit/theme-init.js", body)
+        self.assertIn("/demo-kit/theme.js", body)
+        self.assertIn("/demo-kit/demo-kit.css", body)
