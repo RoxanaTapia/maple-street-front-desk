@@ -61,17 +61,33 @@
     <p class="dk-note">Portfolio demo · fictional business</p>
   </header>
   <main class="wrap" id="chat">
-    <p class="demo">This is a demo. It answers only from Maple Street Plumbing's pages.</p>
-    <p class="next">A live chat assistant. Voice is the next step.</p>
-    <div id="thread" class="thread" aria-live="polite"></div>
-    <form id="composer" class="composer">
-      <label for="message">Message</label>
-      <p id="message-hint" class="hint">Press Enter to send. Shift+Enter adds a new line.</p>
-      <div class="row">
-        <textarea id="message" name="message" rows="2" aria-describedby="message-hint"></textarea>
-        <button id="send" class="btn btn-primary" type="submit">Send</button>
-      </div>
-    </form>
+    <section class="phone" aria-label="Maple Street Plumbing">
+      <header class="phone-top">
+        <p class="scene">Saturday night</p>
+        <h2>Maple Street Plumbing</h2>
+      </header>
+      <p class="demo">This is a demo. It answers only from Maple Street Plumbing's pages.</p>
+      <p class="proof"><a href="/docs/test-results.md">15 of 15 test questions answered right, 4 Nov 2026</a></p>
+      <p class="next">A live chat assistant. Voice is the next step.</p>
+      <ul class="dk-chips case-chips" id="chips">
+        <li><button type="button" data-message="Water everywhere, pipe burst!">Water everywhere, pipe burst!</button></li>
+        <li><button type="button" data-message="How much is drain cleaning?">How much is drain cleaning?</button></li>
+        <li><button type="button" data-message="Water heater price?">Water heater price?</button></li>
+        <li><button type="button" data-message="Do you sell pizza?">Do you sell pizza?</button></li>
+      </ul>
+      <div id="thread" class="thread" aria-live="polite"></div>
+      <form id="composer" class="composer">
+        <label for="message">Message</label>
+        <p id="message-hint" class="hint">Press Enter to send. Shift+Enter adds a new line.</p>
+        <div class="row">
+          <textarea id="message" name="message" rows="1" aria-describedby="message-hint"></textarea>
+          <button id="send" class="btn btn-primary" type="submit">Send</button>
+        </div>
+      </form>
+      <aside class="next-card" aria-disabled="true">
+        <p>Next: the same rules on a phone call</p>
+      </aside>
+    </section>
   </main>
   <footer class="dk-footer">
     <div class="dk-footer-slot">
@@ -83,6 +99,7 @@
     </div>
   </footer>
   <script src="/demo-kit/theme.js"></script>
+  <script src="/demo-kit/motion.js"></script>
   <script src="/chat.js"></script>
 </body>
 </html>

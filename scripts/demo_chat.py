@@ -11,6 +11,12 @@ The Claude key is read later, from the server's own settings, and is
 never sent to the browser. DEMO_HOST and DEMO_PORT choose where the
 page listens. The default is http://127.0.0.1:8080.
 
+The page offers four Saturday night messages and still takes a typed
+message. When the page asks, the reply also names which step ran, and
+a price that names a page can include a short excerpt of that page.
+The reply text itself is unchanged. The dated proof line links to
+docs/test-results.md, which this server also sends.
+
 Messages that reach the AI are counted for the Berlin day. CHAT_DAILY_LIMIT
 is the whole chat, and CHAT_VISITOR_DAILY_LIMIT is one visitor. At either
 cap, the visitor gets a short note to come back tomorrow or book a call,
@@ -22,6 +28,7 @@ Usage: python3 scripts/demo_chat.py
 import errno
 import json
 import os
+import re
 import sys
 import threading
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -49,6 +56,39 @@ _PAGES = {
     "/index.html": "index.html",
     "/style.css": "style.css",
     "/chat.js": "chat.js",
+}
+_DOCS = {
+    "/docs/test-results.md": ROOT / "docs" / "test-results.md",
+}
+_STEP_LABELS = {
+    "urgent": "Urgent rule",
+    "pages": "Page match",
+    "price": "Price check",
+}
+_URGENT_TAG = "Urgent rule · no AI needed"
+_FROM_TAIL = re.compile(r"\s*From .+?\.\s*$", re.DOTALL)
+_WORD = re.compile(r"[a-z0-9$]+")
+_EXCERPT_SKIP = {
+    "home",
+    "services",
+    "pricing",
+    "service",
+    "area",
+    "hours",
+    "faq",
+    "contact",
+    "maple",
+    "street",
+    "plumbing",
+    "is",
+    "a",
+    "fictional",
+    "business",
+    "and",
+    "the",
+    "to",
+    "of",
+    "for",
 }
 _ROOT_FILES = {
     "/favicon.svg": KIT / "favicon.svg",
@@ -118,6 +158,9 @@ def static_file(url_path):
     if name is not None:
         file_path = DEMO / name
         return file_path if _inside(file_path, DEMO) else None
+    doc = _DOCS.get(url_path)
+    if doc is not None:
+        return doc if _inside(doc, ROOT / "docs") else None
     if not url_path.startswith(KIT_PREFIX):
         return None
     rel = url_path[len(KIT_PREFIX):]
@@ -134,18 +177,122 @@ def _json_bytes(payload):
     return text.encode("utf-8")
 
 
-def safe_reply(message, base_url, visitor=""):
+def _reply_body(reply):
+    """Return the reply without the closing From line."""
+    if not isinstance(reply, str):
+        return ""
+    return _FROM_TAIL.sub("", reply.strip()).strip()
+
+
+def _words(text):
+    return set(_WORD.findall(text.casefold()))
+
+
+def _excerpt_for(page, reply):
+    """Return a short piece of this page that supports the reply.
+
+    The piece is copied from the page. When the reply's own words sit
+    in the page, those words are the excerpt. Otherwise the sentence
+    with the most of those words is used.
+    """
+    text = page.get("text") if isinstance(page, dict) else ""
+    if not isinstance(text, str) or not text.strip():
+        return ""
+    body = _reply_body(reply)
+    if body and body in text:
+        return body
+    body_words = _words(body) - _EXCERPT_SKIP
+    if len(body_words) < 2:
+        return ""
+    best = ""
+    best_score = 1
+    for piece in re.split(r"(?<=\.)\s+", text):
+        sentence = piece.strip()
+        if not sentence:
+            continue
+        score = len(_words(sentence) & body_words)
+        if score > best_score:
+            best_score = score
+            best = sentence
+    if not best:
+        return ""
+    if len(best) > 320:
+        best = best[:320].rsplit(" ", 1)[0]
+    if best and not best.endswith("."):
+        best = best + "."
+    return best
+
+
+def cited_sources(reply, pages):
+    """Return a chip for each page named at the end of the reply."""
+    if not isinstance(reply, str):
+        return []
+    match = re.search(r"From (.+)\.\s*$", reply.strip())
+    if not match:
+        return []
+    clause = match.group(1)
+    ranked = []
+    for page in pages or []:
+        if not isinstance(page, dict):
+            continue
+        name = page.get("name")
+        if not isinstance(name, str) or not name:
+            continue
+        at = clause.find(name)
+        if at == -1:
+            continue
+        ranked.append((at, len(name), page))
+    ranked.sort(key=lambda item: (item[0], -item[1]))
+    sources = []
+    seen = set()
+    for _at, _length, page in ranked:
+        name = page["name"]
+        if any(name != other and name in other for other in seen):
+            continue
+        seen.add(name)
+        excerpt = _excerpt_for(page, reply)
+        if not excerpt:
+            continue
+        sources.append({"label": name + " page", "excerpt": excerpt})
+    return sources
+
+
+def trace_fields(trace, reply):
+    """Return the step names, the urgent tag, and any page excerpts.
+
+    The page text itself is not included. An urgent reply has no excerpt,
+    because the pages were not read.
+    """
+    steps = trace.get("steps") if isinstance(trace, dict) else None
+    if not isinstance(steps, list):
+        steps = []
+    checks = [_STEP_LABELS[step] for step in steps if step in _STEP_LABELS]
+    urgent = "urgent" in steps
+    pages = trace.get("pages") if isinstance(trace, dict) else None
+    sources = [] if urgent else cited_sources(reply, pages if isinstance(pages, list) else [])
+    return {
+        "checks": checks,
+        "tag": _URGENT_TAG if urgent else "",
+        "sources": sources,
+    }
+
+
+def safe_reply(message, base_url, visitor="", trace=None):
     """Return the front-desk reply, with the key kept off the page.
 
     A crash, a blank reply, or a reply that contains the key becomes
     the outage reply. The key and the customer message are not logged
     and are not sent on. A fact the pages don't cover stays the
     callback reply. This request counts toward the public chat's daily
-    limit when it would reach the AI.
+    limit when it would reach the AI. trace, when it is a dict, records
+    which step ran. The reply text is the same either way.
     """
     try:
         with chat_limit.public_chat(visitor):
-            reply = front_desk.reply_to(message, base_url=base_url)
+            if isinstance(trace, dict):
+                reply = front_desk.reply_to(message, base_url=base_url, trace=trace)
+            else:
+                reply = front_desk.reply_to(message, base_url=base_url)
     except Exception:
         return answer_reply.outage_reply()
     if not isinstance(reply, str) or not reply.strip():
@@ -201,8 +348,13 @@ class DemoHandler(BaseHTTPRequestHandler):
         if not isinstance(message, str) or not message.strip():
             self._send_json(400, {"reply": ""})
             return
-        reply = safe_reply(message, self.server.base_url, visitor=self._visitor())
-        self._send_json(200, {"reply": reply})
+        want_trace = payload.get("trace") is True
+        trace = {} if want_trace else None
+        reply = safe_reply(message, self.server.base_url, visitor=self._visitor(), trace=trace)
+        body = {"reply": reply}
+        if want_trace:
+            body.update(trace_fields(trace, reply))
+        self._send_json(200, body)
 
     def _visitor(self):
         connected = self.client_address[0] if self.client_address else ""

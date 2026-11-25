@@ -48,7 +48,33 @@ USAGE = (
 )
 
 
-def reply_to(message, base_url=None, writer=None, client=None):
+def _note_step(trace, step):
+    """Record one step on trace, when the caller asked for that record."""
+    if not isinstance(trace, dict):
+        return
+    steps = trace.get("steps")
+    if not isinstance(steps, list):
+        steps = []
+        trace["steps"] = steps
+    steps.append(step)
+
+
+def _note_pages(trace, pages):
+    """Keep the page name and visible text, for a source excerpt later."""
+    if not isinstance(trace, dict):
+        return
+    kept = []
+    for page in pages or []:
+        if not isinstance(page, dict):
+            continue
+        name = page.get("name")
+        text = page.get("text")
+        if isinstance(name, str) and name.strip() and isinstance(text, str):
+            kept.append({"name": name.strip(), "text": text})
+    trace["pages"] = kept
+
+
+def reply_to(message, base_url=None, writer=None, client=None, trace=None):
     """Return the reply a customer would see.
 
     An urgent message stops at the first part. Your pages are not read
@@ -78,16 +104,24 @@ def reply_to(message, base_url=None, writer=None, client=None):
     step. writer, when given, stands in for the whole answer step, so a
     automated test can try a reply without a live call. The price check still runs
     on whatever comes back, except the outage reply.
+
+    trace, when it is a dict, records which step ran. The reply text is
+    the same either way. An urgent message records only the urgent step,
+    and the pages are not read.
     """
     urgent = urgent_reply.reply_if_urgent(message)
     if urgent is not None:
+        _note_step(trace, "urgent")
         return urgent
     base = read_pages.DEFAULT_SITE if base_url is None else base_url
     pages = read_pages.read_pages(base)
+    _note_step(trace, "pages")
+    _note_pages(trace, pages)
     answer = answer_reply.write_answer(message, pages, writer=writer, client=client)
     if answer == answer_reply.outage_reply() or answer == chat_limit.busy_reply():
         return answer
     checked = price_reply.checked_answer(answer, pages=pages, message=message)
+    _note_step(trace, "price")
     cleaned = answer_reply.without_internal_notes(checked)
     if not isinstance(cleaned, str) or not cleaned.strip():
         return answer_reply.callback_reply()
