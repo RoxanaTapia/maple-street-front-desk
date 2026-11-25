@@ -1,6 +1,6 @@
-"""Run the automatic checks from the project root.
+"""Run the automated tests from the project root.
 
-With no arguments, every check runs. Pass a test file, or a file and class
+With no arguments, every automated test runs. Pass a test file, or a file and class
 such as tests/test_pages.py:PageListChecks, to run one area.
 """
 
@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class CheckLoadError(Exception):
-    """A requested check file or class could not be loaded."""
+    """A requested automated test file or class could not be loaded."""
 
 
 def _label(test):
@@ -51,7 +51,7 @@ def _load_target(loader, target):
     if not path.is_file():
         path = ROOT / file_part
     if not path.is_file():
-        raise CheckLoadError(f"No check file at {file_part}.")
+        raise CheckLoadError(f"No automated test file at {file_part}.")
     module_name = "checks_" + path.stem
     spec = importlib.util.spec_from_file_location(module_name, path)
     if spec is None or spec.loader is None:
@@ -65,7 +65,7 @@ def _load_target(loader, target):
         try:
             return loader.loadTestsFromName(class_name, module)
         except AttributeError as error:
-            raise CheckLoadError(f"No check class {class_name} in {file_part}.") from error
+            raise CheckLoadError(f"No automated test class {class_name} in {file_part}.") from error
     return loader.loadTestsFromModule(module)
 
 
@@ -101,7 +101,7 @@ def main(argv=None) -> int:
         print(error, file=sys.stderr)
         return 1
     if suite.countTestCases() == 0:
-        print("No checks found.", file=sys.stderr)
+        print("No automated tests found.", file=sys.stderr)
         return 1
     runner = unittest.TextTestRunner(verbosity=2, resultclass=SummaryResult)
     result = runner.run(suite)

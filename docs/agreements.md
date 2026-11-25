@@ -6,47 +6,47 @@ The assistant answers only from these six pages of your website: Home, Services,
 
 ## Main line and contact
 
-The main line is **(856) 555-0142**. Carla is the person to reach with questions.
+The main line is **030 0000 0000**. The owner is the person to reach with questions.
 
 ## Urgent messages
 
 A message that mentions **no heat**, a **burst pipe**, **flooding**, a **frozen pipe**, **water everywhere**, a **basement**, or a **leak** (also leaking) gets exactly this reply, and nothing else:
 
-> This sounds urgent. Please call us now on (856) 555-0142.
+> This sounds urgent. Please call us now on 030 0000 0000.
 
 ## When the pages don't say
 
 When the business's pages don't cover the question, the assistant replies with exactly this:
 
-> Please call us on (856) 555-0142 to confirm that.
+> Please call us on 030 0000 0000 to confirm that.
 
 ## When the assistant can't look it up
 
 When the assistant can't look up an answer, the customer gets exactly this, and nothing else:
 
-> Sorry, I can’t look that up right now. Please call us on (856) 555-0142.
+> Sorry, I can’t look that up right now. Please call us on 030 0000 0000.
 
 ## Off-topic questions
 
 When a question is not about this business's plumbing, the assistant replies with exactly this:
 
-> I can help with Maple Street’s plumbing services. What do you need help with?
+> I can help with Maple Street Plumbing. What do you need help with?
 
 ## Discounts
 
 When someone asks to ignore the rules, or asks for a discount the pages don't offer, the assistant replies with exactly this:
 
-> I only answer from Maple Street's pages. Discounts are confirmed by phone. Please call us on (856) 555-0142.
+> I only answer from Maple Street Plumbing's pages. Discounts are confirmed by phone. Please call us on 030 0000 0000.
 
 ## A service the pages don't list
 
 When someone asks about a service the pages don't list, the assistant replies with exactly this:
 
-> Our pages don't list that service. Please call us on (856) 555-0142.
+> Our pages don't list that service. Please call us on 030 0000 0000.
 
 ## The 18 test questions
 
-Every change is checked against the questions in this list.
+The automated tests cover every question in this list.
 
 **Answered by your pages**
 
@@ -72,7 +72,7 @@ Questions 13 to 15 are on the Hours & FAQ page.
 
 13. Do you install septic systems? No, we don't install or service septic systems, from Hours & FAQ.
 14. Are you licensed and insured? Yes, we're fully licensed and insured in New Jersey, from Hours & FAQ.
-15. Do you offer after-hours emergency callouts? Yes, we handle emergencies after hours too. Just call our main line at (856) 555-0142, from Hours & FAQ.
+15. Do you offer after-hours emergency callouts? Yes, we handle emergencies after hours too. Just call our main line at 030 0000 0000, from Hours & FAQ.
 
 ### Pricing answers
 

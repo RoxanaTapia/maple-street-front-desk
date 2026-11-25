@@ -46,6 +46,14 @@ _AMOUNT = re.compile(
 # and the digits already inside a dollar amount are left out here.
 # A full stop after the number stays outside it.
 _BARE_PRICE = re.compile(r"(?<![\d,.$:(/-])\d{2,}(?:\.\d+)?(?!,?\d)(?![:)/-])")
+# A phone number is not a price. Parentheses and hyphens already keep
+# a number such as (000) 000-0000 out of the pattern above. A placeholder
+# written with spaces, such as 030 0000 0000, is left out here.
+_PHONE_NUMBER = re.compile(
+    r"\(\d{3}\)\s*\d{3}[-.\s]\d{4}"
+    r"|\b\d{3}[-.]\d{3}[-.]\d{4}"
+    r"|\b\d{3}\s\d{4}\s\d{4}"
+)
 # A word of the service name. A hyphen stays inside the word, so a
 # two-part name is kept together.
 _WORD = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*", re.IGNORECASE)
@@ -168,9 +176,12 @@ def _amount_matches(text):
     for match in _AMOUNT.finditer(text):
         matches.append((match.start(), match.end(), match.group(0)))
     covered = [(start, end) for start, end, _amount in matches]
+    phone_spans = [match.span() for match in _PHONE_NUMBER.finditer(text)]
     for match in _BARE_PRICE.finditer(text):
         start, end = match.span()
         if any(start < span_end and end > span_start for span_start, span_end in covered):
+            continue
+        if any(start < span_end and end > span_start for span_start, span_end in phone_spans):
             continue
         if _looks_like_a_street_number(text, end):
             continue

@@ -1,4 +1,4 @@
-"""Checks for the demo chat page.
+"""Automated tests for the demo chat page.
 
 DemoChatChecks is the "The demo chat gives the same replies" area.
 The page runs each message through the front desk. The docstring of
@@ -34,7 +34,7 @@ import read_pages
 import serve_sample_site
 import urgent_reply
 
-DEMO_LINE = "This is a demo. It answers only from Maple Street's pages."
+DEMO_LINE = "This is a demo. It answers only from Maple Street Plumbing's pages."
 
 
 class _SavedEnv:
@@ -437,7 +437,7 @@ class DemoChatChecks(unittest.TestCase):
         self.assertIn("requestSubmit", script)
 
     def test_the_page_says_it_is_a_demo(self):
-        """The page says it is a demo that answers only from Maple Street's pages."""
+        """The page says it is a demo that answers only from Maple Street Plumbing's pages."""
         status, _headers, body = self.demo.get("/")
         self.assertEqual(status, 200)
         self.assertIn(DEMO_LINE, body)

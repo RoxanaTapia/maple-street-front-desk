@@ -8,6 +8,6 @@ Closes #
 
 What to open or run, and what you should see.
 
-## Checks
+## Automated tests
 
-Which checks passed, in a sentence.
+Which automated tests passed, in a sentence.

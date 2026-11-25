@@ -1,4 +1,4 @@
-"""Checks for the replies found in the delivery run-through.
+"""Automated tests for the replies found in the delivery run-through.
 
 RunThroughReplyChecks is the "A delivery run-through reply is right" area.
 SecondRunThroughChecks is the "A second run-through reply is right" area.
@@ -216,7 +216,7 @@ class RunThroughReplyChecks(unittest.TestCase):
         self.assertIn("Maple Street", expected)
         self.assertIn("discount", expected.lower())
         self.assertIn("phone", expected.lower())
-        self.assertIn("(856) 555-0142", expected)
+        self.assertIn("030 0000 0000", expected)
         self.assertNotEqual(expected, callback)
         self.assertNotEqual(expected, friendly)
         self.assertNotEqual(expected, urgent_reply.fixed_urgent_reply())
@@ -242,7 +242,7 @@ class RunThroughReplyChecks(unittest.TestCase):
         expected = agreed.unlisted_service_reply()
         callback = answer_reply.callback_reply()
         self.assertIn("don't list", expected.lower())
-        self.assertIn("(856) 555-0142", expected)
+        self.assertIn("030 0000 0000", expected)
         self.assertNotIn("roof", expected.lower())
         self.assertNotEqual(expected, callback)
         called = {"writer": 0}
@@ -265,7 +265,7 @@ class RunThroughReplyChecks(unittest.TestCase):
         urgent = urgent_reply.fixed_urgent_reply()
         flooding = self._reply("My basement is flooding, help!")
         self.assertEqual(flooding, urgent)
-        self.assertIn("(856) 555-0142", flooding)
+        self.assertIn("030 0000 0000", flooding)
         saturday = self._reply("Are you open Saturdays?")
         self.assertIn("8:00 am to 12:00 pm", saturday)
         self.assertIn("Yes, we are open Saturdays.", saturday)
@@ -324,7 +324,7 @@ class SecondRunThroughChecks(unittest.TestCase):
         self.assertIn("$149", two_part)
         self.assertIn("From Pricing.", two_part)
         self.assertIn("water heater repair", two_part)
-        self.assertIn("(856) 555-0142", two_part)
+        self.assertIn("030 0000 0000", two_part)
         self.assertNotIn("water heater repair is $", two_part)
         self.assertFalse(two_part.lower().startswith("please call"))
         self.assertEqual(email.count("\n"), 0)

@@ -119,7 +119,7 @@ def allow_model_call():
 def reset():
     """Clear the in-memory count.
 
-    A restart does the same. The checks use this between cases.
+    A restart does the same. The automated tests use this between cases.
     """
     global _day, _total, _visitors
     with _lock:

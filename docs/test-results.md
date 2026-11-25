@@ -6,7 +6,7 @@ The agreed list is 18 test questions. This page records the 15 that were sent to
 
 **15 of 15 questions and 4 of 4 urgent words from that live demo pass.**
 
-Water everywhere, basement, and leak were added after the demo. The automatic checks pass for those three words, and for leaking. "I have a leaky faucet" is not urgent.
+Water everywhere, basement, and leak were added after the demo. The automated tests pass for those three words, and for leaking. "I have a leaky faucet" is not urgent.
 
 We sent each question to the live demo one at a time, as a customer would, and checked every reply against what we agreed. Replies came back in under 2.2 seconds each.
 
@@ -21,18 +21,18 @@ We sent each question to the live demo one at a time, as a customer would, and c
 | 5 | Can I get same-day service? | Yes, from Services | "Yes, we offer same-day service. The call-out fee is $99. From Services." | ✅ |
 | 6 | Do you offer financing? | Yes, from Hours & FAQ | "Yes, we offer financing. From Hours & FAQ." | ✅ |
 | 7 | Are you open Sundays? | No, closed, from Hours & FAQ | "No, we're closed on Sundays. From Hours & FAQ." | ✅ |
-| 8 | How do I book or cancel an appointment? | Call the main line, from Contact | "To book or cancel, call the main line at (856) 555-0142. From Contact." | ✅ |
+| 8 | How do I book or cancel an appointment? | Call the main line, from Contact | "To book or cancel, call the main line at 030 0000 0000. From Contact." | ✅ |
 | 9 | How much is a call-out? | $99, from Services | "The call-out fee is $99. From Services." | ✅ |
-| 10 | I have a burst pipe. What should I do? | The urgent reply | "This sounds urgent. Please call us now on (856) 555-0142." | ✅ |
+| 10 | I have a burst pipe. What should I do? | The urgent reply | "This sounds urgent. Please call us now on 030 0000 0000." | ✅ |
 | 11 | Do you cover Moorestown? | Callback reply | "I can't confirm that from your pages." | ✅ |
 | 12 | How much is a water heater replacement? | Callback reply | "I can't confirm that from your pages." | ✅ |
 | 13 | Do you install septic systems? | No, from Hours & FAQ | "No, we don't install or service septic systems. From Hours & FAQ." | ✅ |
 | 14 | Are you licensed and insured? | Yes, in New Jersey, from Hours & FAQ | "Yes, we're fully licensed and insured in New Jersey. From Hours & FAQ." | ✅ |
-| 15 | Do you offer after-hours emergency callouts? | Yes, call the main line, from Hours & FAQ | "Yes, we handle emergencies after hours too. Just call our main line at (856) 555-0142. From Hours & FAQ." | ✅ |
+| 15 | Do you offer after-hours emergency callouts? | Yes, call the main line, from Hours & FAQ | "Yes, we handle emergencies after hours too. Just call our main line at 030 0000 0000. From Hours & FAQ." | ✅ |
 
 ## Questions added after the demo
 
-These three were not sent to the live demo. The automatic checks cover them. Together with the 15 above, that is the 18 test questions.
+These three were not sent to the live demo. The automated tests cover them. Together with the 15 above, that is the 18 test questions.
 
 | Question | Result |
 |---|---|
@@ -44,7 +44,7 @@ A wrong amount written as 150, or as 150 dollars, gets the call-us reply. An add
 
 ## Urgent words
 
-Each of these got exactly the urgent reply: "This sounds urgent. Please call us now on (856) 555-0142."
+Each of these got exactly the urgent reply: "This sounds urgent. Please call us now on 030 0000 0000."
 
 | Urgent word | Message we sent | Pass |
 |---|---|---|
@@ -57,7 +57,7 @@ Urgent messages were answered in under a second. Every other reply took about 1.
 
 ## Urgent words added after the demo
 
-These were not sent to the live demo. The automatic checks ran them with the stand-in, so no key was used. Water everywhere, a basement, a leak, and leaking each got the urgent reply named above. "I have a leaky faucet" is not urgent. Sent through the demo with the stand-in, that message gets the callback reply.
+These were not sent to the live demo. The automated tests ran them with the stand-in, so no key was used. Water everywhere, a basement, a leak, and leaking each got the urgent reply named above. "I have a leaky faucet" is not urgent. Sent through the demo with the stand-in, that message gets the callback reply.
 
 | Message | Result | Pass |
 |---|---|---|
@@ -68,11 +68,11 @@ These were not sent to the live demo. The automatic checks ran them with the sta
 | The pipe is leaking | The urgent reply | ✅ |
 | I have a leaky faucet | Not urgent | ✅ |
 
-## What the automatic checks cover
+## What the automated tests cover
 
-Historical record only. This whole section is how the checks read on Wednesday, Nov 4, 2026, not how they read now. It keeps that day's count of 54 checks, and that day's line that a failed call got the callback reply.
+Historical record only. This whole section is how the automated tests read on Wednesday, Nov 4, 2026, not how they read now. It keeps that day's count of 54 automated tests, and that day's line that a failed call got the callback reply.
 
-`python3 scripts/run_checks.py` runs 54 checks.
+`python3 scripts/run_checks.py` runs 54 automated tests.
 
 **Your pages (8):** The six practice pages are read, with the words a visitor sees, the agreed phone number, and a note when a page cannot be opened.
 
@@ -86,6 +86,6 @@ Historical record only. This whole section is how the checks read on Wednesday, 
 
 **The demo chat (5):** The chat page says it is a demo, shows the reply as text, keeps the Claude key off the page, and sends when Enter is pressed.
 
-**The project (5):** The project files are present, Python matches the recorded version, links in the docs point at real pages, and a proposed change runs these checks.
+**The project (5):** The project files are present, Python matches the recorded version, links in the docs point at real pages, and a proposed change runs these automated tests.
 
-The checks use a stand-in instead of Claude, so they run in seconds at no cost, and the live results above use the real assistant.
+The automated tests use a stand-in instead of Claude, so they run in seconds at no cost, and the live results above use the real assistant.

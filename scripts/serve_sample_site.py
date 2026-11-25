@@ -1,4 +1,4 @@
-"""Serve the Maple Street sample site over HTTP.
+"""Serve the Maple Street Plumbing sample site over HTTP.
 
 Usage: python3 scripts/serve_sample_site.py [--port PORT]
 
@@ -19,7 +19,7 @@ SITE = ROOT / "sample-site"
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 8000
 
-pricing_live = True  # Pricing is live. Set this to False only to simulate a page that can't be fetched.
+pricing_live = True  # Pricing is live. Set this to False only when a page should fail to load.
 
 CONTENT_TYPES = {
     ".html": "text/html; charset=utf-8",
@@ -88,7 +88,7 @@ def make_server(host=DEFAULT_HOST, port=0):
 
 
 def main(argv=None):
-    parser = argparse.ArgumentParser(description="Serve the Maple Street sample site.")
+    parser = argparse.ArgumentParser(description="Serve the Maple Street Plumbing sample site.")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT)
     args = parser.parse_args(argv)
     try:

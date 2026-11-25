@@ -76,7 +76,7 @@ def reply_to(message, base_url=None, writer=None, client=None):
 
     client, when given, stands in for the Claude call inside the answer
     step. writer, when given, stands in for the whole answer step, so a
-    check can try a reply without a live call. The price check still runs
+    automated test can try a reply without a live call. The price check still runs
     on whatever comes back, except the outage reply.
     """
     urgent = urgent_reply.reply_if_urgent(message)

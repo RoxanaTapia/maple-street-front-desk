@@ -1,8 +1,8 @@
 # Maple Street Front Desk
 
-Maple Street Front Desk is an AI front-desk assistant for a small plumbing business. It answers customer questions only from the business's own pages, tells customers with an urgent problem to call right away, with the business number, and never invents a price.
+Maple Street Front Desk is an AI front-desk assistant for Maple Street Plumbing, a fictional plumbing business. It answers customer questions only from the business's own pages, tells customers with an urgent problem to call right away, with the business number, and never invents a price.
 
-For now it runs on a small practice copy of the business's site. The assistant only reads the pages and never changes the owner's website, which the owner keeps editing.
+It runs on a small copy of that fictional business's site. The assistant only reads the pages and never changes the owner's website, which the owner keeps editing.
 
 ## Try it
 
@@ -60,9 +60,9 @@ The public chat allows 200 messages a day to reach the AI, and 20 from one visit
 
 ## Built with AI, checked by people
 
-- **Clear roles.** Each change is planned, checked by tests, and reviewed before it goes live.
+- **Clear roles.** Each change is planned, covered by automated tests, and reviewed before it goes live.
 - **One change at a time.** Each change starts as a written request, with a plain-English summary.
-- **Promises are tested.** The 18 agreed questions, the urgent words, and the price rules are tested on every change.
+- **Promises are tested.** The automated tests cover the 18 agreed questions, the urgent words, and the price rules on every change.
 - **A person signs off.** Nothing is added until that sign-off is done.
 
 ## Take a closer look

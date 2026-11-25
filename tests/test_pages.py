@@ -1,4 +1,4 @@
-"""Checks for the sample site and the page list.
+"""Automated tests for the sample site and the page list.
 
 PageListChecks is the "Your pages are read" area: the page list, Pricing
 live, a page that can't be fetched, the fictional banner, and the words
@@ -9,7 +9,7 @@ reply, and an answered question names one of your pages.
 
 The docstring of each test is what the CI checklist prints.
 
-Run every check with python3 scripts/run_checks.py.
+Run the automated tests with python3 scripts/run_checks.py.
 Run one area, as the CI jobs do, with
 python3 scripts/run_checks.py tests/test_pages.py:PageListChecks
 or python3 scripts/run_checks.py tests/test_pages.py:QuestionCoverageChecks.
@@ -34,7 +34,7 @@ import agreed
 import read_pages
 import serve_sample_site
 
-BANNER = "This is a fictional business made for this demo."
+BANNER = "Maple Street Plumbing is a fictional business."
 AGREED_NAMES = [
     "Home",
     "Services",
@@ -43,7 +43,7 @@ AGREED_NAMES = [
     "Hours & FAQ",
     "Contact",
 ]
-PHONE = re.compile(r"(?:\(\d{3}\)\s*|\b\d{3}[-.])\d{3}[-.]\d{4}")
+PHONE = re.compile(r"(?:\(\d{3}\)\s*|\b\d{3}[-.])\d{3}[-.]\d{4}|\b\d{3}\s\d{4}\s\d{4}")
 EMAIL = re.compile(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}")
 PRICE = re.compile(r"\$\d+(?:\.\d{2})?")
 
@@ -129,7 +129,7 @@ class PageListChecks(unittest.TestCase):
     def test_scripts_and_styling_are_left_out(self):
         """Scripts and styling are left out of the title and the visible text."""
         html = (
-            "<html><head><title>Home | Maple Street</title>"
+            "<html><head><title>Home | Maple Street Plumbing</title>"
             "<style>.secret { color: red; }</style>"
             "<script>var hidden = 'not for customers';</script></head>"
             "<body><p>Visible line</p>"
@@ -138,7 +138,7 @@ class PageListChecks(unittest.TestCase):
         parser = read_pages.TitleTextParser()
         parser.feed(html)
         parser.close()
-        self.assertEqual(parser.title, "Home | Maple Street")
+        self.assertEqual(parser.title, "Home | Maple Street Plumbing")
         self.assertIn("Visible line", parser.text)
         for hidden in ("secret", "not for customers", "also hidden", "alert"):
             self.assertNotIn(hidden, parser.text)
@@ -206,7 +206,7 @@ class PageListChecks(unittest.TestCase):
         self.assertIn("don't install or service septic systems", text_by_name["Hours & FAQ"].lower())
         self.assertIn("fully licensed and insured in new jersey", text_by_name["Hours & FAQ"].lower())
         self.assertIn("emergencies after hours too", text_by_name["Hours & FAQ"].lower())
-        self.assertIn("(856) 555-0142", text_by_name["Hours & FAQ"])
+        self.assertIn("030 0000 0000", text_by_name["Hours & FAQ"])
         self.assertIn("cherry hill", text_by_name["Service Area"].lower())
         self.assertIn("drain cleaning", text_by_name["Pricing"].lower())
         for name, text in text_by_name.items():
@@ -219,20 +219,22 @@ class PageListChecks(unittest.TestCase):
                 self.assertEqual(amounts, [], name)
 
     def test_sample_site_uses_only_the_agreed_contact(self):
-        """The sample pages use only the agreed phone number and name Carla."""
+        """The sample pages use only the agreed phone number and name the owner."""
         agreements = (ROOT / "docs" / "agreements.md").read_text(encoding="utf-8")
-        self.assertIn("(856) 555-0142", agreements)
+        contact_line = "The owner is the person to reach with questions."
+        self.assertIn("030 0000 0000", agreements)
+        self.assertIn(contact_line, agreements)
         blobs = []
         for path in sorted((ROOT / "sample-site").iterdir()):
             if path.suffix in {".html", ".css"}:
                 blobs.append(path.read_text(encoding="utf-8"))
         combined = "\n".join(blobs)
-        self.assertEqual(PHONE.findall(combined), ["(856) 555-0142", "(856) 555-0142"])
+        self.assertEqual(PHONE.findall(combined), ["030 0000 0000", "030 0000 0000"])
         self.assertEqual(EMAIL.findall(combined), [])
-        self.assertIn("Carla", combined)
+        self.assertIn(contact_line, combined)
         _status, _html, text, _title = fetch_page(read_pages.page_address(self.site.base, "/contact.html"))
-        self.assertIn("(856) 555-0142", text)
-        self.assertIn("Carla", text)
+        self.assertIn("030 0000 0000", text)
+        self.assertIn(contact_line, text)
 
     def test_command_prints_a_page_list(self):
         """Reading the pages prints a page list, and uses the local sample site when no address is given."""
@@ -431,7 +433,7 @@ class QuestionCoverageChecks(unittest.TestCase):
         faq_answers = {
             13: "No, we don't install or service septic systems.",
             14: "Yes, we're fully licensed and insured in New Jersey.",
-            15: "Yes, we handle emergencies after hours too. Just call our main line at (856) 555-0142.",
+            15: "Yes, we handle emergencies after hours too. Just call our main line at 030 0000 0000.",
         }
         self.assertNotIn("Waiting for the Hours & FAQ page", _agreements_text())
         for number, sentence in faq_answers.items():

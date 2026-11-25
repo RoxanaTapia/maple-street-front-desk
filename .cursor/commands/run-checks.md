@@ -1,8 +1,8 @@
 ---
-description: Run all project checks
+description: Run all automated tests
 ---
 
-# Run checks
+# Run the automated tests
 
 From the project root:
 

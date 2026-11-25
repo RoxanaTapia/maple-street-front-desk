@@ -1,4 +1,4 @@
-"""Checks for the public chat's daily limit.
+"""Automated tests for the public chat's daily limit.
 
 ChatLimitChecks is the "The daily chat limit holds" area.
 A message under the cap may reach the AI. At the cap, the visitor

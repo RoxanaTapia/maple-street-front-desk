@@ -1,4 +1,4 @@
-"""Checks that an urgent message gets the fixed reply.
+"""Automated tests that an urgent message gets the fixed reply.
 
 UrgentReplyChecks is the "Urgent messages get the fixed reply" area.
 The words and the reply are read from your agreements. The docstring of
@@ -24,7 +24,7 @@ import agreed
 import front_desk
 import urgent_reply
 
-PHONE = re.compile(r"\(\d{3}\) \d{3}-\d{4}")
+PHONE = re.compile(r"\(\d{3}\) \d{3}-\d{4}|\d{3} \d{4} \d{4}")
 
 
 def quoted_urgent_words():

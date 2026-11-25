@@ -1,4 +1,4 @@
-"""Checks that an answer comes from your pages.
+"""Automated tests that an answer comes from your pages.
 
 AnswerChecks is the "Answers come from your pages" area.
 ClaudeAnswerChecks is the "Claude writes the answer" area.
@@ -89,7 +89,7 @@ class RunningSite:
 
 
 class _SavedEnv:
-    """Keep a developer key from turning the checks into a live call."""
+    """Keep a developer key from turning the automated tests into a live call."""
 
     def __init__(self):
         self.key = os.environ.pop("ANTHROPIC_API_KEY", None)
@@ -143,7 +143,7 @@ class AnswerChecks(unittest.TestCase):
             self.assertNotEqual(answer, self._callback(), row["question"])
             self.assertIn(name, answer, row["question"])
             self.assertTrue(answer.endswith(f"From {name}."), row["question"])
-            self.assertNotIn("This is a fictional business", answer, row["question"])
+            self.assertNotIn("Maple Street Plumbing is a fictional business", answer, row["question"])
             self.assertNotIn("Home Services Pricing", answer, row["question"])
             body = answer[: -len(f"From {name}.")].strip()
             page_text = by_name[name]["text"]
@@ -889,18 +889,18 @@ class OutageReplyChecks(unittest.TestCase):
         self.assertEqual(note, f"{stamp} timeout\n")
 
     def test_a_changed_call_us_sentence_is_what_the_replies_use(self):
-        """A changed call-us sentence, including the phone number, is what the replies and the checks use."""
+        """A changed call-us sentence, including the phone number, is what the replies and the automated tests use."""
         self._block_network()
         original_callback = answer_reply.callback_reply()
         original_outage = answer_reply.outage_reply()
-        callback = "Please phone the office on (609) 555-0199 and we will check."
-        outage = "Sorry, that lookup is unavailable. Please phone the office on (609) 555-0199."
+        callback = "Please phone the office on 030 0000 1111 and we will check."
+        outage = "Sorry, that lookup is unavailable. Please phone the office on 030 0000 1111."
         self.assertNotEqual(callback, original_callback)
         self.assertNotEqual(outage, original_outage)
-        self.assertNotIn("(856) 555-0142", callback)
-        self.assertNotIn("(856) 555-0142", outage)
-        self.assertIn("(609) 555-0199", callback)
-        self.assertIn("(609) 555-0199", outage)
+        self.assertNotIn("030 0000 0000", callback)
+        self.assertNotIn("030 0000 0000", outage)
+        self.assertIn("030 0000 1111", callback)
+        self.assertIn("030 0000 1111", outage)
         body = AGREEMENTS.read_text(encoding="utf-8")
         changed = body
         for old, new in ((original_callback, callback), (original_outage, outage)):
@@ -1193,7 +1193,7 @@ class HoursFaqAnswerChecks(unittest.TestCase):
             14: "Yes, we're fully licensed and insured in New Jersey. From Hours & FAQ.",
             15: (
                 "Yes, we handle emergencies after hours too. "
-                "Just call our main line at (856) 555-0142. From Hours & FAQ."
+                "Just call our main line at 030 0000 0000. From Hours & FAQ."
             ),
         }
         agreements = AGREEMENTS.read_text(encoding="utf-8")
@@ -1627,7 +1627,7 @@ class MisspellingAndPlainPriceChecks(unittest.TestCase):
         )
         self.assertEqual(price_reply.find_amounts("A drain cleaning is $149."), ["$149"])
         self.assertEqual(price_reply.find_amounts("We're at 149 Maple Street"), [])
-        self.assertEqual(price_reply.find_amounts("Call us at (856) 555-0142."), [])
+        self.assertEqual(price_reply.find_amounts("Call us at 030 0000 0000."), [])
         self.assertEqual(price_reply.find_amounts("Saturday: 8:00 am to 12:00 pm."), [])
         for answer in (
             "A drain cleaning is 150.",
@@ -1716,7 +1716,7 @@ class SaturdayBookingChecks(unittest.TestCase):
         question = "How do I book a visit for Saturday morning?"
         expected = (
             "We're open Saturdays from 8:00 am to 12:00 pm. "
-            "To book, call our main line at (856) 555-0142. "
+            "To book, call our main line at 030 0000 0000. "
             "From Hours & FAQ and Contact."
         )
         self.assertNotIn("ANTHROPIC_API_KEY", os.environ)
@@ -1730,7 +1730,7 @@ class SaturdayBookingChecks(unittest.TestCase):
         self.assertIn("8:00 am to 12:00 pm", hours["text"])
         self.assertIn("open Saturdays", hours["text"])
         self.assertIn("book", contact["text"].lower())
-        self.assertIn("(856) 555-0142", contact["text"])
+        self.assertIn("030 0000 0000", contact["text"])
         self.assertIsNone(urgent_reply.reply_if_urgent(question))
         got = front_desk.reply_to(question, base_url=self.site.base)
         self.assertEqual(got, expected)
@@ -1751,7 +1751,7 @@ class SaturdayBookingChecks(unittest.TestCase):
         self.assertIn("name every page", instructions.casefold())
         buggy = (
             "Yes, we're open Saturdays from 8:00 am to 12:00 pm. "
-            "To book, call our main line at (856) 555-0142. From Contact."
+            "To book, call our main line at 030 0000 0000. From Contact."
         )
 
         def writer(question_arg, instructions_arg, pages_arg):
@@ -1768,7 +1768,7 @@ class SaturdayBookingChecks(unittest.TestCase):
         question = "How do I book a visit for Saturday morning?"
         expected = (
             "We're open Saturdays from 8:00 am to 12:00 pm. "
-            "To book, call our main line at (856) 555-0142. "
+            "To book, call our main line at 030 0000 0000. "
             "From Hours & FAQ and Contact."
         )
         behaviour = (ROOT / "docs" / "behaviour.md").read_text(encoding="utf-8")
@@ -1786,7 +1786,7 @@ class SaturdayBookingChecks(unittest.TestCase):
         self.assertEqual(agreed, saturday)
         drafted = (
             "Yes, we're open Saturdays from 8:00 am to 12:00 pm. "
-            "To book, call our main line at (856) 555-0142. "
+            "To book, call our main line at 030 0000 0000. "
             "From Hours & FAQ and Contact."
         )
 
@@ -1815,26 +1815,26 @@ class SaturdayBookingChecks(unittest.TestCase):
         replies.append(front_desk.reply_to(question, base_url=self.site.base))
         duplicated = (
             "We're open Saturday from 8:00 am to 12:00 pm. "
-            "To book, call our main line at (856) 555-0142.\n\n"
+            "To book, call our main line at 030 0000 0000.\n\n"
             "From Hours & FAQ and Contact. From Hours & FAQ and Contact."
         )
         on_its_own_line = (
             "We're open Saturday from 8:00 am to 12:00 pm. "
-            "To book, call our main line at (856) 555-0142.\n\n"
+            "To book, call our main line at 030 0000 0000.\n\n"
             "From Hours & FAQ and Contact."
         )
         named_apart = (
             "We're open Saturday from 8:00 am to 12:00 pm. From Hours & FAQ.\n\n"
-            "To book, call our main line at (856) 555-0142. From Contact."
+            "To book, call our main line at 030 0000 0000. From Contact."
         )
         once = (
             "We're open Saturday from 8:00 am to 12:00 pm. "
-            "To book, call our main line at (856) 555-0142. "
+            "To book, call our main line at 030 0000 0000. "
             "From Hours & FAQ and Contact."
         )
         named_once = (
             "We're open Saturday from 8:00 am to 12:00 pm.\n\n"
-            "To book, call our main line at (856) 555-0142. "
+            "To book, call our main line at 030 0000 0000. "
             "From Hours & FAQ and Contact."
         )
 
@@ -1862,22 +1862,22 @@ class SaturdayBookingChecks(unittest.TestCase):
         """A model source line in another order is replaced by one fixed line."""
         question = "How do I book a visit for Saturday morning?"
         draft = (
-            "To book, call our main line at (856) 555-0142. "
+            "To book, call our main line at 030 0000 0000. "
             "We're open Saturdays from 8:00 am to 12:00 pm.\n\n"
             "From Contact and Hours & FAQ."
         )
         missing_period = (
-            "To book, call our main line at (856) 555-0142. "
+            "To book, call our main line at 030 0000 0000. "
             "We're open Saturdays from 8:00 am to 12:00 pm.\n\n"
             "From Contact and Hours & FAQ"
         )
         joined_with_ampersand = (
-            "To book, call our main line at (856) 555-0142. "
+            "To book, call our main line at 030 0000 0000. "
             "We're open Saturdays from 8:00 am to 12:00 pm.\n\n"
             "From Contact & Hours & FAQ."
         )
         expected = (
-            "To book, call our main line at (856) 555-0142. "
+            "To book, call our main line at 030 0000 0000. "
             "We're open Saturdays from 8:00 am to 12:00 pm. "
             "From Hours & FAQ and Contact."
         )
@@ -1938,7 +1938,7 @@ class MisspelledLeakChecks(unittest.TestCase):
             self.assertNotIn("leek", got.casefold(), question)
             self.assertNotIn("$", got, question)
             self.assertEqual(price_reply.find_amounts(got), [], question)
-            self.assertIn("(856) 555-0142", got, question)
+            self.assertIn("030 0000 0000", got, question)
             self.assertNotEqual(got, callback, question)
             self.assertNotEqual(got, urgent, question)
         self.assertEqual(called["writer"], 0)

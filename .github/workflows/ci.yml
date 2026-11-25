@@ -1,4 +1,4 @@
-name: Checks
+name: Automated tests
 
 on:
   pull_request:
@@ -22,7 +22,7 @@ jobs:
         with:
           python-version-file: .python-version
 
-      - name: Run checks
+      - name: Run automated tests
         run: python3 scripts/run_checks.py tests/test_checks.py
 
   doc-links:
@@ -37,7 +37,7 @@ jobs:
         with:
           python-version-file: .python-version
 
-      - name: Run checks
+      - name: Run automated tests
         run: python3 scripts/run_checks.py tests/test_links.py
 
   pages-read:
@@ -52,7 +52,7 @@ jobs:
         with:
           python-version-file: .python-version
 
-      - name: Run checks
+      - name: Run automated tests
         run: python3 scripts/run_checks.py tests/test_pages.py:PageListChecks
 
   answer-plan:
@@ -67,7 +67,7 @@ jobs:
         with:
           python-version-file: .python-version
 
-      - name: Run checks
+      - name: Run automated tests
         run: python3 scripts/run_checks.py tests/test_pages.py:QuestionCoverageChecks
 
   urgent-reply:
@@ -82,7 +82,7 @@ jobs:
         with:
           python-version-file: .python-version
 
-      - name: Run checks
+      - name: Run automated tests
         run: python3 scripts/run_checks.py tests/test_urgent.py:UrgentReplyChecks
 
   prices:
@@ -97,7 +97,7 @@ jobs:
         with:
           python-version-file: .python-version
 
-      - name: Run checks
+      - name: Run automated tests
         run: python3 scripts/run_checks.py tests/test_prices.py:PriceChecks
 
   longer-price:
@@ -112,7 +112,7 @@ jobs:
         with:
           python-version-file: .python-version
 
-      - name: Run checks
+      - name: Run automated tests
         run: python3 scripts/run_checks.py tests/test_prices.py:LongerPriceChecks
 
   service-price:
@@ -127,7 +127,7 @@ jobs:
         with:
           python-version-file: .python-version
 
-      - name: Run checks
+      - name: Run automated tests
         run: python3 scripts/run_checks.py tests/test_prices.py:ServicePriceChecks
 
   answers:
@@ -142,7 +142,7 @@ jobs:
         with:
           python-version-file: .python-version
 
-      - name: Run checks
+      - name: Run automated tests
         run: python3 scripts/run_checks.py tests/test_answers.py:AnswerChecks
 
   claude-answer:
@@ -157,7 +157,7 @@ jobs:
         with:
           python-version-file: .python-version
 
-      - name: Run checks
+      - name: Run automated tests
         run: python3 scripts/run_checks.py tests/test_answers.py:ClaudeAnswerChecks
 
   unreadable-page:
@@ -172,7 +172,7 @@ jobs:
         with:
           python-version-file: .python-version
 
-      - name: Run checks
+      - name: Run automated tests
         run: python3 scripts/run_checks.py tests/test_unreadable_pages.py:UnreadablePageNoteChecks
 
   failed-call-note:
@@ -187,7 +187,7 @@ jobs:
         with:
           python-version-file: .python-version
 
-      - name: Run checks
+      - name: Run automated tests
         run: python3 scripts/run_checks.py tests/test_answers.py:FailureNoteChecks
 
   outage-reply:
@@ -202,7 +202,7 @@ jobs:
         with:
           python-version-file: .python-version
 
-      - name: Run checks
+      - name: Run automated tests
         run: python3 scripts/run_checks.py tests/test_answers.py:OutageReplyChecks
 
   saturday-booking:
@@ -217,7 +217,7 @@ jobs:
         with:
           python-version-file: .python-version
 
-      - name: Run checks
+      - name: Run automated tests
         run: python3 scripts/run_checks.py tests/test_answers.py:SaturdayBookingChecks
 
   hours-faq-answers:
@@ -232,7 +232,7 @@ jobs:
         with:
           python-version-file: .python-version
 
-      - name: Run checks
+      - name: Run automated tests
         run: python3 scripts/run_checks.py tests/test_answers.py:HoursFaqAnswerChecks
 
   priced-service:
@@ -247,7 +247,7 @@ jobs:
         with:
           python-version-file: .python-version
 
-      - name: Run checks
+      - name: Run automated tests
         run: python3 scripts/run_checks.py tests/test_answers.py:PricedServiceChecks
 
   run-through-replies:
@@ -262,7 +262,7 @@ jobs:
         with:
           python-version-file: .python-version
 
-      - name: Run checks
+      - name: Run automated tests
         run: python3 scripts/run_checks.py tests/test_run_through.py:RunThroughReplyChecks
 
   second-run-through:
@@ -277,7 +277,7 @@ jobs:
         with:
           python-version-file: .python-version
 
-      - name: Run checks
+      - name: Run automated tests
         run: python3 scripts/run_checks.py tests/test_run_through.py:SecondRunThroughChecks
 
   misspelled-leak:
@@ -292,7 +292,7 @@ jobs:
         with:
           python-version-file: .python-version
 
-      - name: Run checks
+      - name: Run automated tests
         run: python3 scripts/run_checks.py tests/test_answers.py:MisspelledLeakChecks
 
   plain-price:
@@ -307,7 +307,7 @@ jobs:
         with:
           python-version-file: .python-version
 
-      - name: Run checks
+      - name: Run automated tests
         run: python3 scripts/run_checks.py tests/test_answers.py:MisspellingAndPlainPriceChecks
 
   wrapped-question:
@@ -322,7 +322,7 @@ jobs:
         with:
           python-version-file: .python-version
 
-      - name: Run checks
+      - name: Run automated tests
         run: python3 scripts/run_checks.py tests/test_answers.py:WrappedQuestionChecks
 
   off-topic-reply:
@@ -337,7 +337,7 @@ jobs:
         with:
           python-version-file: .python-version
 
-      - name: Run checks
+      - name: Run automated tests
         run: python3 scripts/run_checks.py tests/test_off_topic.py:OffTopicReplyChecks
 
   demo-chat:
@@ -352,7 +352,7 @@ jobs:
         with:
           python-version-file: .python-version
 
-      - name: Run checks
+      - name: Run automated tests
         run: python3 scripts/run_checks.py tests/test_demo.py:DemoChatChecks
 
   daily-chat-limit:
@@ -367,5 +367,5 @@ jobs:
         with:
           python-version-file: .python-version
 
-      - name: Run checks
+      - name: Run automated tests
         run: python3 scripts/run_checks.py tests/test_chat_limit.py:ChatLimitChecks
