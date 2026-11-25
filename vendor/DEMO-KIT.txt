@@ -1,0 +1,4 @@
+The chat page copies the shared demo kit.
+
+Source commit: 5ad3b4bfc52f411cb6a634651a13bd62f9d3e584
+Version: 2

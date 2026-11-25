@@ -369,3 +369,39 @@ jobs:
 
       - name: Run automated tests
         run: python3 scripts/run_checks.py tests/test_chat_limit.py:ChatLimitChecks
+
+  demo-icons:
+    name: The four icons are served
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Run automated tests
+        run: python3 scripts/run_checks.py tests/test_brand.py:IconChecks
+
+  demo-kit-copy:
+    name: The demo kit copy matches
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Check the copied demo kit
+        working-directory: vendor/demo-kit
+        run: |
+          sha256sum --quiet -c SHA256SUMS
+          test "$(cat VERSION)" = "2"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Run automated tests
+        run: python3 scripts/run_checks.py tests/test_brand.py:DemoKitCopyChecks

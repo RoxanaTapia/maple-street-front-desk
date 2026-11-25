@@ -237,6 +237,8 @@ Each automated test prints ok, and the run ends with OK. The same automated test
 - Off-topic questions
 - The demo chat
 - The daily chat limit
+- The four icons
+- The demo kit copy
 
 </details>
 
@@ -248,7 +250,9 @@ A chat page runs the same steps as the command line. From the project folder:
 python3 scripts/demo_chat.py
 ```
 
-It prints `Demo chat at http://127.0.0.1:8080`. Open that address. The page says: This is a demo. It answers only from Maple Street Plumbing's pages. Type a message and the reply comes back. The sample site starts with it, so there is nothing else to run. Stop it with Ctrl+C.
+It prints `Demo chat at http://127.0.0.1:8080`. Open that address. The page says: This is a demo. It answers only from Maple Street Plumbing's pages. It also says this is a live chat assistant, and that voice is the next step. Maple Street Plumbing is a fictional business. Type a message and the reply comes back. The sample site starts with it, so there is nothing else to run. Stop it with Ctrl+C.
+
+The page uses the shared demo kit in `vendor/demo-kit`. The header shows the wordmark, the name Maple Street front desk, a theme menu, and an Exit demo link to the portfolio site. On a phone the product name sits on its own line, so it stays whole. A line under the header says: Portfolio demo · fictional business. The same server serves favicon.svg, favicon-32.png, apple-touch-icon.png, and favicon.ico. The fonts come from this server. An automated test checks that the copied kit still matches version 2. Another checks that the four icons answer.
 
 `DEMO_HOST` and `DEMO_PORT` choose the address. The default is local. The names are listed in [.env.example](../.env.example). The Claude key is set on the machine that runs the assistant. It isn't written into the repo or shown in replies. A crash, a blank reply, or a reply that would show the key is replaced with the outage reply. A clearly unrelated question gets the off-topic reply. A missing fact, and a price the pages don't state, stay the callback reply.
 

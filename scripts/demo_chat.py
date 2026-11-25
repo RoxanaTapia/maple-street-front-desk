@@ -3,6 +3,9 @@
 Each message goes through the front desk: the urgent reply, your pages,
 the answer, and the price check. The page adds no rules of its own.
 The sample site starts with this server, so one command is enough.
+The page uses the shared demo kit in vendor/demo-kit for the header,
+the theme menu, and the fonts. It also serves favicon.svg,
+favicon-32.png, apple-touch-icon.png, and favicon.ico.
 
 The Claude key is read later, from the server's own settings, and is
 never sent to the browser. DEMO_HOST and DEMO_PORT choose where the
@@ -32,6 +35,8 @@ import serve_sample_site
 
 ROOT = Path(__file__).resolve().parents[1]
 DEMO = ROOT / "demo"
+KIT = ROOT / "vendor" / "demo-kit"
+KIT_PREFIX = "/demo-kit/"
 HOST_ENV = "DEMO_HOST"
 PORT_ENV = "DEMO_PORT"
 DEFAULT_HOST = "127.0.0.1"
@@ -45,10 +50,22 @@ _PAGES = {
     "/style.css": "style.css",
     "/chat.js": "chat.js",
 }
+_ROOT_FILES = {
+    "/favicon.svg": KIT / "favicon.svg",
+    "/favicon-32.png": KIT / "favicon-32.png",
+    "/apple-touch-icon.png": KIT / "apple-touch-icon.png",
+    "/favicon.ico": DEMO / "favicon.ico",
+}
 _TYPES = {
     ".html": "text/html; charset=utf-8",
     ".css": "text/css; charset=utf-8",
     ".js": "text/javascript; charset=utf-8",
+    ".svg": "image/svg+xml",
+    ".png": "image/png",
+    ".ico": "image/x-icon",
+    ".woff2": "font/woff2",
+    ".txt": "text/plain; charset=utf-8",
+    ".md": "text/plain; charset=utf-8",
 }
 USAGE = (
     "Usage: python3 scripts/demo_chat.py\n"
@@ -72,6 +89,42 @@ def listen_address():
     if not 1 <= port <= 65535:
         raise ValueError(f"Set {PORT_ENV} to a port number.")
     return host, port
+
+
+def _content_type(path):
+    return _TYPES.get(path.suffix.lower(), "application/octet-stream")
+
+
+def _inside(path, root):
+    try:
+        path.resolve().relative_to(root.resolve())
+    except ValueError:
+        return False
+    return path.is_file()
+
+
+def static_file(url_path):
+    """Return a file this server may send, or None.
+
+    The chat page, the shared kit, and the four icons are included.
+    A path that leaves those folders is not.
+    """
+    if not url_path.startswith("/") or "\\" in url_path or "\x00" in url_path:
+        return None
+    root_file = _ROOT_FILES.get(url_path)
+    if root_file is not None:
+        return root_file if _inside(root_file, ROOT) else None
+    name = _PAGES.get(url_path)
+    if name is not None:
+        file_path = DEMO / name
+        return file_path if _inside(file_path, DEMO) else None
+    if not url_path.startswith(KIT_PREFIX):
+        return None
+    rel = url_path[len(KIT_PREFIX):]
+    if not rel or rel.startswith("/") or any(part == ".." for part in rel.split("/")):
+        return None
+    file_path = KIT / rel
+    return file_path if _inside(file_path, KIT) else None
 
 
 def _json_bytes(payload):
@@ -123,21 +176,11 @@ class DemoServer(ThreadingHTTPServer):
 class DemoHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         path = unquote(urlsplit(self.path).path)
-        name = _PAGES.get(path)
-        if name is None:
+        file_path = static_file(path)
+        if file_path is None:
             self._send_text(404, "Not found\n")
             return
-        file_path = (DEMO / name).resolve()
-        try:
-            file_path.relative_to(DEMO.resolve())
-        except ValueError:
-            self._send_text(404, "Not found\n")
-            return
-        if not file_path.is_file():
-            self._send_text(404, "Not found\n")
-            return
-        content_type = _TYPES.get(file_path.suffix, "application/octet-stream")
-        self._send_bytes(200, file_path.read_bytes(), content_type)
+        self._send_bytes(200, file_path.read_bytes(), _content_type(file_path))
 
     def do_POST(self):
         try:
