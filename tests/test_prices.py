@@ -1,4 +1,4 @@
-"""Checks that a price is shown only when your pages state it.
+"""Automated tests that a price is shown only when your pages state it.
 
 PriceChecks is the "Prices come only from your pages" area.
 LongerPriceChecks is the "A longer price isn't mistaken for a shorter one"
@@ -364,8 +364,8 @@ class LongerPriceChecks(unittest.TestCase):
             "We're at 149 Maple Street",
             "We're at 149 Maple Street.",
             "We are at 149 Maple Street.",
-            "Call us at (856) 555-0142.",
-            "Call us at 555-0142.",
+            "Call us at 030 0000 0000.",
+            "Call us at 000-0000.",
             "Saturday: 8:00 am to 12:00 pm.",
         )
         for answer in answers:

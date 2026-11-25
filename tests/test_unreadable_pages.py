@@ -1,4 +1,4 @@
-"""Checks that a page that can't be read is noted for the owner.
+"""Automated tests that a page that can't be read is noted for the owner.
 
 UnreadablePageNoteChecks is the "A page that can't be read is noted
 for the owner" area. Pricing is switched off, the note is written once,
@@ -60,7 +60,7 @@ class RunningSite:
 
 
 class _SavedEnv:
-    """Keep a developer key from turning the checks into a live call."""
+    """Keep a developer key from turning the automated tests into a live call."""
 
     def __init__(self):
         self.key = os.environ.pop("ANTHROPIC_API_KEY", None)

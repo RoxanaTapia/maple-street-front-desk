@@ -1,6 +1,6 @@
 # Handover notes
 
-Dave and Carla, this page is yours. Everything you have lives in this project.
+This page is for the owner. Everything you have lives in this project.
 
 Live demo: [front-desk.roxanatapia.dev](https://front-desk.roxanatapia.dev). This live demo is kept online as a portfolio example. For a real client project, the live demo stays online for 15 days after delivery, so your team can try it while you set up your own copy from the code and the setup guide, and then it is taken down, with hosting staying with you.
 
@@ -50,21 +50,21 @@ Look here if customers say they got the call-us reply more than usual.
 - [How the assistant behaves](behaviour.md)
 - [How the assistant works](how-it-works.md)
 - [Project guide](../AGENTS.md)
-- On every change: [Checks](how-it-works.md#try-it-yourself)
+- On every change: [Automated tests](how-it-works.md#try-it-yourself)
 
 <details>
-<summary>Working with the agents, and what the checks look for</summary>
+<summary>Working with the agents, and what the automated tests look for</summary>
 
-Each change is one issue, one branch, and one pull request. The checks run, a person reviews, and then you merge.
+Each change is one issue, one branch, and one pull request. The automated tests run, a person reviews, and then you merge.
 
 The steps are in [How a change happens](../AGENTS.md#how-a-change-happens). The [roles](../.cursor/team/README.md) and [rules](../.cursor/rules/working-in-this-repo.mdc) are there too.
 
-If a check turns red, open it. Its name says what did not match. Fix the agreements page on the same copy. The checks run again. If the file looks right, ask Roxana. The check itself may need updating.
+If an automated test turns red, open it. Its name says what did not match. Fix the agreements page on the same copy. The automated tests run again. If the file looks right, ask Roxana. The automated test itself may need updating.
 
 You can change the urgent reply freely if:
 
 - it stays on a line starting with `>`
-- it keeps a phone number written like (856) 555-0142 and has no `$`
+- it keeps a phone number written like 030 0000 0000 and has no `$`
 - it's different from the callback and outage replies
 - it isn't already written word for word on the behaviour page, the README or the how-it-works page
 
@@ -75,7 +75,7 @@ You can change either call-us sentence freely if:
 - it isn't copied inside another reply on the agreements page
 - it isn't already written word for word on the behaviour page, the README, the how-it-works page, or the setup guide
 
-| Edit | Needs a check update? |
+| Edit | Needs an automated test update? |
 |---|---|
 | Remove or rename "water everywhere", "basement", "leak", "leaking", "frozen pipe", "burst pipe", or "no heat" | Yes |
 | A new word that appears on the behaviour page, even inside a longer word, or in an ordinary test question | Yes |
@@ -97,23 +97,23 @@ You edit a copy, then approve it.
 2. Change a bold word or the `>` reply, and keep the `>`.
 3. **Commit changes**, name a branch, then **Propose changes**.
 4. Click **Create pull request**.
-5. Wait until every check is green.
+5. Wait until every automated test is green.
 6. Click **Merge pull request**, then **Confirm merge**.
 
-If a check turns red, don't merge; ask Roxana in the PR.
+If an automated test turns red, don't merge; ask Roxana in the PR.
 
 ## Change the call-us sentences
 
-You edit a copy, then approve it. You can change the words or the phone number. The checks read these two replies from the agreements page.
+You edit a copy, then approve it. You can change the words or the phone number. The automated tests read these two replies from the agreements page.
 
 1. Open [docs/agreements.md](agreements.md) and click **Edit this file**.
 2. Change the `>` reply under When the pages don't say, or the `>` reply under When the assistant can't look it up, and keep the `>`.
 3. **Commit changes**, name a branch, then **Propose changes**.
 4. Click **Create pull request**.
-5. Wait until every check is green.
+5. Wait until every automated test is green.
 6. Click **Merge pull request**, then **Confirm merge**.
 
-If a check turns red, don't merge; ask Roxana in the PR.
+If an automated test turns red, don't merge; ask Roxana in the PR.
 
 ## Set your call-us number and your emergency number
 
@@ -127,10 +127,10 @@ The call-us number and the emergency number are separate. You set both on the ag
 6. Set your emergency number in the reply under Urgent messages. This can be a different number. Keep the `>`.
 7. **Commit changes**, name a branch, then **Propose changes**.
 8. Click **Create pull request**.
-9. Wait until every check is green.
+9. Wait until every automated test is green.
 10. Click **Merge pull request**, then **Confirm merge**.
 
-If a check turns red, don't merge; ask Roxana in the PR.
+If an automated test turns red, don't merge; ask Roxana in the PR.
 
 ## Who to ask
 

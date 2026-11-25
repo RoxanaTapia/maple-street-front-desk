@@ -1,8 +1,8 @@
-"""Checks that an unrelated question gets the friendly reply.
+"""Automated tests that an unrelated question gets the friendly reply.
 
 OffTopicReplyChecks is the "Off-topic questions get the friendly reply" area.
 The off-topic reply and the callback reply are read from your agreements.
-The page text is what the page reader returns. A check sends the message
+The page text is what the page reader returns. An automated test sends the message
 through the front desk and compares the reply. The docstring of each
 test is what the checklist prints.
 
@@ -33,7 +33,7 @@ import serve_sample_site
 import urgent_reply
 
 # The sentence the owner chose. The code reads it from the agreements.
-OFF_TOPIC = "I can help with Maple Street\u2019s plumbing services. What do you need help with?"
+OFF_TOPIC = "I can help with Maple Street Plumbing. What do you need help with?"
 
 
 class _SavedEnv:

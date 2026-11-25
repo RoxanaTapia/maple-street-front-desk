@@ -43,7 +43,7 @@ A how, what, when, or where question starts with the fact. Yes is
 added only for a yes or no question. An internal note is never part of
 the reply. The
 stand-in is not a real AI,
-and it does not call one. The checks use that path, so they do not show
+and it does not call one. The automated tests use that path, so they do not show
 what a live call would write.
 Quotes or markdown around the whole question are set aside before that
 comparison, so the same words get the same answer. A dollar sign, a
@@ -128,8 +128,8 @@ NAME_EVERY_PAGE = (
 )
 # An address such as owner@shop.test. The contact page does not have one.
 _EMAIL_ADDRESS = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
-# The main line, as the contact page writes it, such as (856) 555-0142.
-_PHONE = re.compile(r"\(\d{3}\) \d{3}-\d{4}")
+# The main line, as the contact page writes it, such as 030 0000 0000.
+_PHONE = re.compile(r"\(\d{3}\) \d{3}-\d{4}|\d{3} \d{4} \d{4}")
 # "Do you clean drains and fix water heaters?" is two jobs.
 _TWO_JOBS = re.compile(
     r"^(?:do|can|will)\s+you\s+(.+?)\s+and\s+(.+)$",
@@ -2153,7 +2153,7 @@ def write_answer(question, pages, writer=None, text=None, client=None):
 
     With no writer, Claude writes the answer when ANTHROPIC_API_KEY is
     set, or when client is given. client is a stand-in for the HTTP call,
-    used by the checks. If the call fails, the outage reply is returned
+    used by the automated tests. If the call fails, the outage reply is returned
     and a short note records when it happened and what kind of error it
     was. The customer's message and the key are not in that note. The
     outage reply is not the callback sentence.

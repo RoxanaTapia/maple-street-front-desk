@@ -2,7 +2,7 @@
 
 ## What we're building
 
-Maple Street Front Desk is a chat assistant for a small plumbing business. It answers from the business's own public web pages. [How the assistant behaves](docs/behaviour.md) is what a customer experiences, and [How the assistant works](docs/how-it-works.md) is how a message gets there.
+Maple Street Front Desk is a chat assistant for Maple Street Plumbing, a fictional plumbing business. It answers from the business's own public web pages. [How the assistant behaves](docs/behaviour.md) is what a customer experiences, and [How the assistant works](docs/how-it-works.md) is how a message gets there.
 
 ## What we've agreed
 
@@ -12,8 +12,8 @@ These never change without the client's OK. The list is in [What we've agreed](d
 
 1. **One issue.** An issue is the written request. Each request stays one piece of work. Use `.github/ISSUE_TEMPLATE.md`. The sections are What, Acceptance criteria, and Out of scope, in plain words. Acceptance criteria are plain bullet points, not checkboxes.
 2. **One branch.** A branch is a separate copy of the project, so this work does not mix with anything else. Its name is plain and descriptive, such as step-5-price-rule.
-3. **One pull request.** A pull request is the proposal to add that copy. The title is a plain sentence, with no prefix such as "fix:", and issue titles and pull request titles use no emoji. The description is written to Dave and Carla in plain words. It has four parts: Closes, What changes, How to try it, and Checks. There is no Coming next part. Internal review notes stay out of the description. When a change adds or changes a script, update its section in docs/how-it-works.md (what it does, why it's there, a command to try).
-4. **Automatic checks.** So nothing breaks what was agreed. Each new test area gets its own plainly named check on the pull request.
+3. **One pull request.** A pull request is the proposal to add that copy. The title is a plain sentence, with no prefix such as "fix:", and issue titles and pull request titles use no emoji. The description is written to the owner in plain words. It has four parts: Closes, What changes, How to try it, and Automated tests. There is no Coming next part. Internal review notes stay out of the description. When a change adds or changes a script, update its section in docs/how-it-works.md (what it does, why it's there, a command to try).
+4. **Automated tests.** So nothing breaks what was agreed. Each new test area gets its own plainly named automated test on the pull request.
 5. **A person reviews.** A person signs off every change.
 6. **Merge.** Merge means the change joins the project.
 
@@ -26,10 +26,10 @@ Issues, pull requests, and other client-facing writing use no em dashes and no s
 | Client-facing | [README.md](README.md) | What this project is |
 | Client-facing | [docs/agreements.md](docs/agreements.md) | What we've agreed |
 | Client-facing | [docs/behaviour.md](docs/behaviour.md) | What a customer writes, and what they get back |
-| Client-facing | [docs/how-it-works.md](docs/how-it-works.md) | How a message is handled, and how to try the sample site and the checks. See [Try it yourself](docs/how-it-works.md#try-it-yourself). |
+| Client-facing | [docs/how-it-works.md](docs/how-it-works.md) | How a message is handled, and how to try the sample site and the automated tests. See [Try it yourself](docs/how-it-works.md#try-it-yourself). |
 | Client-facing | [docs/handover.md](docs/handover.md) | Notes for when the project is handed over |
 | Client-facing | [AGENTS.md](AGENTS.md) | This guide |
-| Client-facing | [sample-site/](sample-site/) | A small fictional sample of the business's public pages |
+| Client-facing | [sample-site/](sample-site/) | A small fictional sample of Maple Street Plumbing's public pages |
 | Client-facing | [scripts/serve_sample_site.py](scripts/serve_sample_site.py) | Serves that sample like a website |
 | Client-facing | [scripts/agreed.py](scripts/agreed.py) | Reads the agreed sentences, the call-us replies, and the test questions from the agreements page. The other scripts use this one reader. |
 | Client-facing | [scripts/read_pages.py](scripts/read_pages.py) | Reads the agreed pages and prints the page list. See [Read the pages](docs/how-it-works.md#2-·-read-the-pages). |
@@ -41,18 +41,18 @@ Issues, pull requests, and other client-facing writing use no em dashes and no s
 | Client-facing | [demo/](demo/) | The chat page: the message box, the conversation, and the demo line. |
 | For the agents | [.cursor/rules/](.cursor/rules/) | How the agents are allowed to work |
 | For the agents | [.cursor/team/](.cursor/team/README.md) | The roles they work in |
-| For the agents | [.cursor/commands/](.cursor/commands/run-checks.md) | Shortcuts for the checks and the pull request description |
-| Checks | [tests/](tests/) | The automatic checks |
-| Checks | [scripts/run_checks.py](scripts/run_checks.py) | Runs the checks |
-| Checks | [.github/workflows/ci.yml](.github/workflows/ci.yml) | Runs those same checks on every proposed change |
-| Checks | [.github/ISSUE_TEMPLATE.md](.github/ISSUE_TEMPLATE.md) | The short form for a new issue |
-| Checks | [.github/pull_request_template.md](.github/pull_request_template.md) | The short form for a pull request |
-| Checks | [.python-version](.python-version) | Which version of Python the checks use. Python is the language they are written in. |
+| For the agents | [.cursor/commands/](.cursor/commands/run-checks.md) | Shortcuts for the automated tests and the pull request description |
+| Automated tests | [tests/](tests/) | The automated tests |
+| Automated tests | [scripts/run_checks.py](scripts/run_checks.py) | Runs the automated tests |
+| Automated tests | [.github/workflows/ci.yml](.github/workflows/ci.yml) | Runs those same automated tests on every proposed change |
+| Automated tests | [.github/ISSUE_TEMPLATE.md](.github/ISSUE_TEMPLATE.md) | The short form for a new issue |
+| Automated tests | [.github/pull_request_template.md](.github/pull_request_template.md) | The short form for a pull request |
+| Automated tests | [.python-version](.python-version) | Which version of Python the automated tests use. Python is the language they are written in. |
 
-To try the sample site, read the pages, or run the checks, follow [Try it yourself](docs/how-it-works.md#try-it-yourself).
+To try the sample site, read the pages, or run the automated tests, follow [Try it yourself](docs/how-it-works.md#try-it-yourself).
 
 ## For the agents
 
-Three layers. [What we've agreed](docs/agreements.md) wins if anything else disagrees. [How the assistant behaves](docs/behaviour.md) says what the assistant does. The code (the part that does the work) and the checks prove it.
+Three layers. [What we've agreed](docs/agreements.md) wins if anything else disagrees. [How the assistant behaves](docs/behaviour.md) says what the assistant does. The code (the part that does the work) and the automated tests prove it.
 
 `.cursor/` is the instructions for the agents that build it. How you work: [.cursor/rules/](.cursor/rules/). Roles: [.cursor/team/README.md](.cursor/team/README.md).

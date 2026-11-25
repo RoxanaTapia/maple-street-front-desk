@@ -1,7 +1,7 @@
-"""Automatic checks for Maple Street Front Desk.
+"""Automated tests for Maple Street Front Desk.
 
-Page checks live in test_pages.py. Urgent reply checks live in
-test_urgent.py. Price checks live in test_prices.py.
+Page tests live in test_pages.py. Urgent reply tests live in
+test_urgent.py. Price tests live in test_prices.py.
 """
 
 import sys
@@ -60,7 +60,7 @@ class ProjectChecks(unittest.TestCase):
         self.assertTrue(version == running or version.startswith(running + "."))
 
     def test_a_proposed_change_runs_the_checks(self):
-        """A proposed change runs the checks for the pages, urgent words, prices, answers, and the demo chat."""
+        """A proposed change runs the automated tests for the pages, urgent words, prices, answers, and the demo chat."""
         workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
         for command in (
             "tests/test_checks.py",
