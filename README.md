@@ -43,6 +43,12 @@ flowchart LR
 
 An emergency is caught first. A price is checked last. A number the pages don't state, or a price for a different service, does not go out.
 
+## A busy day
+
+The public chat allows 200 messages a day to reach the AI, and 20 from one visitor. The day runs from midnight to midnight in Berlin. When a cap is reached, the visitor gets a short note to come back tomorrow or book a call on roxanatapia.dev, and the AI is not called. An urgent message still gets the fixed reply to call the business. A question the assistant answers without the AI does not use up the count.
+
+`CHAT_DAILY_LIMIT` and `CHAT_VISITOR_DAILY_LIMIT` change the caps. Leave either one empty to keep the default. Set one to 0 to turn that cap off. The names sit in [.env.example](.env.example). The count is kept in memory, so a restart starts it again.
+
 ## Where we are
 
 - ✅ **Reads the pages:** all six, with the words a visitor actually sees.
