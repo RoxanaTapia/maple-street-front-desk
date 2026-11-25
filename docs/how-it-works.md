@@ -101,6 +101,7 @@ Every sample page shows a banner that this business is fictional.
 - A question in two parts answers the part the pages cover, with its price and its page, and says the pages don't list the other part. Nothing is invented.
 - An internal note is left out of every reply. Text that starts with Note: is that kind of note.
 - A question that is clearly about something else gets the off-topic reply from [Off-topic questions](agreements.md#off-topic-questions). Anything else the pages don't cover gets the call-us reply from [When the pages don't say](agreements.md#when-the-pages-dont-say).
+- On the public chat, once the day's limit is reached, this step returns a short busy-day reply and does not call Claude. The caps are described with [the demo](#try-the-demo).
 - If the call fails, the customer gets the outage reply from [When the assistant can't look it up](agreements.md#when-the-assistant-cant-look-it-up). A short note is kept for the owner.
 - A page that can't be read is written to those same notes. The line has the time, the page name, and the kind of error. The customer's message is not included. The same page is written once an hour. Where to read the notes is in the [handover notes](handover.md#your-error-notes) and the [developer guide](developer-guide.md#-when-something-fails).
 - The questions in [The 18 test questions](agreements.md#the-18-test-questions) each name a page, use the fixed urgent reply, offer a callback, or use one of the replies added after the delivery run-through.
@@ -235,6 +236,7 @@ Each check prints ok, and the run ends with OK. The same checks run on every pul
 - A page that can't be read is noted
 - Off-topic questions
 - The demo chat
+- The daily chat limit
 
 </details>
 
@@ -249,3 +251,23 @@ python3 scripts/demo_chat.py
 It prints `Demo chat at http://127.0.0.1:8080`. Open that address. The page says: This is a demo. It answers only from Maple Street's pages. Type a message and the reply comes back. The sample site starts with it, so there is nothing else to run. Stop it with Ctrl+C.
 
 `DEMO_HOST` and `DEMO_PORT` choose the address. The default is local. The names are listed in [.env.example](../.env.example). The Claude key is set on the machine that runs the assistant. It isn't written into the repo or shown in replies. A crash, a blank reply, or a reply that would show the key is replaced with the outage reply. A clearly unrelated question gets the off-topic reply. A missing fact, and a price the pages don't state, stay the callback reply.
+
+`scripts/chat_limit.py` counts each public chat message that reaches the AI. The count is kept in memory for the Berlin day, so a busy day stops before another AI call. The whole chat allows 200 such messages, and one visitor allows 20, unless `CHAT_DAILY_LIMIT` or `CHAT_VISITOR_DAILY_LIMIT` says otherwise. An empty setting keeps that default. 0 turns that cap off. At either cap, the visitor is asked to come back tomorrow or book a call on roxanatapia.dev, and the AI is not called. An urgent message still gets the fixed reply. A restart clears the count.
+
+One visitor is the address that connected, or the first address in X-Forwarded-For when a proxy sends that header.
+
+**Try it**
+
+```
+python3 scripts/chat_limit.py
+```
+
+It prints the caps and the busy-day reply.
+
+With a key set, a low cap stops the next AI call:
+
+```
+CHAT_DAILY_LIMIT=1 python3 scripts/demo_chat.py
+```
+
+The first ordinary question is answered. The next one asks the visitor to come back tomorrow or book a call on roxanatapia.dev. An urgent message still gets the fixed reply. With no key, the stand-in answers and the cap is not used.

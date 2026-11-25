@@ -78,6 +78,7 @@ Claude reads the pages and the callback sentence, not that list.
 - A request to ignore the rules, or for a discount, uses the discount reply and is not sent to Claude.
 - A service the pages don't list uses that reply and is not sent to Claude.
 - An email the pages don't list is named as missing, then the callback sentence is used, and that question is not sent to Claude.
+- When the public chat reaches its daily limit, the message is not sent. The visitor is asked to come back tomorrow or book a call. The caps are `CHAT_DAILY_LIMIT` and `CHAT_VISITOR_DAILY_LIMIT`. The count is kept in memory for the Berlin day.
 
 ### How an answer is shaped
 

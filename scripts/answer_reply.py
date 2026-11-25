@@ -12,7 +12,9 @@ on the answer path. The text of every page is included.
 
 When ANTHROPIC_API_KEY is set, Claude writes the answer through the
 Messages API. A small, fast model is used unless CLAUDE_MODEL names
-another one. If that call fails, the outage reply is used instead of
+another one. On the public chat, a day that has reached its limit
+returns a short busy-day reply and does not call Claude. If the Claude
+call fails, the outage reply is used instead of
 an error, and a short note records when it happened and what kind of
 error it was. The customer's message and the key are not in that note.
 The outage reply is a different sentence from the callback reply.
@@ -67,6 +69,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import agreed
+import chat_limit
 import price_reply
 import read_pages
 import urgent_reply
@@ -2153,7 +2156,9 @@ def write_answer(question, pages, writer=None, text=None, client=None):
 
     With no writer, Claude writes the answer when ANTHROPIC_API_KEY is
     set, or when client is given. client is a stand-in for the HTTP call,
-    used by the checks. If the call fails, the outage reply is returned
+    used by the checks. On the public chat, once the day's limit is
+    reached, the busy-day reply is returned and Claude is not called.
+    If the call fails, the outage reply is returned
     and a short note records when it happened and what kind of error it
     was. The customer's message and the key are not in that note. The
     outage reply is not the callback sentence.
@@ -2214,6 +2219,8 @@ def write_answer(question, pages, writer=None, text=None, client=None):
     elif client is None and not _api_key():
         reply = stand_in_writer(question, instructions, pages, text=text)
     else:
+        if not chat_limit.allow_model_call():
+            return chat_limit.busy_reply()
         try:
             reply = _claude_reply(instructions, client=client)
         except Exception as error:

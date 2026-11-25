@@ -8,6 +8,11 @@ The Claude key is read later, from the server's own settings, and is
 never sent to the browser. DEMO_HOST and DEMO_PORT choose where the
 page listens. The default is http://127.0.0.1:8080.
 
+Messages that reach the AI are counted for the Berlin day. CHAT_DAILY_LIMIT
+is the whole chat, and CHAT_VISITOR_DAILY_LIMIT is one visitor. At either
+cap, the visitor gets a short note to come back tomorrow or book a call,
+and the AI is not called. An urgent message still gets the fixed reply.
+
 Usage: python3 scripts/demo_chat.py
 """
 
@@ -21,6 +26,7 @@ from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
 import answer_reply
+import chat_limit
 import front_desk
 import serve_sample_site
 
@@ -75,16 +81,18 @@ def _json_bytes(payload):
     return text.encode("utf-8")
 
 
-def safe_reply(message, base_url):
+def safe_reply(message, base_url, visitor=""):
     """Return the front-desk reply, with the key kept off the page.
 
     A crash, a blank reply, or a reply that contains the key becomes
     the outage reply. The key and the customer message are not logged
     and are not sent on. A fact the pages don't cover stays the
-    callback reply.
+    callback reply. This request counts toward the public chat's daily
+    limit when it would reach the AI.
     """
     try:
-        reply = front_desk.reply_to(message, base_url=base_url)
+        with chat_limit.public_chat(visitor):
+            reply = front_desk.reply_to(message, base_url=base_url)
     except Exception:
         return answer_reply.outage_reply()
     if not isinstance(reply, str) or not reply.strip():
@@ -150,8 +158,12 @@ class DemoHandler(BaseHTTPRequestHandler):
         if not isinstance(message, str) or not message.strip():
             self._send_json(400, {"reply": ""})
             return
-        reply = safe_reply(message, self.server.base_url)
+        reply = safe_reply(message, self.server.base_url, visitor=self._visitor())
         self._send_json(200, {"reply": reply})
+
+    def _visitor(self):
+        connected = self.client_address[0] if self.client_address else ""
+        return chat_limit.visitor_key(self.headers.get("X-Forwarded-For", ""), connected)
 
     def _read_json(self):
         raw_length = self.headers.get("Content-Length", "")
@@ -204,6 +216,7 @@ def main(argv=None):
         return 2
     try:
         host, port = listen_address()
+        chat_limit.limits()
     except ValueError as error:
         print(error, file=sys.stderr)
         return 1

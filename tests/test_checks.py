@@ -60,7 +60,7 @@ class ProjectChecks(unittest.TestCase):
         self.assertTrue(version == running or version.startswith(running + "."))
 
     def test_a_proposed_change_runs_the_checks(self):
-        """A proposed change runs the checks for the pages, urgent words, prices, answers, and the demo chat."""
+        """A proposed change runs the checks for the pages, urgent words, prices, answers, the demo chat, and the daily limit."""
         workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
         for command in (
             "tests/test_checks.py",
@@ -85,6 +85,7 @@ class ProjectChecks(unittest.TestCase):
             "tests/test_run_through.py:SecondRunThroughChecks",
             "tests/test_off_topic.py:OffTopicReplyChecks",
             "tests/test_demo.py:DemoChatChecks",
+            "tests/test_chat_limit.py:ChatLimitChecks",
         ):
             self.assertIn(command, workflow)
         behaviour = (ROOT / "docs" / "behaviour.md").read_text(encoding="utf-8")
