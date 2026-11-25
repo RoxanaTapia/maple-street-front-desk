@@ -34,6 +34,7 @@ site prints by default.
 import sys
 
 import answer_reply
+import chat_limit
 import price_reply
 import read_pages
 import urgent_reply
@@ -68,7 +69,9 @@ def reply_to(message, base_url=None, writer=None, client=None):
     number when the pages list no price. An internal note is removed
     before the reply is returned.
     The outage reply is returned as written, so a failed call is not
-    replaced with the callback reply. A page that can't be read is
+    replaced with the callback reply. The busy-day reply is returned
+    as written too, when the public chat has reached its daily limit.
+    A page that can't be read is
     noted for the owner. That note does not change this reply.
 
     client, when given, stands in for the Claude call inside the answer
@@ -82,7 +85,7 @@ def reply_to(message, base_url=None, writer=None, client=None):
     base = read_pages.DEFAULT_SITE if base_url is None else base_url
     pages = read_pages.read_pages(base)
     answer = answer_reply.write_answer(message, pages, writer=writer, client=client)
-    if answer == answer_reply.outage_reply():
+    if answer == answer_reply.outage_reply() or answer == chat_limit.busy_reply():
         return answer
     checked = price_reply.checked_answer(answer, pages=pages, message=message)
     cleaned = answer_reply.without_internal_notes(checked)
