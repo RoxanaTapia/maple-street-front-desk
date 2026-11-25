@@ -12,7 +12,7 @@ From the project folder:
 python3 scripts/demo_chat.py
 ```
 
-It prints `Demo chat at http://127.0.0.1:8080`. Open that address. The practice site starts with the chat, so there is nothing else to run. Stop it with Ctrl+C. The office uses the [setup guide](docs/setup-guide.md). Whoever installs or maintains it uses the [developer guide](docs/developer-guide.md).
+It prints `Demo chat at http://127.0.0.1:8080`. Open that address. The page offers four Saturday night messages, and you can still type your own. The practice site starts with the chat, so there is nothing else to run. Stop it with Ctrl+C. The office uses the [setup guide](docs/setup-guide.md). Whoever installs or maintains it uses the [developer guide](docs/developer-guide.md).
 
 ## What customers get
 
