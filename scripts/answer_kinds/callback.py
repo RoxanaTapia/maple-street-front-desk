@@ -267,7 +267,14 @@ def _asks_about_a_price(question):
     if not isinstance(question, str):
         return False
     bare = _without_surrounding_marks(question)
-    return re.search(r"\b(?:charge|charges|cost|costs|price|prices)\b", bare, re.IGNORECASE) is not None
+    return (
+        re.search(
+            r"\b(?:charge|charges|cost|costs|price|prices)\b",
+            bare,
+            re.IGNORECASE,
+        )
+        is not None
+    )
 
 
 def _mentions_faucet_leak(question):

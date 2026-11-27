@@ -217,7 +217,9 @@ class OffTopicReplyChecks(unittest.TestCase):
         self.assertNotEqual(drain, friendly)
 
     def test_an_unknown_question_still_reaches_the_answer_path(self):
-        """A dripping tap and a card payment are still sent on. An unlisted service is not invented."""
+        """A dripping tap and a card payment are still sent on.
+        An unlisted service is not invented.
+        """
         friendly = answer_reply.off_topic_reply()
         seen = []
 
@@ -254,7 +256,9 @@ class OffTopicReplyChecks(unittest.TestCase):
         self.assertNotEqual(mixed, friendly)
 
     def test_the_demo_http_matches_the_front_desk(self):
-        """The demo HTTP reply matches the front desk for a tap, a payment, and pizza on Saturday."""
+        """The demo HTTP reply matches the front desk for a tap, a payment,
+        and pizza on Saturday.
+        """
         friendly = answer_reply.off_topic_reply()
         callback = answer_reply.callback_reply()
         demo = demo_chat.make_server("127.0.0.1", 0, self.site.base)

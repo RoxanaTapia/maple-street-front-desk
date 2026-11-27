@@ -33,8 +33,7 @@ DEFAULT_DAILY_LIMIT = 200
 DEFAULT_VISITOR_LIMIT = 20
 BERLIN = ZoneInfo("Europe/Berlin")
 BUSY_REPLY = (
-    "The demo has had a busy day. Please come back tomorrow, "
-    "or book a call on roxanatapia.dev."
+    "The demo has had a busy day. Please come back tomorrow, or book a call on roxanatapia.dev."
 )
 
 # Tests set this to a function that returns a datetime. None means now.

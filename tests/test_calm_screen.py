@@ -26,8 +26,7 @@ STYLE = ROOT / "demo" / "style.css"
 GREETING = "Hi, I'm the Maple Street front desk."
 HELP = "How can I help?"
 DISCLAIMER = (
-    "Demo for a fictional plumbing business. "
-    "It only answers from Maple Street Plumbing's pages."
+    "Demo for a fictional plumbing business. It only answers from Maple Street Plumbing's pages."
 )
 CHIPS = (
     "It's Saturday night and my sink is leaking",
@@ -104,7 +103,8 @@ class CalmScreenChecks(unittest.TestCase):
         self.assertNotIn("Exit demo", self.page)
         self.assertNotIn("Log out", self.page)
         self.assertNotIn('id="demo-exit"', self.page)
-        back = self.page.index('class="dk-back" href="https://roxanatapia.dev/">Back to portfolio</a>')
+        back_link = 'class="dk-back" href="https://roxanatapia.dev/">Back to portfolio</a>'
+        back = self.page.index(back_link)
         self.assertLess(back, self.page.index('class="dk-note"'))
         self.assertNotIn("target=", self.page.split('class="dk-back"', 1)[1].split("</a>", 1)[0])
         built = footer.index('href="https://roxanatapia.dev/">Built by Roxana Tapia</a>')

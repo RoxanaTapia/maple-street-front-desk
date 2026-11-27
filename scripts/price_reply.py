@@ -553,7 +553,11 @@ def _prefix_no(answer):
 
 
 def _prices_match(numbers, page_number):
-    return bool(numbers) and page_number is not None and all(number == page_number for number in numbers)
+    return (
+        bool(numbers)
+        and page_number is not None
+        and all(number == page_number for number in numbers)
+    )
 
 
 def adjust_stated_price(answer, message, pages=None, blobs=None):
@@ -628,9 +632,7 @@ def checked_answer(answer, base_url=None, page_text=None, text=None, message=Non
         return answer
     for amount in amounts:
         if not any(
-            price_is_near_service(blob, amount, clause)
-            for clause in clauses
-            for blob in blobs
+            price_is_near_service(blob, amount, clause) for clause in clauses for blob in blobs
         ):
             return callback_reply(text)
     return adjust_stated_price(answer, message, blobs=blobs)

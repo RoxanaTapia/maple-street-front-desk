@@ -5,3 +5,7 @@ extend-exclude = ["vendor/demo-kit"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I"]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests import project modules after adding scripts/ to the path.
+"tests/*.py" = ["E402"]

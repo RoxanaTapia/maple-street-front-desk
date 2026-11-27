@@ -4,17 +4,15 @@ Run this area with
 python3 scripts/run_checks.py tests/test_answer_fixed.py.
 """
 
-import contextlib
 import io
 import json
 import os
-import re
 import sys
 import tempfile
 import unittest
 import urllib.error
 import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parents[1]
@@ -23,19 +21,6 @@ for _folder in (_ROOT / "tests", _ROOT / "scripts"):
     if _text not in sys.path:
         sys.path.insert(0, _text)
 
-from answer_support import (
-    AGREEMENTS,
-    CLOCK,
-    ROOT,
-    SCRIPTS,
-    RunningSite,
-    _FrozenClock,
-    _SavedEnv,
-    _wrapped_forms,
-    docs,
-    page_named,
-    question_rows,
-)
 import agreed
 import answer_reply
 import demo_chat
@@ -44,6 +29,15 @@ import price_reply
 import read_pages
 import serve_sample_site
 import urgent_reply
+from answer_support import (
+    AGREEMENTS,
+    ROOT,
+    SCRIPTS,
+    RunningSite,
+    _FrozenClock,
+    _SavedEnv,
+)
+
 
 class OutageReplyChecks(unittest.TestCase):
     def setUp(self):
@@ -116,7 +110,9 @@ class OutageReplyChecks(unittest.TestCase):
         self.assertEqual(note, f"{stamp} timeout\n")
 
     def test_a_changed_call_us_sentence_is_what_the_replies_use(self):
-        """A changed call-us sentence, including the phone number, is what the replies and the automated tests use."""
+        """A changed call-us sentence, including the phone number,
+        is what the replies and the automated tests use.
+        """
         self._block_network()
         original_callback = answer_reply.callback_reply()
         original_outage = answer_reply.outage_reply()
@@ -195,7 +191,9 @@ class OutageReplyChecks(unittest.TestCase):
         self.assertEqual(answer_reply.outage_reply(), original_outage)
 
     def test_a_failed_call_returns_only_the_outage_reply(self):
-        """A failed call returns only the outage reply, and the note keeps the time and the kind of error."""
+        """A failed call returns only the outage reply,
+        and the note keeps the time and the kind of error.
+        """
         self.assertEqual(self._saved_log, ROOT / "logs" / "error-notes.log")
         answer_reply.datetime = _FrozenClock
         missing = answer_reply.callback_reply()
@@ -297,7 +295,11 @@ class OutageReplyChecks(unittest.TestCase):
             "2026-11-07T15:30:00Z timeout",
         )
         self.assertEqual(lines, list(expected))
-        urgent = front_desk.reply_to("I have a burst pipe", base_url=self.site.base, client=raising(TimeoutError(token)))
+        urgent = front_desk.reply_to(
+            "I have a burst pipe",
+            base_url=self.site.base,
+            client=raising(TimeoutError(token)),
+        )
         self.assertEqual(urgent, urgent_reply.fixed_urgent_reply())
         self.assertEqual(answer_reply.FAILURE_LOG.read_text(encoding="utf-8"), note)
         priced = "Sorry, the lookup is down. A visit is $1,200."
@@ -308,6 +310,7 @@ class OutageReplyChecks(unittest.TestCase):
 
         answer_reply.outage_reply = pricey
         try:
+
             def client(_payload):
                 raise TimeoutError(token)
 
@@ -330,6 +333,7 @@ class OutageReplyChecks(unittest.TestCase):
         self.assertNotIn(priced, saved)
         self.assertTrue(saved.startswith(note))
         self.assertTrue(saved.endswith("2026-11-07T15:30:00Z timeout\n"))
+
 
 if __name__ == "__main__":
     unittest.main()

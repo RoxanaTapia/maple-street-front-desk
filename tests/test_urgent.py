@@ -127,7 +127,8 @@ class UrgentReplyChecks(unittest.TestCase):
             self.assertNotIn(word, behaviour)
         sample = (
             "## Urgent messages\n\n"
-            "When a message mentions **roof leak** or **no water**, it replies with exactly this:\n\n"
+            "When a message mentions **roof leak** or **no water**, "
+            "it replies with exactly this:\n\n"
             "> Please call\n"
             "> the owner.\n"
         )
@@ -167,7 +168,9 @@ class UrgentReplyChecks(unittest.TestCase):
             self.assertNotIn("$", got)
 
     def test_checking_a_message_prints_the_fixed_reply(self):
-        """Checking a message prints the fixed reply when it is urgent, and says it is not when it is not."""
+        """Checking a message prints the fixed reply when it is urgent,
+        and says it is not when it is not.
+        """
         reply = blockquote_reply()
         for word in quoted_urgent_words():
             stdout = io.StringIO()

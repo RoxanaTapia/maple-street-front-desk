@@ -108,7 +108,7 @@ class IconChecks(unittest.TestCase):
             status, content_type, body = self.demo.get(path)
             self.assertEqual(status, 200, path)
             self.assertIn(kind, content_type, path)
-            rel = path[len("/demo-kit/"):]
+            rel = path[len("/demo-kit/") :]
             self.assertEqual(body, (KIT / rel).read_bytes(), path)
         _status, _kind, script = self.demo.get("/demo-kit/theme-init.js")
         self.assertIn(b"rt_theme", script)

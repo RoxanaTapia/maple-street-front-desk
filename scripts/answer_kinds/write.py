@@ -35,6 +35,7 @@ def _entry():
 
     return answer_reply
 
+
 def without_internal_notes(reply):
     """Drop an internal note so the customer never sees it."""
     if not isinstance(reply, str) or not re.search(r"\bnote\s*:", reply, re.IGNORECASE):

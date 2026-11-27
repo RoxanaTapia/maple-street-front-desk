@@ -4,17 +4,10 @@ Run this area with
 python3 scripts/run_checks.py tests/test_answer_pages.py.
 """
 
-import contextlib
-import io
-import json
-import os
 import re
 import sys
 import tempfile
 import unittest
-import urllib.error
-import urllib.request
-from datetime import datetime, timezone
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parents[1]
@@ -23,27 +16,20 @@ for _folder in (_ROOT / "tests", _ROOT / "scripts"):
     if _text not in sys.path:
         sys.path.insert(0, _text)
 
-from answer_support import (
-    AGREEMENTS,
-    CLOCK,
-    ROOT,
-    SCRIPTS,
-    RunningSite,
-    _FrozenClock,
-    _SavedEnv,
-    _wrapped_forms,
-    docs,
-    page_named,
-    question_rows,
-)
-import agreed
 import answer_reply
-import demo_chat
 import front_desk
 import price_reply
 import read_pages
 import serve_sample_site
 import urgent_reply
+from answer_support import (
+    CLOCK,
+    RunningSite,
+    _SavedEnv,
+    page_named,
+    question_rows,
+)
+
 
 class AnswerChecks(unittest.TestCase):
     def setUp(self):
@@ -82,7 +68,11 @@ class AnswerChecks(unittest.TestCase):
             self.assertNotEqual(answer, self._callback(), row["question"])
             self.assertIn(name, answer, row["question"])
             self.assertTrue(answer.endswith(f"From {name}."), row["question"])
-            self.assertNotIn("Maple Street Plumbing is a fictional business", answer, row["question"])
+            self.assertNotIn(
+                "Maple Street Plumbing is a fictional business",
+                answer,
+                row["question"],
+            )
             self.assertNotIn("Home Services Pricing", answer, row["question"])
             body = answer[: -len(f"From {name}.")].strip()
             page_text = by_name[name]["text"]
@@ -103,6 +93,7 @@ class AnswerChecks(unittest.TestCase):
         self.assertIn("book", booking_answer.lower())
         self.assertIn("cancel", booking_answer.lower())
         self.assertIn("Contact", booking_answer)
+
 
 class FromPageChecks(unittest.TestCase):
     def setUp(self):
@@ -199,6 +190,7 @@ class FromPageChecks(unittest.TestCase):
         self.assertEqual(urgent, urgent_reply.fixed_urgent_reply())
         self.assertEqual(called["n"], 0)
 
+
 class SourceLineChecks(unittest.TestCase):
     def setUp(self):
         self.env = _SavedEnv()
@@ -212,7 +204,7 @@ class SourceLineChecks(unittest.TestCase):
     def test_no_reply_contains_its_source_line_twice(self):
         """No reply contains its source line twice."""
         question = "How do I book a visit for Saturday morning?"
-        pages = read_pages.read_pages(self.site.base)
+        read_pages.read_pages(self.site.base)
         replies = []
         for row in question_rows():
             replies.append(front_desk.reply_to(row["question"], base_url=self.site.base))
@@ -298,6 +290,7 @@ class SourceLineChecks(unittest.TestCase):
             self.assertEqual(got, expected, model_reply)
             self.assertEqual(len(re.findall(r"(?<!\S)From\s+", got)), 1, got)
             self.assertIn("from 8:00 am", got)
+
 
 if __name__ == "__main__":
     unittest.main()

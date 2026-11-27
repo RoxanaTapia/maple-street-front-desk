@@ -78,10 +78,7 @@ def _saturday_booking_reply(question, pages, instructions):
     contact_name = " ".join(str(contact.get("name", "")).split())
     if not hours_name or not contact_name:
         return None
-    body = (
-        f"We're open Saturdays from {clock}. "
-        f"To book, call our main line at {phone.group(0)}."
-    )
+    body = f"We're open Saturdays from {clock}. To book, call our main line at {phone.group(0)}."
     names = [name for name in _ordered_names(pages) if name in {hours_name, contact_name}]
     if names != [hours_name, contact_name]:
         names = [hours_name, contact_name]

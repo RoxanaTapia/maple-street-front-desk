@@ -4,17 +4,9 @@ Run this area with
 python3 scripts/run_checks.py tests/test_answer_hours.py.
 """
 
-import contextlib
-import io
-import json
 import os
-import re
 import sys
-import tempfile
 import unittest
-import urllib.error
-import urllib.request
-from datetime import datetime, timezone
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parents[1]
@@ -23,27 +15,20 @@ for _folder in (_ROOT / "tests", _ROOT / "scripts"):
     if _text not in sys.path:
         sys.path.insert(0, _text)
 
-from answer_support import (
-    AGREEMENTS,
-    CLOCK,
-    ROOT,
-    SCRIPTS,
-    RunningSite,
-    _FrozenClock,
-    _SavedEnv,
-    _wrapped_forms,
-    docs,
-    page_named,
-    question_rows,
-)
-import agreed
 import answer_reply
-import demo_chat
 import front_desk
-import price_reply
 import read_pages
 import serve_sample_site
 import urgent_reply
+from answer_support import (
+    AGREEMENTS,
+    ROOT,
+    RunningSite,
+    _SavedEnv,
+    page_named,
+    question_rows,
+)
+
 
 class HoursFaqAnswerChecks(unittest.TestCase):
     def setUp(self):
@@ -56,7 +41,9 @@ class HoursFaqAnswerChecks(unittest.TestCase):
         self.env.restore()
 
     def test_questions_13_to_15_come_from_hours_and_faq(self):
-        """Questions 13 to 15 are answered from the Hours & FAQ page, and the after-hours question is not urgent."""
+        """Questions 13 to 15 are answered from the Hours & FAQ page,
+        and the after-hours question is not urgent.
+        """
         rows = {row["number"]: row for row in question_rows()}
         callback = answer_reply.callback_reply()
         urgent = urgent_reply.fixed_urgent_reply()
@@ -98,6 +85,7 @@ class HoursFaqAnswerChecks(unittest.TestCase):
             self.assertNotEqual(got, callback, row["question"])
             self.assertNotEqual(got, urgent, row["question"])
             self.assertTrue(got.endswith("From Hours & FAQ."), row["question"])
+
 
 class SaturdayBookingChecks(unittest.TestCase):
     def setUp(self):
@@ -160,6 +148,7 @@ class SaturdayBookingChecks(unittest.TestCase):
             expected,
         )
         self.assertEqual(answer_reply.write_answer(question, pages, writer=writer), expected)
+
 
 if __name__ == "__main__":
     unittest.main()

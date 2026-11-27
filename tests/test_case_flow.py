@@ -65,6 +65,7 @@ class RunningDemo:
         self.base = f"http://{site_host}:{site_port}"
         self._wait(self.base + "/")
         import demo_chat
+
         self.demo = demo_chat.make_server("127.0.0.1", 0, self.base)
         self.demo_thread = threading.Thread(target=self.demo.serve_forever, daemon=True)
         self.demo_thread.start()

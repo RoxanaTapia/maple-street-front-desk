@@ -31,6 +31,34 @@ from answer_kinds.pages import normalize_source_line
 from answer_kinds.stand_in import ANSWERED_GROUP, stand_in_writer
 from answer_kinds.write import without_internal_notes, write_answer
 
+# Names the other scripts and the tests read from this module.
+__all__ = [
+    "ANSWERED_GROUP",
+    "CORRECT_A_WRONG_PRICE",
+    "FACT_FIRST",
+    "HOW_MUCH_IS_NOT_YES",
+    "MISSPELLED_SERVICE",
+    "NAME_EVERY_PAGE",
+    "NO_INTERNAL_NOTE",
+    "PAGE_NOTE_WINDOW",
+    "PLAIN_PRICE",
+    "PRICED_SERVICE_IS_OFFERED",
+    "WRONG_AMOUNT_GETS_A_NO",
+    "_message_text",
+    "_post_message",
+    "build_instructions",
+    "callback_reply",
+    "datetime",
+    "discount_reply",
+    "normalize_source_line",
+    "off_topic_reply",
+    "outage_reply",
+    "stand_in_writer",
+    "unlisted_service_reply",
+    "urllib",
+    "without_internal_notes",
+]
+
 ROOT = Path(__file__).resolve().parents[1]
 KEY_ENV = "ANTHROPIC_API_KEY"
 MODEL_ENV = "CLAUDE_MODEL"

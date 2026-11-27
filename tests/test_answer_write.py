@@ -6,15 +6,8 @@ python3 scripts/run_checks.py tests/test_answer_write.py.
 
 import contextlib
 import io
-import json
-import os
-import re
 import sys
-import tempfile
 import unittest
-import urllib.error
-import urllib.request
-from datetime import datetime, timezone
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parents[1]
@@ -23,27 +16,17 @@ for _folder in (_ROOT / "tests", _ROOT / "scripts"):
     if _text not in sys.path:
         sys.path.insert(0, _text)
 
-from answer_support import (
-    AGREEMENTS,
-    CLOCK,
-    ROOT,
-    SCRIPTS,
-    RunningSite,
-    _FrozenClock,
-    _SavedEnv,
-    _wrapped_forms,
-    docs,
-    page_named,
-    question_rows,
-)
-import agreed
 import answer_reply
-import demo_chat
 import front_desk
-import price_reply
 import read_pages
 import serve_sample_site
 import urgent_reply
+from answer_support import (
+    RunningSite,
+    _SavedEnv,
+    question_rows,
+)
+
 
 class UrgentPathChecks(unittest.TestCase):
     def setUp(self):
@@ -98,6 +81,7 @@ class UrgentPathChecks(unittest.TestCase):
                 self._callback(),
                 row["question"],
             )
+
 
 class PrintedReplyChecks(unittest.TestCase):
     def setUp(self):
@@ -154,6 +138,7 @@ class PrintedReplyChecks(unittest.TestCase):
             stderr = io.StringIO()
             with contextlib.redirect_stderr(stderr):
                 self.assertEqual(command([]), 2)
+
 
 if __name__ == "__main__":
     unittest.main()
