@@ -1,0 +1,15 @@
+---
+description: How public writing and agent notes are written
+globs: "**/*.md,**/*.mdc"
+alwaysApply: true
+---
+
+# Documentation
+
+- Write in plain words. Short sections. Use a list or a table when it is easier to scan.
+- No em dashes. A Markdown link is fine. Do not invent a path, a command, or a number.
+- Maple Street Plumbing is a demo front desk. Do not describe it as a real client.
+- An issue title starts with one emoji code, such as 🛠️ or 📄. A pull request title is a plain sentence.
+- Keep each fact in one file and link to it. [docs/behaviour.md](../../docs/behaviour.md) says what the assistant does. [docs/agreements.md](../../docs/agreements.md) holds what was agreed.
+- When a script is added or changed, update its section in [docs/how-it-works.md](../../docs/how-it-works.md).
+- Roxana reviews and merges.
