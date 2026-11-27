@@ -8,10 +8,17 @@ python3 scripts/run_checks.py tests/test_calm_screen.py:CalmScreenChecks.
 """
 
 import re
+import sys
 import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+SCRIPTS = ROOT / "scripts"
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+import demo_chat
+
 PAGE = ROOT / "demo" / "index.html"
 SCRIPT = ROOT / "demo" / "chat.js"
 STYLE = ROOT / "demo" / "style.css"
@@ -29,10 +36,6 @@ CHIPS = (
     "Do you sell pizza?",
 )
 FOOTER_LINK = "https://roxanatapia.dev/cases/front-desk"
-BOOK_LINK = (
-    "https://calendar.google.com/calendar/appointments/schedules/"
-    "AcZssZ3r5LJ7bPLsMMNRH2fcH9DkzDNTf8oA8XIg0NX9aNpoKezPGMN2Z2OTD-baqG9XoB5vfehzJnzt?gv=true"
-)
 VOICE_LINES = (
     "A live chat assistant. Voice is the next step.",
     "Next: the same rules on a phone call",
@@ -95,18 +98,38 @@ class CalmScreenChecks(unittest.TestCase):
         footer = self.page.split('<footer class="dk-footer">', 1)[1].split("</footer>", 1)[0]
         self.assertIn('class="dk-footer-slot"', footer)
         self.assertNotIn("Tested with automated tests.", self.page)
+        self.assertNotIn('class="tested"', self.page)
+        self.assertNotIn(".tested", self.style)
         self.assertNotIn("github.com/RoxanaTapia/maple-street-front-desk", self.page)
+        self.assertNotIn("Exit demo", self.page)
+        self.assertNotIn("Log out", self.page)
+        self.assertNotIn('id="demo-exit"', self.page)
+        back = self.page.index('class="dk-back" href="https://roxanatapia.dev/">Back to portfolio</a>')
+        self.assertLess(back, self.page.index('class="dk-note"'))
+        self.assertNotIn("target=", self.page.split('class="dk-back"', 1)[1].split("</a>", 1)[0])
         built = footer.index('href="https://roxanatapia.dev/">Built by Roxana Tapia</a>')
         case = footer.index(f'href="{FOOTER_LINK}">How it\'s built</a>')
         book = footer.index(
-            f'href="{BOOK_LINK}" target="_blank" rel="noopener noreferrer">Book a call</a>'
+            'href="__BOOKING_URL__" target="_blank" rel="noopener noreferrer">Book a call</a>'
         )
         self.assertLess(built, case)
         self.assertLess(case, book)
         self.assertEqual(footer.count("·"), 2)
         self.assertNotIn('target="_blank"', footer[:case])
+        url = demo_chat.booking_page()
+        self.assertTrue(url.startswith("https://calendar.google.com/calendar/appointments/"))
+        served = demo_chat.chat_page()
+        self.assertIn(
+            f'href="{url}" target="_blank" rel="noopener noreferrer">Book a call</a>',
+            served,
+        )
+        self.assertNotIn("__BOOKING_URL__", served)
         self.assertIsNone(re.search(r"\bchecks\b", self.page, re.IGNORECASE))
         self.assertIn(".dk-footer-slot a {\n  color: var(--color-muted);\n", self.style)
+        self.assertNotIn("Tested with automated tests.", served)
+        back_css = self.style.split(".dk-back", 1)[1].split("}", 1)[0]
+        self.assertIn("color: var(--color-muted)", back_css)
+        self.assertIn(':root[data-theme="dark"] .dk-back', self.style)
 
     def test_the_chat_page_has_no_em_dash(self):
         """The chat page has no em dash."""

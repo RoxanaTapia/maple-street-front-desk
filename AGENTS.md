@@ -28,6 +28,7 @@ Issues, pull requests, and other client-facing writing use no em dashes and no s
 | Client-facing | [docs/behaviour.md](docs/behaviour.md) | What a customer writes, and what they get back |
 | Client-facing | [docs/how-it-works.md](docs/how-it-works.md) | How a message is handled, and how to try the sample site and the automated tests. See [Try it yourself](docs/how-it-works.md#try-it-yourself). |
 | Client-facing | [docs/handover.md](docs/handover.md) | Notes for when the project is handed over |
+| Client-facing | [docs/portfolio.md](docs/portfolio.md) | The booking page address the chat footer uses |
 | Client-facing | [AGENTS.md](AGENTS.md) | This guide |
 | Client-facing | [sample-site/](sample-site/) | A small fictional sample of Maple Street Plumbing's public pages |
 | Client-facing | [scripts/serve_sample_site.py](scripts/serve_sample_site.py) | Serves that sample like a website |
