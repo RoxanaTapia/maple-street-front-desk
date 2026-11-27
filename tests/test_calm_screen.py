@@ -29,6 +29,10 @@ CHIPS = (
     "Do you sell pizza?",
 )
 FOOTER_LINK = "https://roxanatapia.dev/cases/front-desk"
+BOOK_LINK = (
+    "https://calendar.google.com/calendar/appointments/schedules/"
+    "AcZssZ3r5LJ7bPLsMMNRH2fcH9DkzDNTf8oA8XIg0NX9aNpoKezPGMN2Z2OTD-baqG9XoB5vfehzJnzt?gv=true"
+)
 VOICE_LINES = (
     "A live chat assistant. Voice is the next step.",
     "Next: the same rules on a phone call",
@@ -83,15 +87,26 @@ class CalmScreenChecks(unittest.TestCase):
         self.assertLess(send.index("clearEmpty"), send.index("addCustomer"))
         self.assertIn("removeChild", self.script.split("function clearEmpty", 1)[1])
 
-    def test_the_footer_links_to_how_it_is_built(self):
-        """The quiet footer links How it's built to the case notes."""
-        footer = self.page.index('class="quiet"')
+    def test_the_footer_matches_the_demo_kit_slot(self):
+        """The footer is the shared line, and How it's built opens the case notes."""
         composer = self.page.index('id="composer"')
-        self.assertLess(composer, footer)
-        self.assertIn("Tested with automated tests.", self.page)
-        self.assertIn(f'href="{FOOTER_LINK}">How it\'s built</a>', self.page)
+        footer_at = self.page.index('<footer class="dk-footer">')
+        self.assertLess(composer, footer_at)
+        footer = self.page.split('<footer class="dk-footer">', 1)[1].split("</footer>", 1)[0]
+        self.assertIn('class="dk-footer-slot"', footer)
+        self.assertNotIn("Tested with automated tests.", self.page)
         self.assertNotIn("github.com/RoxanaTapia/maple-street-front-desk", self.page)
+        built = footer.index('href="https://roxanatapia.dev/">Built by Roxana Tapia</a>')
+        case = footer.index(f'href="{FOOTER_LINK}">How it\'s built</a>')
+        book = footer.index(
+            f'href="{BOOK_LINK}" target="_blank" rel="noopener noreferrer">Book a call</a>'
+        )
+        self.assertLess(built, case)
+        self.assertLess(case, book)
+        self.assertEqual(footer.count("·"), 2)
+        self.assertNotIn('target="_blank"', footer[:case])
         self.assertIsNone(re.search(r"\bchecks\b", self.page, re.IGNORECASE))
+        self.assertIn(".dk-footer-slot a {\n  color: var(--color-muted);\n", self.style)
 
     def test_the_chat_page_has_no_em_dash(self):
         """The chat page has no em dash."""
