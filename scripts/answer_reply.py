@@ -129,6 +129,40 @@ NAME_EVERY_PAGE = (
     "When the answer uses facts from more than one page, name every page. "
     "For example, From Hours & FAQ and Contact."
 )
+# Speak as the business. A missing price is something we have not published.
+SPEAK_AS_THE_BUSINESS = (
+    "Speak as Maple Street Plumbing, using we. "
+    "Do not say the pages don't list a service or a price. "
+    "If a price is not published, say we don't have a published price "
+    "and that we can't confirm it."
+)
+# Words that name a kind of job, not the job itself.
+_GENERIC_PRICE_WORDS = frozenset(
+    {
+        "service",
+        "services",
+        "servicing",
+        "repair",
+        "repairs",
+        "repairing",
+        "fix",
+        "fixes",
+        "fixing",
+        "price",
+        "prices",
+        "cost",
+        "costs",
+        "charge",
+        "charges",
+    }
+)
+# "How much is boiler servicing?" keeps the service words the visitor used.
+_HOW_MUCH_NAME = re.compile(
+    r"^(?:how\s+much\s+(?:is|for)\s+(?:an?\s+)?|how\s+much\s+does\s+)"
+    r"(.+?)"
+    r"(?:\s+cost|\s+costs)?$",
+    re.IGNORECASE,
+)
 # An address such as owner@shop.test. The contact page does not have one.
 _EMAIL_ADDRESS = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 # The main line, as the contact page writes it, such as 030 0000 0000.
@@ -415,6 +449,47 @@ def discount_reply(text=None):
 def unlisted_service_reply(text=None):
     """Return the sentence used when the pages don't list that service."""
     return agreed.unlisted_service_reply(text)
+
+
+def _main_line(text=None):
+    """Return the fictional call-us number from the agreed sentences."""
+    for sentence in (callback_reply(text), urgent_reply.fixed_urgent_reply(text)):
+        found = _PHONE.search(sentence or "")
+        if found:
+            return found.group(0)
+    return ""
+
+
+def _call_and_confirm(text=None):
+    """A call-us line that is not the callback sentence."""
+    number = _main_line(text)
+    if number:
+        return f"Call us on {number} and we'll confirm."
+    return "Call us and we'll confirm."
+
+
+def _call_or_request(text=None):
+    """Invite a call or a request, and give the fictional number."""
+    number = _main_line(text)
+    if number:
+        return f"Call or send a request and we'll confirm. Our number is {number}."
+    return "Call or send a request and we'll confirm."
+
+
+def _confirm_on_number(text=None):
+    """Another call-or-request line, so the closers are not all the same."""
+    number = _main_line(text)
+    if number:
+        return f"Call or send a request and we'll confirm on {number}."
+    return "Call or send a request and we'll confirm."
+
+
+def _published_price_closer(text=None):
+    """The closer for a price we have not published."""
+    number = _main_line(text)
+    if number:
+        return f"Call us and we'll confirm. Our number is {number}."
+    return "Call us and we'll confirm."
 
 
 def _is_off_topic(question):
@@ -1243,6 +1318,7 @@ def build_instructions(question, pages, text=None):
         HOW_MUCH_IS_NOT_YES,
         FACT_FIRST,
         NO_INTERNAL_NOTE,
+        SPEAK_AS_THE_BUSINESS,
         "When the pages don't cover the question, reply with exactly this sentence:",
         callback,
         "",
@@ -1632,6 +1708,75 @@ def _saturday_booking_reply(question, pages, instructions):
     return _with_pages(body, names)
 
 
+def _distinctive_price_words(phrase):
+    """Return the service words, leaving out generic job words."""
+    generic_stems = {price_reply.service_stem(word) for word in _GENERIC_PRICE_WORDS}
+    words = []
+    for word in _WORD.findall(phrase.casefold()):
+        if word in _STOP or len(word) < 3:
+            continue
+        if word in _GENERIC_PRICE_WORDS or price_reply.service_stem(word) in generic_stems:
+            continue
+        words.append(word)
+    return words
+
+
+def _page_words(pages):
+    """Return the words a visitor can read, once each."""
+    words = []
+    seen = set()
+    for page in pages or []:
+        if not isinstance(page, dict) or page.get("status") != "read":
+            continue
+        blob = f"{page.get('name', '')} {page.get('title', '')} {page.get('text', '')}"
+        for match in _WORD.finditer(blob.casefold()):
+            word = match.group(0)
+            if word in seen:
+                continue
+            seen.add(word)
+            words.append(word)
+    return words
+
+
+def _asked_service_phrase(question):
+    """Return the service words from a how much question, as the visitor wrote them."""
+    if not isinstance(question, str):
+        return None
+    bare = _without_surrounding_marks(question).rstrip(" ?!.").strip()
+    bare = " ".join(bare.split())
+    match = _HOW_MUCH_NAME.match(bare)
+    if not match:
+        return None
+    phrase = match.group(1).strip(" ?!.")
+    phrase = re.sub(r"^(?:an?\s+)", "", phrase, flags=re.IGNORECASE).strip()
+    if len(phrase) < 3 or not re.search(r"[a-z]", phrase, re.IGNORECASE):
+        return None
+    return phrase
+
+
+def _unpublished_price_reply(question, pages, text=None):
+    """Say we have no published price for a service the pages never name.
+
+    "How much is boiler servicing?" is that case. A service the pages do
+    name, even beside an extra word, stays on the callback path. An
+    agreed question is left for its own reply. Nothing is invented.
+    """
+    if not _asks_how_much(question) or not _every_page_was_read(pages):
+        return None
+    if _matched_question(question, text) is not None:
+        return None
+    phrase = _asked_service_phrase(question)
+    if not phrase:
+        return None
+    words = _distinctive_price_words(phrase)
+    if not words:
+        return None
+    listed = _page_words(pages)
+    if any(_listed_word(word, listed) for word in words):
+        return None
+    return f"We don't have a published price for {phrase}. {_published_price_closer(text)}"
+
+
 def stand_in_writer(question, instructions, pages, text=None):
     """Answer the agreed test questions. This is not a real AI.
 
@@ -1652,7 +1797,9 @@ def stand_in_writer(question, instructions, pages, text=None):
     whether a service is offered, and a page lists a price for it, the
     answer says yes, includes that price, and names the page. The pages
     do not have to say "we do" that job in other words. A service the
-    pages never mention gets the callback sentence.
+    pages never mention gets the callback sentence. A how much question
+    about a service the pages never name says we don't have a published
+    price, and that we will confirm.
     """
     callback = callback_reply(text)
     if not isinstance(question, str) or not question.strip():
@@ -1672,6 +1819,7 @@ def stand_in_writer(question, instructions, pages, text=None):
             or offered
             or _misspelled_price(question, pages, instructions)
             or _how_much_reply(question, pages, instructions)
+            or _unpublished_price_reply(question, pages, text)
             or callback
         )
     name = _source_page(row["detail"])
@@ -1972,7 +2120,7 @@ def _email_reply_for(question, pages, text=None):
         blob = f"{page.get('name', '')} {page.get('title', '')} {page.get('text', '')}"
         if _EMAIL_ADDRESS.search(blob):
             return None
-    return f"The pages don't list an email address. {callback_reply(text)}"
+    return f"We don't have a published email address. {_call_or_request(text)}"
 
 
 def _two_jobs(question):
@@ -2079,7 +2227,10 @@ def _two_part_reply(question, pages, instructions, text=None):
         missing = phrase
     if len(covered) != 1 or not missing:
         return None
-    return f"{covered[0]} The pages don't list {missing}. {callback_reply(text)}"
+    return (
+        f"{covered[0]} We don't have a published price for {missing}. "
+        f"{_call_and_confirm(text)}"
+    )
 
 
 def _normalize_leaky_words(question):
@@ -2132,7 +2283,10 @@ def _leak_price_reply(question, pages, instructions, text=None):
         return None
     if _priced_snippet(question, pages, instructions):
         return None
-    return f"The pages don't list a price for a leak. {callback_reply(text)}"
+    return (
+        "We don't have a published price for a leaking faucet. "
+        f"{_confirm_on_number(text)}"
+    )
 
 
 def write_answer(question, pages, writer=None, text=None, client=None):

@@ -1,6 +1,7 @@
 body {
-  height: 100dvh;
-  overflow: hidden;
+  min-height: 100dvh;
+  height: auto;
+  overflow-x: hidden;
 }
 
 h1.dk-product {
@@ -30,18 +31,18 @@ h1.dk-product {
   padding: 6px var(--page-pad) 6px;
   display: flex;
   flex-direction: column;
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow: hidden;
+  flex: 1 0 auto;
+  min-height: auto;
+  overflow: visible;
 }
 
 .phone {
-  flex: 1 1 auto;
-  min-height: 0;
+  flex: 1 0 auto;
+  min-height: auto;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .phone > :not(.thread) {
@@ -128,9 +129,9 @@ h1.dk-product {
 }
 
 .thread {
-  flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
+  flex: 1 0 auto;
+  min-height: auto;
+  overflow: visible;
   display: flex;
   flex-direction: column;
 }
@@ -320,6 +321,10 @@ textarea:disabled,
 }
 
 @media (min-width: 800px) {
+  .wrap {
+    max-width: 42rem;
+  }
+
   .phone {
     padding: 16px 16px 14px;
     border: 1px solid var(--color-border);

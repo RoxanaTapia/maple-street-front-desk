@@ -238,10 +238,11 @@ class RunThroughReplyChecks(unittest.TestCase):
         self.assertEqual(called["writer"], 0)
 
     def test_an_unlisted_service_is_not_invented(self):
-        """Do you fix roofs says the pages don't list that service, plus the call-us number."""
+        """Do you fix roofs says we don't offer that service, plus the call-us number."""
         expected = agreed.unlisted_service_reply()
         callback = answer_reply.callback_reply()
-        self.assertIn("don't list", expected.lower())
+        self.assertIn("don't offer", expected.lower())
+        self.assertNotIn("pages", expected.lower())
         self.assertIn("030 0000 0000", expected)
         self.assertNotIn("roof", expected.lower())
         self.assertNotEqual(expected, callback)
@@ -291,10 +292,14 @@ class SecondRunThroughChecks(unittest.TestCase):
         self.assertNotIn("ANTHROPIC_API_KEY", os.environ)
         callback = answer_reply.callback_reply()
         urgent = urgent_reply.fixed_urgent_reply()
-        email = f"The pages don't list an email address. {callback}"
+        email = (
+            "We don't have a published email address. "
+            f"{answer_reply._call_or_request()}"
+        )
         two_part = (
             "Yes, we do drain cleaning. It's $149. From Pricing. "
-            f"The pages don't list water heater repair. {callback}"
+            "We don't have a published price for water heater repair. "
+            f"{answer_reply._call_and_confirm()}"
         )
         wrong_price = "No, a drain cleaning is $149. From Pricing."
         rows = agreed.question_rows()
@@ -328,8 +333,10 @@ class SecondRunThroughChecks(unittest.TestCase):
         self.assertNotIn("water heater repair is $", two_part)
         self.assertFalse(two_part.lower().startswith("please call"))
         self.assertEqual(email.count("\n"), 0)
-        self.assertTrue(email.startswith("The pages don't list an email address."))
-        self.assertTrue(email.endswith(callback))
+        self.assertTrue(email.startswith("We don't have a published email address."))
+        self.assertIn("send a request", email.lower())
+        self.assertNotIn("pages", email.lower())
+        self.assertNotEqual(email, callback)
         self.assertNotIn("From Contact", email)
         called = {"writer": 0}
 
@@ -345,13 +352,15 @@ class SecondRunThroughChecks(unittest.TestCase):
     def test_no_reply_contains_an_internal_note(self):
         """No reply contains an internal note."""
         callback = answer_reply.callback_reply()
+        email = (
+            "We don't have a published email address. "
+            f"{answer_reply._call_or_request()}"
+        )
         leaked = (
-            "The pages don't list an email address. "
-            f"{callback}\n\n"
-            "Note: the pages don't list an email address, so the call-back line "
+            f"{email}\n\n"
+            "Note: no email address is published, so the call-back line "
             "is the only contact given. From Contact."
         )
-        email = f"The pages don't list an email address. {callback}"
         self.assertEqual(answer_reply.without_internal_notes(leaked), email)
         self.assertNotIn("Note:", answer_reply.without_internal_notes(leaked))
         self.assertNotIn("From Contact", answer_reply.without_internal_notes(leaked))

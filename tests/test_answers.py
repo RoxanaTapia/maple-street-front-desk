@@ -242,7 +242,9 @@ class AnswerChecks(unittest.TestCase):
                 self.assertNotIn("$", got)
             for row in urgent_rows:
                 got = front_desk.reply_to(row["question"], writer=writer)
-                self.assertEqual(got, reply, row["question"])
+                expected = urgent_reply.reply_if_urgent(row["question"])
+                self.assertEqual(got, expected, row["question"])
+                self.assertTrue(got.endswith(reply), row["question"])
         finally:
             read_pages.read_pages = original
         self.assertEqual(called["pages"], 0)
@@ -331,6 +333,8 @@ class AnswerChecks(unittest.TestCase):
             and urgent_reply.reply_if_urgent(row["question"]) is None
         )
         urgent_row = next(row for row in rows if urgent_reply.reply_if_urgent(row["question"]))
+        urgent_expected = urgent_reply.reply_if_urgent(urgent_row["question"])
+        self.assertTrue(urgent_expected.endswith(urgent))
         expected = front_desk.reply_to(answered["question"], base_url=self.site.base)
         stdout = io.StringIO()
         with contextlib.redirect_stdout(stdout):
@@ -346,7 +350,7 @@ class AnswerChecks(unittest.TestCase):
         with contextlib.redirect_stdout(stdout):
             code = front_desk.main(urgent_row["question"].split())
         self.assertEqual(code, 0)
-        self.assertEqual(stdout.getvalue(), urgent + "\n")
+        self.assertEqual(stdout.getvalue(), urgent_expected + "\n")
         for command in (answer_reply.main, front_desk.main):
             stderr = io.StringIO()
             with contextlib.redirect_stderr(stderr):
@@ -1506,7 +1510,8 @@ class PricedServiceChecks(unittest.TestCase):
             self.assertEqual(got, unlisted, question)
             self.assertEqual(answer_reply.write_answer(question, pages), unlisted, question)
             self.assertNotIn("$", got, question)
-            self.assertIn("don't list", got.lower(), question)
+            self.assertIn("don't offer", got.lower(), question)
+            self.assertNotIn("pages", got.lower(), question)
             self.assertNotEqual(got, friendly, question)
             self.assertNotEqual(got, urgent, question)
             self.assertNotEqual(got, callback, question)
@@ -1524,6 +1529,35 @@ class PricedServiceChecks(unittest.TestCase):
             answer_reply.unlisted_service_reply(),
         )
         self.assertNotIn("$149", "Call for a quote.")
+
+    def test_an_unpublished_price_is_spoken_as_the_business(self):
+        """How much is boiler servicing says we have no published price."""
+        self.assertNotIn("ANTHROPIC_API_KEY", os.environ)
+        question = "How much is boiler servicing?"
+        callback = answer_reply.callback_reply()
+        got = front_desk.reply_to(question, base_url=self.site.base)
+        self.assertTrue(
+            got.startswith("We don't have a published price for boiler servicing."),
+            got,
+        )
+        self.assertIn("Call us and we'll confirm.", got)
+        self.assertIn("030 0000 0000", got)
+        self.assertNotIn("pages", got.lower())
+        self.assertNotIn("$", got)
+        self.assertNotEqual(got, callback)
+        self.assertNotEqual(got, answer_reply.outage_reply())
+        weekly = front_desk.reply_to(
+            "How much is a weekly drain cleaning?",
+            base_url=self.site.base,
+        )
+        self.assertEqual(weekly, callback)
+        heater = front_desk.reply_to("Water heater price?", base_url=self.site.base)
+        self.assertEqual(heater, callback)
+        agreed = front_desk.reply_to(
+            "How much is a water heater replacement?",
+            base_url=self.site.base,
+        )
+        self.assertEqual(agreed, callback)
 
 
 class MisspellingAndPlainPriceChecks(unittest.TestCase):
@@ -1914,7 +1948,10 @@ class MisspelledLeakChecks(unittest.TestCase):
         self.assertIn("small misspelling of that problem", behaviour.lower())
         callback = answer_reply.callback_reply()
         urgent = urgent_reply.fixed_urgent_reply()
-        leak_reply = f"The pages don't list a price for a leak. {callback}"
+        leak_reply = (
+            "We don't have a published price for a leaking faucet. "
+            f"Call or send a request and we'll confirm on {answer_reply._main_line()}."
+        )
         spelled = "how much do u charge for a leaky faucet"
         misspelled = "how much do u charge for a leeky faucet"
         self.assertIsNone(urgent_reply.reply_if_urgent(spelled))
@@ -2011,7 +2048,10 @@ class MisspelledLeakChecks(unittest.TestCase):
         self.assertNotIn("ANTHROPIC_API_KEY", os.environ)
         callback = answer_reply.callback_reply()
         urgent = urgent_reply.fixed_urgent_reply()
-        leak_reply = f"The pages don't list a price for a leak. {callback}"
+        leak_reply = (
+            "We don't have a published price for a leaking faucet. "
+            f"Call or send a request and we'll confirm on {answer_reply._main_line()}."
+        )
         drain = "How much is a drain cleaning?"
         got = front_desk.reply_to(drain, base_url=self.site.base)
         self.assertEqual(got, "A drain cleaning is $149. From Pricing.")

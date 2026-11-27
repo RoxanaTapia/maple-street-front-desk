@@ -363,7 +363,7 @@ class QuestionCoverageChecks(unittest.TestCase):
         unlisted_rows = [
             row
             for row in handled
-            if "don't list" in row["detail"].lower() and "callback" not in row["detail"].lower()
+            if row not in urgent_rows and row not in callback_rows and row not in discount_rows
         ]
         self.assertEqual([row["number"] for row in discount_rows], [21])
         self.assertEqual([row["number"] for row in unlisted_rows], [22, 24, 28])
