@@ -39,7 +39,7 @@ Issues, pull requests, and other client-facing writing use no em dashes and no s
 | Client-facing | [scripts/front_desk.py](scripts/front_desk.py) | Runs one message through the urgent reply, the business's pages, the answer, and the price check. See [How the assistant works](docs/how-it-works.md). |
 | Client-facing | [scripts/demo_chat.py](scripts/demo_chat.py) | Serves a chat page that runs one message through the front desk. See [Try the demo](docs/how-it-works.md#try-the-demo). |
 | Client-facing | [scripts/chat_limit.py](scripts/chat_limit.py) | Counts public chat messages that reach the AI, for one Berlin day. See [Try the demo](docs/how-it-works.md#try-the-demo). |
-| Client-facing | [demo/](demo/) | The chat page: four Saturday night messages, the message box, the conversation, and the demo line. |
+| Client-facing | [demo/](demo/) | The chat page: a greeting, four messages, the message box, the conversation, and a quiet footer. |
 | Client-facing | [vendor/demo-kit/](vendor/demo-kit/) | The shared header, theme, icons, and fonts for the chat page. |
 | For the agents | [.cursor/rules/](.cursor/rules/) | How the agents are allowed to work |
 | For the agents | [.cursor/team/](.cursor/team/README.md) | The roles they work in |

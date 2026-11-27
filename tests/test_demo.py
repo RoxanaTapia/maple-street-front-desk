@@ -34,7 +34,10 @@ import read_pages
 import serve_sample_site
 import urgent_reply
 
-DEMO_LINE = "This is a demo. It answers only from Maple Street Plumbing's pages."
+DEMO_LINE = (
+    "Demo for a fictional plumbing business. "
+    "It only answers from Maple Street Plumbing's pages."
+)
 
 
 class _SavedEnv:
@@ -444,7 +447,8 @@ class DemoChatChecks(unittest.TestCase):
         self.assertIn("Maple Street front desk", body)
         self.assertIn("Portfolio demo · fictional business", body)
         self.assertNotIn("sample data", body)
-        self.assertIn("A live chat assistant. Voice is the next step.", body)
+        self.assertNotIn("A live chat assistant. Voice is the next step.", body)
+        self.assertNotIn("Next: the same rules on a phone call", body)
         self.assertIn("Exit demo", body)
         self.assertIn("Log out", body)
         self.assertIn('id="theme-toggle"', body)

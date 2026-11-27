@@ -370,6 +370,21 @@ jobs:
       - name: Run automated tests
         run: python3 scripts/run_checks.py tests/test_case_flow.py:CaseFlowChecks
 
+  calm-screen:
+    name: The empty chat screen stays calm
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Run automated tests
+        run: python3 scripts/run_checks.py tests/test_calm_screen.py:CalmScreenChecks
+
   daily-chat-limit:
     name: The daily chat limit holds
     runs-on: ubuntu-latest
