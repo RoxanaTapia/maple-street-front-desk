@@ -19,7 +19,7 @@ flowchart LR
 |---|---|---|---|
 | 1 | Spot an emergency | `scripts/urgent_reply.py` | Yes |
 | 2 | Read the pages | `scripts/read_pages.py` | Yes |
-| 3 | Write the answer | `scripts/answer_reply.py` | Yes |
+| 3 | Write the answer | `scripts/answer_reply.py`, kinds in `scripts/answer_kinds/` | Yes |
 | 4 | Check every price | `scripts/price_reply.py` | Yes |
 
 `scripts/front_desk.py` runs these four parts in order. Start the sample site first. [Try it yourself](#try-it-yourself) is at the end.
@@ -83,6 +83,22 @@ Every sample page shows a banner that this business is fictional.
 ## 3 · Write the answer
 
 *A question gets a short answer from the business's pages, the off-topic reply when it is clearly about something else, the callback reply when the pages don't cover it, or the outage reply when the call fails.*
+
+The command and the import stay `scripts/answer_reply.py`. The kinds of reply live in `scripts/answer_kinds/`.
+
+- `off_topic.py` spots a question that is clearly about something else, and a discount ask.
+- `hours.py` answers opening hours and a Saturday booking.
+- `prices.py` answers from a price the pages state.
+- `spoken.py` says that price to the customer, with no note about them.
+- `callback.py` replies when the pages don't list the email, the job, or a leak price.
+- `fixed.py` reads the fixed replies from the agreements.
+- `instructions.py` builds the instructions for one question.
+- `stand_in.py` answers the agreed test questions when no key is set.
+- `claude.py` asks Claude through the Messages API.
+- `notes.py` writes a short note when a call or a page fails.
+- `pages.py` names the page an answer came from.
+- `text.py` holds the shared helpers.
+- `write.py` chooses the reply.
 
 **What it does**
 
