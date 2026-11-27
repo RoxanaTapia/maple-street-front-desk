@@ -11,6 +11,7 @@ def _entry():
 
     return answer_reply
 
+
 def _api_key():
     return os.environ.get(_entry().KEY_ENV, "").strip()
 

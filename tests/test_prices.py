@@ -163,7 +163,8 @@ class PriceChecks(unittest.TestCase):
         self.assertNotIn(callback, how)
         for banned in ("openai", "anthropic", "grok"):
             self.assertNotIn(banned, source)
-        invented = [item for item in ("$1,200", "$50", "250 dollars", "$149.00") if item not in published]
+        candidates = ("$1,200", "$50", "250 dollars", "$149.00")
+        invented = [item for item in candidates if item not in published]
         self.assertGreaterEqual(len(invented), 1)
         for amount in invented:
             answer = f"The price is {amount}."
@@ -255,7 +256,9 @@ class PriceChecks(unittest.TestCase):
         self.assertEqual(stdout.getvalue(), "Yes, we are open Saturdays.\n")
 
     def test_checking_an_answer_prints_it_or_the_callback(self):
-        """Checking an answer prints it when the price is published, and the callback reply when it is not."""
+        """Checking an answer prints it when the price is published,
+        and the callback reply when it is not.
+        """
         published = self._published()
         callback = self._callback()
         self.assertGreaterEqual(len(published), 1)
@@ -431,9 +434,7 @@ class ServicePriceChecks(unittest.TestCase):
         self.assertEqual(self._ask(drain, drain_answer, page_text=page), drain_answer)
         stdout = io.StringIO()
         with contextlib.redirect_stdout(stdout):
-            code = price_reply.main(
-                ["--asked", drain, drain_answer, self.site.base]
-            )
+            code = price_reply.main(["--asked", drain, drain_answer, self.site.base])
         self.assertEqual(code, 0)
         self.assertEqual(stdout.getvalue(), drain_answer + "\n")
 
@@ -541,7 +542,11 @@ class ServicePriceChecks(unittest.TestCase):
         pages = read_pages.read_pages(self.site.base)
         self.assertTrue(
             any(
-                price_reply.price_is_near_service(page.get("text") or "", "$149", ["drain", "cleaning"])
+                price_reply.price_is_near_service(
+                    page.get("text") or "",
+                    "$149",
+                    ["drain", "cleaning"],
+                )
                 for page in pages
             )
         )
@@ -648,7 +653,9 @@ class ServicePriceChecks(unittest.TestCase):
         )
 
         def narrate_call_out(question_arg, instructions_arg, pages_arg):
-            return "The customer was wrong about the call-out. The call-out fee is $99. From Services."
+            return (
+                "The customer was wrong about the call-out. The call-out fee is $99. From Services."
+            )
 
         call_spoken = front_desk.reply_to(
             call_out,
@@ -750,6 +757,7 @@ class ServicePriceChecks(unittest.TestCase):
             "Yes, the customer is right.",
         )
         for draft in unsafe:
+
             def writer(question_arg, instructions, pages, draft=draft):
                 return draft
 
@@ -762,9 +770,7 @@ class ServicePriceChecks(unittest.TestCase):
             def client(_payload, draft=draft):
                 return {"content": [{"type": "text", "text": draft}]}
 
-            via_call = front_desk.reply_to(
-                question, base_url=self.site.base, client=client
-            )
+            via_call = front_desk.reply_to(question, base_url=self.site.base, client=client)
             self.assertEqual(via_call, callback, draft)
             self.assertNotEqual(via_call, direct, draft)
             self.assertNotIn("$149", via_call, draft)
@@ -788,9 +794,7 @@ class ServicePriceChecks(unittest.TestCase):
         def client_narrate(_payload):
             return {"content": [{"type": "text", "text": narrated}]}
 
-        via_narrated = front_desk.reply_to(
-            question, base_url=self.site.base, client=client_narrate
-        )
+        via_narrated = front_desk.reply_to(question, base_url=self.site.base, client=client_narrate)
         self.assertEqual(via_narrated, kept)
         self.assertNotIn("the customer", via_narrated.casefold())
         self.assertIn("Same-day service is available.", via_narrated)
@@ -813,17 +817,12 @@ class ServicePriceChecks(unittest.TestCase):
 
         # A separate fact in the same sentence as the note stays.
         # It is not thrown away to force the page sentence.
-        mixed = (
-            "The customer also needs a Saturday visit. "
-            "A drain cleaning is $149. From Pricing."
-        )
+        mixed = "The customer also needs a Saturday visit. A drain cleaning is $149. From Pricing."
 
         def mixed_writer(question_arg, instructions, pages):
             return mixed
 
-        mixed_got = front_desk.reply_to(
-            question, base_url=self.site.base, writer=mixed_writer
-        )
+        mixed_got = front_desk.reply_to(question, base_url=self.site.base, writer=mixed_writer)
         self.assertIn("Saturday visit", mixed_got)
         self.assertIn("$149", mixed_got)
         self.assertNotEqual(mixed_got, direct)

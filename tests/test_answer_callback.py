@@ -4,17 +4,10 @@ Run this area with
 python3 scripts/run_checks.py tests/test_answer_callback.py.
 """
 
-import contextlib
-import io
-import json
 import os
-import re
 import sys
 import tempfile
 import unittest
-import urllib.error
-import urllib.request
-from datetime import datetime, timezone
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parents[1]
@@ -23,27 +16,20 @@ for _folder in (_ROOT / "tests", _ROOT / "scripts"):
     if _text not in sys.path:
         sys.path.insert(0, _text)
 
-from answer_support import (
-    AGREEMENTS,
-    CLOCK,
-    ROOT,
-    SCRIPTS,
-    RunningSite,
-    _FrozenClock,
-    _SavedEnv,
-    _wrapped_forms,
-    docs,
-    page_named,
-    question_rows,
-)
-import agreed
 import answer_reply
-import demo_chat
 import front_desk
 import price_reply
 import read_pages
 import serve_sample_site
 import urgent_reply
+from answer_support import (
+    ROOT,
+    RunningSite,
+    _SavedEnv,
+    page_named,
+    question_rows,
+)
+
 
 class UncoveredQuestionChecks(unittest.TestCase):
     def setUp(self):
@@ -112,6 +98,7 @@ class UncoveredQuestionChecks(unittest.TestCase):
         tankless = next(row["question"] for row in rows if "tankless" in row["question"].lower())
         self.assertEqual(answer_reply.write_answer(tankless, missing), callback)
         self.assertIn("tankless", services["text"].lower())
+
 
 class MissingFactChecks(unittest.TestCase):
     def setUp(self):
@@ -192,7 +179,9 @@ class MissingFactChecks(unittest.TestCase):
         self.assertFalse(answer_reply.FAILURE_LOG.exists())
 
         def right_price(_payload):
-            return {"content": [{"type": "text", "text": "A drain cleaning is $149. From Pricing."}]}
+            return {
+                "content": [{"type": "text", "text": "A drain cleaning is $149. From Pricing."}]
+            }
 
         kept = front_desk.reply_to(
             "How much is a drain cleaning?",
@@ -201,6 +190,7 @@ class MissingFactChecks(unittest.TestCase):
         )
         self.assertEqual(kept, "A drain cleaning is $149. From Pricing.")
         self.assertFalse(answer_reply.FAILURE_LOG.exists())
+
 
 class UnlistedServiceChecks(unittest.TestCase):
     def setUp(self):
@@ -253,6 +243,7 @@ class UnlistedServiceChecks(unittest.TestCase):
             answer_reply.unlisted_service_reply(),
         )
         self.assertNotIn("$149", "Call for a quote.")
+
 
 class MisspelledLeakChecks(unittest.TestCase):
     def setUp(self):
@@ -395,6 +386,7 @@ class MisspelledLeakChecks(unittest.TestCase):
             self.assertIsNone(urgent_reply.reply_if_urgent(question), question)
             self.assertNotIn("$", got, question)
             self.assertNotIn("don't list a price for a leak", got.lower(), question)
+
 
 if __name__ == "__main__":
     unittest.main()

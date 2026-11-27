@@ -1,0 +1,16 @@
+---
+description: Short, readable Python
+globs: "**/*.py"
+alwaysApply: true
+---
+
+# Python style
+
+Ruff is the style check. Settings live in `pyproject.toml`: line length 100, rules E, F, and I. Files under `vendor/demo-kit/` are left out. CI checks that copy by checksum.
+
+- Prefer the simplest change that solves the issue. One function, one job. Clear names.
+- Use `pathlib.Path`, f-strings, and `with` for files and other resources.
+- Keep a docstring short. Say what the function is for.
+- Comment only where the code is not obvious.
+- A formatting change keeps the behaviour unless the issue asks for a change.
+- From the project root, run `ruff check .` and `ruff format --check .`.

@@ -17,11 +17,11 @@ _PUNCTUATION = re.compile(r"[\u2000-\u206F\u2E00-\u2E7F\\'\"!#$%&()*+,./:;<=>?@\
 # them, so that space still becomes a leading hyphen.
 _EMOJI = re.compile(
     "["
-    "\U0001F1E6-\U0001F1FF"
-    "\U0001F300-\U0001FAFF"
-    "\U00002600-\U000027BF"
-    "\U0000FE00-\U0000FE0F"
-    "\U0000200D"
+    "\U0001f1e6-\U0001f1ff"
+    "\U0001f300-\U0001faff"
+    "\U00002600-\U000027bf"
+    "\U0000fe00-\U0000fe0f"
+    "\U0000200d"
     "]+"
 )
 _LINK = re.compile(r"!?\[[^\]]*\]\(\s*<?([^)\s>]+)>?")
@@ -114,7 +114,10 @@ class LinkChecks(unittest.TestCase):
     def test_github_slug_matches_known_headings(self):
         """Headings keep a working link, even with an apostrophe or an &."""
         self.assertEqual(github_slug("What you've agreed"), "what-youve-agreed")
-        self.assertEqual(github_slug("Pages the assistant answers from"), "pages-the-assistant-answers-from")
+        self.assertEqual(
+            github_slug("Pages the assistant answers from"),
+            "pages-the-assistant-answers-from",
+        )
         self.assertEqual(github_slug("How a change happens"), "how-a-change-happens")
         self.assertEqual(github_slug("Hours & FAQ"), "hours--faq")
         self.assertEqual(github_slug("🧰 First install"), "-first-install")

@@ -22,6 +22,7 @@ CLOCK = re.compile(r"\d{1,2}:\d{2} am to \d{1,2}:\d{2} pm", re.IGNORECASE)
 question_rows = agreed.question_rows
 page_named = agreed.page_named
 
+
 class RunningSite:
     def __init__(self):
         serve_sample_site.pricing_live = True
@@ -47,6 +48,7 @@ class RunningSite:
         self.httpd.server_close()
         self.thread.join(timeout=2)
 
+
 class _SavedEnv:
     """Keep a developer key from turning the automated tests into a live call."""
 
@@ -64,6 +66,7 @@ class _SavedEnv:
         else:
             os.environ["CLAUDE_MODEL"] = self.model
 
+
 class _FrozenClock:
     """A clock that always reports one instant, so the failure note is exact."""
 
@@ -73,11 +76,13 @@ class _FrozenClock:
     def now(cls, tz=None):
         return cls.when
 
+
 def docs():
     files = []
     for pattern in ("*.md", "*.mdc"):
         files.extend(ROOT.rglob(pattern))
     return [path for path in files if ".git" not in path.parts]
+
 
 def _wrapped_forms(message):
     """The same words with quotes, markdown, or a question mark around them."""

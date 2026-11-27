@@ -129,7 +129,7 @@ def booking_page():
         stripped = line.strip()
         if not stripped.startswith(_BOOKING_PREFIX):
             continue
-        url = stripped[len(_BOOKING_PREFIX):].strip()
+        url = stripped[len(_BOOKING_PREFIX) :].strip()
         if url.startswith("https://calendar.google.com/"):
             return url
     raise ValueError("docs/portfolio.md needs a Book a call line with the booking page.")
@@ -190,7 +190,7 @@ def static_file(url_path):
         return doc if _inside(doc, ROOT / "docs") else None
     if not url_path.startswith(KIT_PREFIX):
         return None
-    rel = url_path[len(KIT_PREFIX):]
+    rel = url_path[len(KIT_PREFIX) :]
     if not rel or rel.startswith("/") or any(part == ".." for part in rel.split("/")):
         return None
     file_path = KIT / rel

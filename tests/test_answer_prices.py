@@ -6,15 +6,10 @@ python3 scripts/run_checks.py tests/test_answer_prices.py.
 
 import contextlib
 import io
-import json
 import os
-import re
 import sys
 import tempfile
 import unittest
-import urllib.error
-import urllib.request
-from datetime import datetime, timezone
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parents[1]
@@ -23,27 +18,20 @@ for _folder in (_ROOT / "tests", _ROOT / "scripts"):
     if _text not in sys.path:
         sys.path.insert(0, _text)
 
-from answer_support import (
-    AGREEMENTS,
-    CLOCK,
-    ROOT,
-    SCRIPTS,
-    RunningSite,
-    _FrozenClock,
-    _SavedEnv,
-    _wrapped_forms,
-    docs,
-    page_named,
-    question_rows,
-)
-import agreed
 import answer_reply
-import demo_chat
 import front_desk
 import price_reply
 import read_pages
 import serve_sample_site
 import urgent_reply
+from answer_support import (
+    ROOT,
+    RunningSite,
+    _SavedEnv,
+    page_named,
+    question_rows,
+)
+
 
 class PricedServiceChecks(unittest.TestCase):
     def setUp(self):
@@ -137,6 +125,7 @@ class PricedServiceChecks(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertEqual(stdout.getvalue(), expected + "\n")
 
+
 class InventedPriceChecks(unittest.TestCase):
     def setUp(self):
         self.env = _SavedEnv()
@@ -179,9 +168,7 @@ class InventedPriceChecks(unittest.TestCase):
             self.assertEqual(len(payload["messages"]), 1)
             self.assertIn("Page: Pricing", payload["messages"][0]["content"])
             return {
-                "content": [
-                    {"type": "text", "text": f"A water heater replacement is {invented}."}
-                ]
+                "content": [{"type": "text", "text": f"A water heater replacement is {invented}."}]
             }
 
         self._block_network()
@@ -203,6 +190,7 @@ class InventedPriceChecks(unittest.TestCase):
         self.assertEqual(urgent, urgent_reply.fixed_urgent_reply())
         self.assertEqual(seen["n"], 1)
         self.assertNotIn("$", urgent)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,8 +1,10 @@
 """Read the agreed pages and print a page list.
 
 1. Which pages: agreed_pages reads the names under "Your pages".
-2. Fetching: fetch requests each page over HTTP. A page that cannot be fetched is marked unreadable with the reason and stays on the list.
-3. Reading: TitleTextParser takes the title and the visible text. Script and style elements are ignored.
+2. Fetching: fetch requests each page over HTTP. A page that cannot be
+   fetched is marked unreadable with the reason and stays on the list.
+3. Reading: TitleTextParser takes the title and the visible text.
+   Script and style elements are ignored.
 4. Page list: format_page_list prints each page's name, title, address, and status.
 
 Usage: python3 scripts/read_pages.py [site address]
@@ -172,12 +174,12 @@ def fetch(url):
 def read_pages(base_url):
     """Fetch every agreed page and return the page list."""
     pages = []
-    for agreed in agreed_pages():
-        address = page_address(base_url, agreed["path"])
+    for listed in agreed_pages():
+        address = page_address(base_url, listed["path"])
         fetched = fetch(address)
         pages.append(
             {
-                "name": agreed["name"],
+                "name": listed["name"],
                 "title": fetched["title"],
                 "text": fetched["text"],
                 "address": address,

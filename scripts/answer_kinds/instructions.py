@@ -42,9 +42,7 @@ WRONG_AMOUNT_GETS_A_NO = (
 
 
 # How much is not a yes or no question.
-HOW_MUCH_IS_NOT_YES = (
-    "If they ask how much, give the price from the pages with no leading yes."
-)
+HOW_MUCH_IS_NOT_YES = "If they ask how much, give the price from the pages with no leading yes."
 
 
 # How, what, when, and where start with the fact.
@@ -55,9 +53,7 @@ FACT_FIRST = (
 
 
 # A note is for the owner. It must not be written into the reply.
-NO_INTERNAL_NOTE = (
-    "Do not add an internal note. The reply is only what the customer should read."
-)
+NO_INTERNAL_NOTE = "Do not add an internal note. The reply is only what the customer should read."
 
 
 # Hours from one page and a booking line from another still name both.

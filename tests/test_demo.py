@@ -35,8 +35,7 @@ import serve_sample_site
 import urgent_reply
 
 DEMO_LINE = (
-    "Demo for a fictional plumbing business. "
-    "It only answers from Maple Street Plumbing's pages."
+    "Demo for a fictional plumbing business. It only answers from Maple Street Plumbing's pages."
 )
 
 
@@ -346,12 +345,15 @@ class DemoChatChecks(unittest.TestCase):
                 front_desk.reply_to = original_reply
 
                 for bad in ("", "   ", None, 0, {"text": token}):
+
                     def blank(message, base_url=None, writer=None, client=None, value=bad):
                         return value
 
                     front_desk.reply_to = blank
                     status, headers, raw, parsed = self.demo.post(token)
-                    self._assert_outage(status, headers, raw, parsed, outage, missing, token, secret)
+                    self._assert_outage(
+                        status, headers, raw, parsed, outage, missing, token, secret
+                    )
                 front_desk.reply_to = original_reply
 
                 os.environ["ANTHROPIC_API_KEY"] = secret
@@ -440,7 +442,9 @@ class DemoChatChecks(unittest.TestCase):
         self.assertIn("requestSubmit", script)
 
     def test_the_page_says_it_is_a_demo(self):
-        """The page says it is a portfolio demo that answers only from Maple Street Plumbing's pages."""
+        """The page says it is a portfolio demo that answers only from
+        Maple Street Plumbing's pages.
+        """
         status, _headers, body = self.demo.get("/")
         self.assertEqual(status, 200)
         self.assertIn(DEMO_LINE, body)

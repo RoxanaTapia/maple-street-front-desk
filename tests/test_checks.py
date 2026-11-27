@@ -73,7 +73,10 @@ class ProjectChecks(unittest.TestCase):
         self.assertTrue(version == running or version.startswith(running + "."))
 
     def test_a_proposed_change_runs_the_checks(self):
-        """A proposed change runs the automated tests for the pages, urgent words, prices, answers, the demo chat, the calm screen, the Saturday night chips, the daily limit, the icons, and the demo kit."""
+        """A proposed change runs the automated tests for the pages, urgent words,
+        prices, answers, the demo chat, the calm screen, the Saturday night chips,
+        the daily limit, the icons, and the demo kit.
+        """
         workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
         for command in (
             "tests/test_checks.py",

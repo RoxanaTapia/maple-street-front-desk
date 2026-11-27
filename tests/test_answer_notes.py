@@ -4,11 +4,9 @@ Run this area with
 python3 scripts/run_checks.py tests/test_answer_notes.py.
 """
 
-import contextlib
 import io
 import json
 import os
-import re
 import sys
 import tempfile
 import unittest
@@ -23,27 +21,16 @@ for _folder in (_ROOT / "tests", _ROOT / "scripts"):
     if _text not in sys.path:
         sys.path.insert(0, _text)
 
-from answer_support import (
-    AGREEMENTS,
-    CLOCK,
-    ROOT,
-    SCRIPTS,
-    RunningSite,
-    _FrozenClock,
-    _SavedEnv,
-    _wrapped_forms,
-    docs,
-    page_named,
-    question_rows,
-)
-import agreed
 import answer_reply
-import demo_chat
 import front_desk
-import price_reply
-import read_pages
 import serve_sample_site
 import urgent_reply
+from answer_support import (
+    ROOT,
+    RunningSite,
+    _SavedEnv,
+)
+
 
 class FailureNoteChecks(unittest.TestCase):
     def setUp(self):
@@ -69,7 +56,9 @@ class FailureNoteChecks(unittest.TestCase):
         answer_reply._post_message = fail
 
     def test_a_failed_call_is_noted_and_the_outage_reply_is_used(self):
-        """A failed call gets the outage reply, and a note records the time and the kind of error."""
+        """A failed call gets the outage reply,
+        and a note records the time and the kind of error.
+        """
         callback = answer_reply.callback_reply()
         outage = answer_reply.outage_reply()
         self.assertNotEqual(outage, callback)
@@ -117,7 +106,11 @@ class FailureNoteChecks(unittest.TestCase):
                 ]
             }
 
-        answered = front_desk.reply_to("Are you open Saturdays?", base_url=self.site.base, client=client_ok)
+        answered = front_desk.reply_to(
+            "Are you open Saturdays?",
+            base_url=self.site.base,
+            client=client_ok,
+        )
         self.assertNotEqual(answered, callback)
         self.assertNotEqual(answered, outage)
         self.assertNotIn(key, answered)
@@ -212,6 +205,7 @@ class FailureNoteChecks(unittest.TestCase):
         self.assertNotEqual(again, callback)
         self.assertNotEqual(again, outage)
         self.assertEqual(answer_reply.FAILURE_LOG.read_text(encoding="utf-8"), note)
+
 
 if __name__ == "__main__":
     unittest.main()

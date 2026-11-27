@@ -102,18 +102,23 @@ class PageListChecks(unittest.TestCase):
         serve_sample_site.pricing_live = True
 
     def test_unreadable_page_stays_on_the_list(self):
-        """A page that can't be fetched stays on the list as unreadable, with the reason, and with no title. The other pages are still read."""
+        """A page that can't be fetched stays on the list as unreadable,
+        with the reason, and with no title. The other pages are still read.
+        """
         serve_sample_site.pricing_live = False
         pages = read_pages.read_pages(self.site.base)
         read = [page for page in pages if page["status"] == "read"]
         unread = [page for page in pages if page["status"] != "read"]
-        self.assertEqual([page["name"] for page in read], [
-            "Home",
-            "Services",
-            "Service Area",
-            "Hours & FAQ",
-            "Contact",
-        ])
+        self.assertEqual(
+            [page["name"] for page in read],
+            [
+                "Home",
+                "Services",
+                "Service Area",
+                "Hours & FAQ",
+                "Contact",
+            ],
+        )
         self.assertEqual(len(unread), 1)
         pricing = unread[0]
         self.assertEqual(pricing["name"], "Pricing")
@@ -151,11 +156,11 @@ class PageListChecks(unittest.TestCase):
         banner_rule = css.split(".banner", 1)[1].split("}", 1)[0]
         self.assertNotIn("display: none", banner_rule)
         self.assertNotIn("visibility: hidden", banner_rule)
-        for agreed in read_pages.agreed_pages():
-            url = read_pages.page_address(self.site.base, agreed["path"])
+        for listed in read_pages.agreed_pages():
+            url = read_pages.page_address(self.site.base, listed["path"])
             _status, html, text, _title = fetch_page(url)
-            self.assertIn(BANNER, text, agreed["name"])
-            self.assertIn('class="banner"', html, agreed["name"])
+            self.assertIn(BANNER, text, listed["name"])
+            self.assertIn('class="banner"', html, listed["name"])
 
     def test_every_agreed_page_appears_on_the_page_list(self):
         """Every agreed page appears on the page list with its title, address, and status."""
@@ -194,17 +199,18 @@ class PageListChecks(unittest.TestCase):
     def test_pages_contain_the_shared_answers(self):
         """This only checks that the answer text is on the pages, not that the assistant answers."""
         text_by_name = {}
-        for agreed in read_pages.agreed_pages():
-            url = read_pages.page_address(self.site.base, agreed["path"])
+        for listed in read_pages.agreed_pages():
+            url = read_pages.page_address(self.site.base, listed["path"])
             _status, _html, text, _title = fetch_page(url)
-            text_by_name[agreed["name"]] = text
+            text_by_name[listed["name"]] = text
         self.assertIn("tankless water heaters", text_by_name["Services"].lower())
         self.assertIn("same-day service", text_by_name["Services"].lower())
         self.assertIn("call-out fee", text_by_name["Services"].lower())
         self.assertIn("saturday", text_by_name["Hours & FAQ"].lower())
         self.assertIn("financing", text_by_name["Hours & FAQ"].lower())
-        self.assertIn("don't install or service septic systems", text_by_name["Hours & FAQ"].lower())
-        self.assertIn("fully licensed and insured in new jersey", text_by_name["Hours & FAQ"].lower())
+        hours = text_by_name["Hours & FAQ"].lower()
+        self.assertIn("don't install or service septic systems", hours)
+        self.assertIn("fully licensed and insured in new jersey", hours)
         self.assertIn("emergencies after hours too", text_by_name["Hours & FAQ"].lower())
         self.assertIn("030 0000 0000", text_by_name["Hours & FAQ"])
         self.assertIn("cherry hill", text_by_name["Service Area"].lower())
@@ -232,21 +238,24 @@ class PageListChecks(unittest.TestCase):
         self.assertEqual(PHONE.findall(combined), ["030 0000 0000", "030 0000 0000"])
         self.assertEqual(EMAIL.findall(combined), [])
         self.assertIn(contact_line, combined)
-        _status, _html, text, _title = fetch_page(read_pages.page_address(self.site.base, "/contact.html"))
+        contact = read_pages.page_address(self.site.base, "/contact.html")
+        _status, _html, text, _title = fetch_page(contact)
         self.assertIn("030 0000 0000", text)
         self.assertIn(contact_line, text)
 
     def test_command_prints_a_page_list(self):
-        """Reading the pages prints a page list, and uses the local sample site when no address is given."""
+        """Reading the pages prints a page list,
+        and uses the local sample site when no address is given.
+        """
         stdout = io.StringIO()
         with contextlib.redirect_stdout(stdout):
             code = read_pages.main([self.site.base])
         self.assertEqual(code, 0)
         text = stdout.getvalue()
         self.assertTrue(text.startswith("Page list\n"))
-        for agreed in read_pages.agreed_pages():
-            self.assertIn(agreed["name"], text)
-            self.assertIn(read_pages.page_address(self.site.base, agreed["path"]), text)
+        for listed in read_pages.agreed_pages():
+            self.assertIn(listed["name"], text)
+            self.assertIn(read_pages.page_address(self.site.base, listed["path"]), text)
         self.assertEqual(text.count("Status: read"), len(read_pages.agreed_pages()))
         self.assertNotIn("unreadable", text)
         self.assertEqual(
@@ -259,8 +268,8 @@ class PageListChecks(unittest.TestCase):
         self.assertEqual(code, 0)
         text = stdout.getvalue()
         self.assertTrue(text.startswith("Page list\n"))
-        for agreed in read_pages.agreed_pages():
-            self.assertIn(read_pages.page_address(read_pages.DEFAULT_SITE, agreed["path"]), text)
+        for listed in read_pages.agreed_pages():
+            self.assertIn(read_pages.page_address(read_pages.DEFAULT_SITE, listed["path"]), text)
         stderr = io.StringIO()
         with contextlib.redirect_stderr(stderr):
             self.assertEqual(read_pages.main(["--help"]), 2)
@@ -308,7 +317,9 @@ def _agreements_text():
 
 class QuestionCoverageChecks(unittest.TestCase):
     def test_every_question_has_an_answer_plan(self):
-        """Every test question has an answer plan, an answered question names one of your pages, and the drain-cleaning question is answered from Pricing."""
+        """Every test question has an answer plan, an answered question names
+        one of your pages, and the drain-cleaning question is answered from Pricing.
+        """
         rows = question_rows()
         agreed = {page["name"]: page["path"] for page in read_pages.agreed_pages()}
         self.assertEqual(len(rows), 28)
@@ -369,8 +380,7 @@ class QuestionCoverageChecks(unittest.TestCase):
         self.assertEqual([row["number"] for row in unlisted_rows], [22, 24, 28])
         handled_questions = {row["question"] for row in handled}
         covered = {
-            row["question"]
-            for row in urgent_rows + callback_rows + discount_rows + unlisted_rows
+            row["question"] for row in urgent_rows + callback_rows + discount_rows + unlisted_rows
         }
         self.assertEqual(covered, handled_questions)
 
@@ -433,7 +443,10 @@ class QuestionCoverageChecks(unittest.TestCase):
         faq_answers = {
             13: "No, we don't install or service septic systems.",
             14: "Yes, we're fully licensed and insured in New Jersey.",
-            15: "Yes, we handle emergencies after hours too. Just call our main line at 030 0000 0000.",
+            15: (
+                "Yes, we handle emergencies after hours too. "
+                "Just call our main line at 030 0000 0000."
+            ),
         }
         self.assertNotIn("Waiting for the Hours & FAQ page", _agreements_text())
         for number, sentence in faq_answers.items():

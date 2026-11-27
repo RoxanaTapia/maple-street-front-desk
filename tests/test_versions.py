@@ -45,7 +45,9 @@ def names_exactly(text, value):
 
 class TestedVersionChecks(unittest.TestCase):
     def test_the_note_matches_the_tested_versions(self):
-        """The developer guide names the Claude model, the API version, and the Python version that were tested."""
+        """The developer guide names the Claude model, the API version,
+        and the Python version that were tested.
+        """
         note = versions_note()
         self.assertTrue(note.strip(), "The developer guide has no versions note.")
         python_version = (ROOT / ".python-version").read_text(encoding="utf-8").strip()

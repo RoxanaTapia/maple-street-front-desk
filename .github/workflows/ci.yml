@@ -468,3 +468,24 @@ jobs:
 
       - name: Run automated tests
         run: python3 scripts/run_checks.py tests/test_brand.py:DemoKitCopyChecks
+
+  python-style:
+    name: Python style holds
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Install Ruff
+        run: python3 -m pip install ruff
+
+      - name: Check Python with Ruff
+        run: ruff check .
+
+      - name: Check formatting with Ruff
+        run: ruff format --check .

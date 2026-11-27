@@ -19,6 +19,7 @@ def _log():
 
     return answer_reply.FAILURE_LOG
 
+
 # One note per page per hour. The notes file is the record, so a later
 # question, even from a new command, does not write the page again while
 # that hour still has a line for it.

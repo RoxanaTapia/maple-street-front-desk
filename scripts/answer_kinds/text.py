@@ -33,7 +33,8 @@ _WORD = re.compile(r"[a-z0-9]+(?:-[a-z0-9]+)*")
 # A following "Just ..." sentence stays with that line, so the after-hours
 # answer keeps the phone number written beside it.
 _SNIPPET = re.compile(
-    r"\b(?:Yes|No|The|A|An|To|We|Sunday|Saturday|Monday|Tuesday|Wednesday|Thursday|Friday|Main line)\b"
+    r"\b(?:Yes|No|The|A|An|To|We|Sunday|Saturday|Monday|"
+    r"Tuesday|Wednesday|Thursday|Friday|Main line)\b"
     r"[^.!?]*(?:[.!?]|$)"
     r"(?:\s+Just [^.!?]*[.!?])?"
 )

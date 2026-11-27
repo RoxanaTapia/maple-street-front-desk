@@ -185,9 +185,7 @@ def reply_if_urgent(message, text=None):
         forms = _spellings(body, word)
         if any(_contains_word(message, form) for form in forms):
             return fixed_urgent_reply(body)
-        if any(
-            _misspells_leak_form(piece, form) for piece in words for form in forms
-        ):
+        if any(_misspells_leak_form(piece, form) for piece in words for form in forms):
             return fixed_urgent_reply(body)
     return None
 
