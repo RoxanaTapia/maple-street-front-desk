@@ -2,89 +2,17 @@ name: Board labels
 
 on:
   pull_request:
-    paths:
-      - .github/labels.yml
-      - .github/workflows/board-labels.yml
 
 permissions:
   contents: read
   issues: write
 
 jobs:
-  board-labels:
-    name: Board labels are on the repository
+  now-description:
+    name: Now description is current work
     runs-on: ubuntu-latest
     steps:
-      - name: Check out the repository
-        uses: actions/checkout@v4
-
-      - name: Add the board labels
+      - name: Set the Now description
         env:
           GH_TOKEN: ${{ github.token }}
-        run: |
-          python3 - <<'PY'
-          import os
-          import subprocess
-          import sys
-          from pathlib import Path
-
-          text = Path(".github/labels.yml").read_text(encoding="utf-8")
-          labels = []
-          current = None
-          for raw in text.splitlines():
-              if not raw.strip() or raw.startswith("#"):
-                  continue
-              if raw.startswith("- name:"):
-                  value = raw.split(":", 1)[1].strip()
-                  if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
-                      value = value[1:-1]
-                  current = {"name": value}
-                  labels.append(current)
-                  continue
-              if current is None:
-                  sys.exit("A label field came before its name.")
-              if raw.startswith("  color:"):
-                  current["color"] = raw.split(":", 1)[1].strip().strip("\"'")
-              elif raw.startswith("  description:"):
-                  value = raw.split(":", 1)[1].strip()
-                  if len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'":
-                      value = value[1:-1]
-                  current["description"] = value
-              else:
-                  sys.exit("Unexpected line in .github/labels.yml: " + raw)
-
-          if not labels:
-              sys.exit("No labels in .github/labels.yml.")
-          for label in labels:
-              if not label.get("name") or not label.get("color") or "description" not in label:
-                  sys.exit("A label is missing a name, colour, or description.")
-              if len(label["color"]) != 6 or any(c not in "0123456789abcdefABCDEF" for c in label["color"]):
-                  sys.exit("Colour for " + label["name"] + " must be 6 hex characters.")
-              if len(label["description"]) > 100:
-                  sys.exit("Description for " + label["name"] + " is longer than 100 characters.")
-
-          repo = os.environ.get("GITHUB_REPOSITORY", "")
-          if not repo:
-              sys.exit("GITHUB_REPOSITORY is not set.")
-          failed = False
-          for label in labels:
-              result = subprocess.run(
-                  [
-                      "gh", "label", "create", label["name"],
-                      "--repo", repo,
-                      "--color", label["color"],
-                      "--description", label["description"],
-                  ],
-                  text=True,
-                  capture_output=True,
-              )
-              output = (result.stdout + "\n" + result.stderr).lower()
-              if result.returncode == 0:
-                  print("Added " + label["name"])
-              elif "already exists" in output:
-                  print("Kept " + label["name"])
-              else:
-                  print("Could not add " + label["name"] + ": " + result.stderr.strip(), file=sys.stderr)
-                  failed = True
-          sys.exit(1 if failed else 0)
-          PY
+        run: gh label edit "Now" --repo "$GITHUB_REPOSITORY" --description "Current work. Filter with is:open label:Now."

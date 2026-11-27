@@ -1,11 +1,10 @@
 # Board labels for this repository.
-# Names, colours, and descriptions match Rewelle and Dracarys.
-# The board labels check reads this file and adds a label that is not already there.
-# It does not change or remove labels already on the repository.
+# Names and colours match Rewelle and Dracarys.
+# This file does not remove labels already on the repository.
 
 - name: Now
   color: "1D76DB"
-  description: "Now stage: do this first. Weekly routines take Now issues top-down, skipping Epic issues."
+  description: "Current work. Filter with is:open label:Now."
 
 - name: Next
   color: "FBCA04"
