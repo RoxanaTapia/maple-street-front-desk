@@ -44,6 +44,9 @@ import serve_sample_site
 ROOT = Path(__file__).resolve().parents[1]
 DEMO = ROOT / "demo"
 KIT = ROOT / "vendor" / "demo-kit"
+PORTFOLIO = ROOT / "docs" / "portfolio.md"
+_BOOKING_MARK = "__BOOKING_URL__"
+_BOOKING_PREFIX = "Book a call:"
 KIT_PREFIX = "/demo-kit/"
 HOST_ENV = "DEMO_HOST"
 PORT_ENV = "DEMO_PORT"
@@ -113,6 +116,29 @@ USAGE = (
     "Serves a chat page that runs each message through the front desk.\n"
     f"Listens on {DEFAULT_HOST} port {DEFAULT_PORT} unless {HOST_ENV} or {PORT_ENV} is set."
 )
+
+
+def booking_page():
+    """Return the booking page address from docs/portfolio.md.
+
+    That file is the one place to change it. The chat page fills the
+    address in when it is served.
+    """
+    text = PORTFOLIO.read_text(encoding="utf-8")
+    for line in text.splitlines():
+        stripped = line.strip()
+        if not stripped.startswith(_BOOKING_PREFIX):
+            continue
+        url = stripped[len(_BOOKING_PREFIX):].strip()
+        if url.startswith("https://calendar.google.com/"):
+            return url
+    raise ValueError("docs/portfolio.md needs a Book a call line with the booking page.")
+
+
+def chat_page():
+    """Return the chat page, with the booking address filled in."""
+    html = (DEMO / "index.html").read_text(encoding="utf-8")
+    return html.replace(_BOOKING_MARK, booking_page())
 
 
 def listen_address():
@@ -327,6 +353,14 @@ class DemoHandler(BaseHTTPRequestHandler):
         file_path = static_file(path)
         if file_path is None:
             self._send_text(404, "Not found\n")
+            return
+        if path in ("/", "/index.html"):
+            try:
+                body = chat_page().encode("utf-8")
+            except ValueError:
+                self._send_text(500, "The booking page address is missing.\n")
+                return
+            self._send_bytes(200, body, _content_type(file_path))
             return
         self._send_bytes(200, file_path.read_bytes(), _content_type(file_path))
 
