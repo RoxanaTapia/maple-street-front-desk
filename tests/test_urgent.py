@@ -88,7 +88,13 @@ class UrgentReplyChecks(unittest.TestCase):
         urgent_questions = [row for row in question_rows() if _is_urgent_question(row)]
         self.assertGreaterEqual(len(urgent_questions), 1)
         for row in urgent_questions:
-            self.assertEqual(urgent_reply.reply_if_urgent(row["question"]), reply)
+            got = urgent_reply.reply_if_urgent(row["question"])
+            if urgent_reply.asks_what_to_do(row["question"]):
+                self.assertNotEqual(got, reply, row["question"])
+                self.assertTrue(got.endswith(reply), row["question"])
+                self.assertIn("stopcock", got.lower(), row["question"])
+            else:
+                self.assertEqual(got, reply, row["question"])
 
     def test_a_normal_question_is_not_treated_as_urgent(self):
         """A normal question is not treated as urgent."""
@@ -216,6 +222,38 @@ class UrgentReplyChecks(unittest.TestCase):
             front_desk.reply_to("My basement has water everywhere"),
             reply,
         )
+
+    def test_asking_what_to_do_adds_a_safety_line(self):
+        """An urgent what-to-do message adds a safety line, and the chip reply stays short."""
+        short = blockquote_reply()
+        chip = "It's Saturday night and my sink is leaking"
+        asked = "water is pouring from the ceiling, what should I do?"
+        burst = "I have a burst pipe. What should I do?"
+        self.assertTrue(urgent_reply.asks_what_to_do(asked))
+        self.assertTrue(urgent_reply.asks_what_to_do(burst))
+        self.assertFalse(urgent_reply.asks_what_to_do(chip))
+        self.assertEqual(urgent_reply.reply_if_urgent(chip), short)
+        self.assertEqual(front_desk.reply_to(chip), short)
+        for message in (asked, burst, "The pipe is leaking, what should I do?"):
+            got = urgent_reply.reply_if_urgent(message)
+            self.assertNotEqual(got, short, message)
+            self.assertTrue(got.endswith(short), message)
+            self.assertIn("stopcock", got.lower(), message)
+            self.assertIn("wet electrics", got.lower(), message)
+            self.assertIn("030 0000 0000", got, message)
+            self.assertLess(got.lower().find("stopcock"), got.lower().find("call us"), message)
+            self.assertEqual(front_desk.reply_to(message), got, message)
+            self.assertNotIn("$", got, message)
+        pouring = urgent_reply.reply_if_urgent("water is pouring from the ceiling")
+        self.assertEqual(pouring, short)
+        self.assertIsNone(urgent_reply.reply_if_urgent("What should I do?"))
+        self.assertIsNone(urgent_reply.reply_if_urgent("What should I do on Saturday?"))
+        stdout = io.StringIO()
+        with contextlib.redirect_stdout(stdout):
+            code = urgent_reply.main([asked])
+        self.assertEqual(code, 0)
+        self.assertEqual(stdout.getvalue(), urgent_reply.reply_if_urgent(asked) + "\n")
+        self.assertNotEqual(stdout.getvalue().strip(), short)
 
     def test_leaking_gets_the_call_now_reply_and_a_leaky_faucet_does_not(self):
         """Leaking gets the call-now reply. I have a leaky faucet does not."""

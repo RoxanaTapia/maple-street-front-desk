@@ -177,7 +177,7 @@ class DemoChatChecks(unittest.TestCase):
         self.assertNotIn("<", raw)
 
     def test_a_plumbing_gap_gets_the_callback(self):
-        """A garbage disposal repair says the pages don't list that service."""
+        """A garbage disposal repair says we don't offer that service."""
         unlisted = answer_reply.unlisted_service_reply()
         question = "Do you repair garbage disposals?"
         self.assertNotEqual(unlisted, answer_reply.off_topic_reply())

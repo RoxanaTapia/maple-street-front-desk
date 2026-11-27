@@ -42,19 +42,11 @@
     }
   }
 
-  function answeredIn(ms) {
-    var seconds = ms / 1000;
-    if (!(seconds >= 0)) {
-      seconds = 0;
-    }
-    if (seconds < 0.05) {
-      return "Answered in under 0.1s";
-    }
-    return "Answered in " + seconds.toFixed(1) + "s";
-  }
-
   function scrollThread() {
-    thread.scrollTop = thread.scrollHeight;
+    var last = thread.lastElementChild;
+    if (last && typeof last.scrollIntoView === "function") {
+      last.scrollIntoView({ block: "nearest" });
+    }
   }
 
   function addCustomer(text) {
@@ -131,46 +123,18 @@
     block.appendChild(excerpt);
   }
 
-  function addReply(data, ms) {
+  function addReply(data) {
     var block = document.createElement("div");
     block.className = "reply-block dk-enter";
     var line = document.createElement("p");
     line.className = "reply";
     line.textContent = data.reply;
     block.appendChild(line);
-    if (data.tag) {
-      var tag = document.createElement("p");
-      tag.className = "tag";
-      tag.textContent = data.tag;
-      block.appendChild(tag);
-    }
-    var elapsed = document.createElement("p");
-    elapsed.className = "elapsed";
-    elapsed.textContent = answeredIn(ms);
-    block.appendChild(elapsed);
     (data.sources || []).forEach(function (source) {
       if (validSource(source)) {
         addSource(block, source);
       }
     });
-    if (data.checks && data.checks.length) {
-      var drawer = document.createElement("details");
-      drawer.className = "behind";
-      var summary = document.createElement("summary");
-      summary.textContent = "Behind this reply";
-      drawer.appendChild(summary);
-      var list = document.createElement("ul");
-      data.checks.forEach(function (check) {
-        if (typeof check !== "string" || !check) {
-          return;
-        }
-        var item = document.createElement("li");
-        item.textContent = check;
-        list.appendChild(item);
-      });
-      drawer.appendChild(list);
-      block.appendChild(drawer);
-    }
     thread.appendChild(block);
     scrollThread();
   }
@@ -191,7 +155,6 @@
     addCustomer(text);
     box.value = "";
     setWaiting(true);
-    var started = window.performance && window.performance.now ? window.performance.now() : Date.now();
     var typing = null;
     var typingTimer = null;
     if (!reducedMotion()) {
@@ -210,19 +173,15 @@
         });
       })
       .then(function (result) {
-        var now = window.performance && window.performance.now ? window.performance.now() : Date.now();
         var payload = result.data || {};
         var reply = typeof payload.reply === "string" ? payload.reply : "";
         addReply({
           reply: result.ok && reply ? reply : "Please try again.",
-          tag: typeof payload.tag === "string" ? payload.tag : "",
-          checks: Array.isArray(payload.checks) ? payload.checks : [],
           sources: Array.isArray(payload.sources) ? payload.sources : []
-        }, now - started);
+        });
       })
       .catch(function () {
-        var now = window.performance && window.performance.now ? window.performance.now() : Date.now();
-        addReply({ reply: "Please try again.", tag: "", checks: [], sources: [] }, now - started);
+        addReply({ reply: "Please try again.", sources: [] });
       })
       .then(function () {
         if (typingTimer) {

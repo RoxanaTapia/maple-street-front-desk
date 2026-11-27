@@ -6,7 +6,11 @@ A vowel slip of the leak spelling counts too, and one dropped, doubled,
 or swapped letter counts for the longer spelling. A word that ends in y,
 such as the faucet adjective, does not. When the message contains one of
 those words, that reply is used on its own and your pages are not read.
-Anything else is not urgent, and an answer can come in a later step.
+Water pouring, or water from a ceiling, is urgent too. When the
+message also asks what to do, one practical safety line comes first
+and the call-us line follows. That longer reply is not the same words
+as the short one. Anything else is not urgent, and an answer can come
+in a later step.
 
 Usage: python3 scripts/urgent_reply.py "customer message"
 """
@@ -17,7 +21,15 @@ import sys
 import agreed
 
 URGENT_HEADING = "Urgent messages"
+SAFETY_HEADING = "When an urgent message asks what to do"
 NOT_URGENT = "This message is not urgent."
+_WHAT_TO_DO = re.compile(
+    r"\bwhat\s+(?:should|can)\s+i\s+do\b"
+    r"|\bwhat\s+do\s+i\s+do\b"
+    r"|\bwhat\s+should\s+we\s+do\b"
+    r"|\bwhat\s+to\s+do\b",
+    re.IGNORECASE,
+)
 _BESIDE = re.compile(
     r"\*\*([^*]+)\*\*\s*\(also\s+([^)]+)\)",
     re.IGNORECASE,
@@ -169,27 +181,81 @@ def _spellings(body, word):
     return forms
 
 
+def asks_what_to_do(message):
+    """True when the visitor asks what they should do."""
+    if not isinstance(message, str):
+        return False
+    return _WHAT_TO_DO.search(message) is not None
+
+
+def _water_emergency(message):
+    """True when water is pouring, or water is coming from a ceiling."""
+    if not isinstance(message, str):
+        return False
+    folded = message.casefold()
+    water = re.search(r"\bwater\b", folded) is not None
+    pouring = re.search(r"\bpouring\b", folded) is not None
+    ceiling = re.search(r"\bceiling\b", folded) is not None
+    return (water and pouring) or (pouring and ceiling) or (water and ceiling)
+
+
+def safety_line(text=None):
+    """Return the practical safety line from your agreements."""
+    return agreed.require_blockquote(
+        SAFETY_HEADING,
+        text,
+        "The safety line is missing from your agreements.",
+    )
+
+
+def _with_safety(message, reply, text):
+    """Put the safety line before the call-us line when they ask what to do.
+
+    A sample agreement with no safety section keeps the short reply.
+    The real agreements include that section.
+    """
+    if not asks_what_to_do(message):
+        return reply
+    try:
+        line = safety_line(text)
+    except ValueError:
+        if text is None:
+            raise
+        return reply
+    if not line:
+        return reply
+    return f"{line}\n{reply}"
+
+
 def reply_if_urgent(message, text=None):
-    """Return the fixed urgent reply, or None when the message is not urgent.
+    """Return the urgent reply, or None when the message is not urgent.
 
     Call this before any answer. It does not read your pages.
     A spelling named beside an urgent word counts as that word.
     A small slip of the leak spelling counts as that word. A word that
-    ends in y does not.
+    ends in y does not. Water pouring, or water from a ceiling, counts
+    too. When the message asks what to do, one safety line comes first.
     """
     if not isinstance(message, str) or not message.strip():
         return None
     body = agreed.body(text)
     words = _message_words(message)
+    matched = False
     for word in urgent_words(body):
         forms = _spellings(body, word)
         if any(_contains_word(message, form) for form in forms):
-            return fixed_urgent_reply(body)
+            matched = True
+            break
         if any(
             _misspells_leak_form(piece, form) for piece in words for form in forms
         ):
-            return fixed_urgent_reply(body)
-    return None
+            matched = True
+            break
+    if not matched and _water_emergency(message):
+        matched = True
+    if not matched:
+        return None
+    return _with_safety(message, fixed_urgent_reply(body), body)
 
 
 def main(argv=None):
