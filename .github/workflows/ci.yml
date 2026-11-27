@@ -146,7 +146,7 @@ jobs:
           python-version-file: .python-version
 
       - name: Run automated tests
-        run: python3 scripts/run_checks.py tests/test_answers.py:AnswerChecks
+        run: python3 scripts/run_checks.py tests/test_answer_pages.py
 
   claude-answer:
     name: Claude writes the answer
@@ -161,7 +161,7 @@ jobs:
           python-version-file: .python-version
 
       - name: Run automated tests
-        run: python3 scripts/run_checks.py tests/test_answers.py:ClaudeAnswerChecks
+        run: python3 scripts/run_checks.py tests/test_answer_claude.py
 
   unreadable-page:
     name: A page that can't be read is noted for the owner
@@ -191,7 +191,7 @@ jobs:
           python-version-file: .python-version
 
       - name: Run automated tests
-        run: python3 scripts/run_checks.py tests/test_answers.py:FailureNoteChecks
+        run: python3 scripts/run_checks.py tests/test_answer_notes.py
 
   outage-reply:
     name: A failed call gets the outage reply
@@ -206,10 +206,10 @@ jobs:
           python-version-file: .python-version
 
       - name: Run automated tests
-        run: python3 scripts/run_checks.py tests/test_answers.py:OutageReplyChecks
+        run: python3 scripts/run_checks.py tests/test_answer_fixed.py
 
   saturday-booking:
-    name: A Saturday booking names every page
+    name: Hours and a Saturday booking
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
@@ -221,10 +221,10 @@ jobs:
           python-version-file: .python-version
 
       - name: Run automated tests
-        run: python3 scripts/run_checks.py tests/test_answers.py:SaturdayBookingChecks
+        run: python3 scripts/run_checks.py tests/test_answer_hours.py
 
-  hours-faq-answers:
-    name: Questions 13 to 15 come from Hours and FAQ
+  callback-reply:
+    name: The callback reply
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
@@ -236,7 +236,7 @@ jobs:
           python-version-file: .python-version
 
       - name: Run automated tests
-        run: python3 scripts/run_checks.py tests/test_answers.py:HoursFaqAnswerChecks
+        run: python3 scripts/run_checks.py tests/test_answer_callback.py
 
   priced-service:
     name: A priced service is offered
@@ -251,7 +251,7 @@ jobs:
           python-version-file: .python-version
 
       - name: Run automated tests
-        run: python3 scripts/run_checks.py tests/test_answers.py:PricedServiceChecks
+        run: python3 scripts/run_checks.py tests/test_answer_prices.py
 
   run-through-replies:
     name: A delivery run-through reply is right
@@ -283,8 +283,8 @@ jobs:
       - name: Run automated tests
         run: python3 scripts/run_checks.py tests/test_run_through.py:SecondRunThroughChecks
 
-  misspelled-leak:
-    name: A misspelled leak question is recognised
+  stand-in-answer:
+    name: With no key the stand-in answers
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
@@ -296,7 +296,7 @@ jobs:
           python-version-file: .python-version
 
       - name: Run automated tests
-        run: python3 scripts/run_checks.py tests/test_answers.py:MisspelledLeakChecks
+        run: python3 scripts/run_checks.py tests/test_answer_stand_in.py
 
   plain-price:
     name: A misspelling and a plain price are answered
@@ -311,10 +311,10 @@ jobs:
           python-version-file: .python-version
 
       - name: Run automated tests
-        run: python3 scripts/run_checks.py tests/test_answers.py:MisspellingAndPlainPriceChecks
+        run: python3 scripts/run_checks.py tests/test_answer_spoken.py
 
   wrapped-question:
-    name: A wrapped question matches the plain one
+    name: A wrapped question and a fact-first reply
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
@@ -326,7 +326,37 @@ jobs:
           python-version-file: .python-version
 
       - name: Run automated tests
-        run: python3 scripts/run_checks.py tests/test_answers.py:WrappedQuestionChecks
+        run: python3 scripts/run_checks.py tests/test_answer_text.py
+
+  answer-instructions:
+    name: The instructions include every page
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Run automated tests
+        run: python3 scripts/run_checks.py tests/test_answer_instructions.py
+
+  answer-write:
+    name: Checking a message prints the reply
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: .python-version
+
+      - name: Run automated tests
+        run: python3 scripts/run_checks.py tests/test_answer_write.py
 
   off-topic-reply:
     name: Off-topic questions get the friendly reply

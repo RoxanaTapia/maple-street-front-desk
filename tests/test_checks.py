@@ -2,6 +2,7 @@
 
 Page tests live in test_pages.py. Urgent reply tests live in
 test_urgent.py. Price tests live in test_prices.py.
+Answer tests live in one file for each kind of reply.
 """
 
 import sys
@@ -41,7 +42,19 @@ REQUIRED_FILES = (
     "tests/test_pages.py",
     "tests/test_urgent.py",
     "tests/test_prices.py",
-    "tests/test_answers.py",
+    "tests/answer_support.py",
+    "tests/test_answer_pages.py",
+    "tests/test_answer_hours.py",
+    "tests/test_answer_prices.py",
+    "tests/test_answer_spoken.py",
+    "tests/test_answer_callback.py",
+    "tests/test_answer_fixed.py",
+    "tests/test_answer_instructions.py",
+    "tests/test_answer_stand_in.py",
+    "tests/test_answer_claude.py",
+    "tests/test_answer_notes.py",
+    "tests/test_answer_text.py",
+    "tests/test_answer_write.py",
     "tests/test_off_topic.py",
 )
 
@@ -71,16 +84,19 @@ class ProjectChecks(unittest.TestCase):
             "tests/test_prices.py:PriceChecks",
             "tests/test_prices.py:LongerPriceChecks",
             "tests/test_prices.py:ServicePriceChecks",
-            "tests/test_answers.py:AnswerChecks",
-            "tests/test_answers.py:ClaudeAnswerChecks",
-            "tests/test_answers.py:FailureNoteChecks",
+            "tests/test_answer_pages.py",
+            "tests/test_answer_claude.py",
+            "tests/test_answer_notes.py",
             "tests/test_unreadable_pages.py:UnreadablePageNoteChecks",
-            "tests/test_answers.py:OutageReplyChecks",
-            "tests/test_answers.py:HoursFaqAnswerChecks",
-            "tests/test_answers.py:SaturdayBookingChecks",
-            "tests/test_answers.py:WrappedQuestionChecks",
-            "tests/test_answers.py:PricedServiceChecks",
-            "tests/test_answers.py:MisspelledLeakChecks",
+            "tests/test_answer_fixed.py",
+            "tests/test_answer_hours.py",
+            "tests/test_answer_callback.py",
+            "tests/test_answer_text.py",
+            "tests/test_answer_prices.py",
+            "tests/test_answer_spoken.py",
+            "tests/test_answer_stand_in.py",
+            "tests/test_answer_instructions.py",
+            "tests/test_answer_write.py",
             "tests/test_run_through.py:RunThroughReplyChecks",
             "tests/test_run_through.py:SecondRunThroughChecks",
             "tests/test_off_topic.py:OffTopicReplyChecks",

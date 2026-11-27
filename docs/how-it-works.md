@@ -100,6 +100,8 @@ The command and the import stay `scripts/answer_reply.py`. The kinds of reply li
 - `text.py` holds the shared helpers.
 - `write.py` chooses the reply.
 
+The automated tests are split the same way. One file covers each kind: `tests/test_answer_hours.py`, `tests/test_answer_prices.py`, `tests/test_answer_spoken.py`, `tests/test_answer_callback.py`, `tests/test_answer_fixed.py`, `tests/test_answer_instructions.py`, `tests/test_answer_stand_in.py`, `tests/test_answer_claude.py`, `tests/test_answer_notes.py`, `tests/test_answer_pages.py`, `tests/test_answer_text.py`, and `tests/test_answer_write.py`. Off-topic checks are in `tests/test_off_topic.py`.
+
 **What it does**
 
 - A question the pages answer gets a short answer that names the page.
