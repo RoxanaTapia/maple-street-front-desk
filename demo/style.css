@@ -10,6 +10,17 @@ h1.dk-product {
 .dk-footer-slot {
   padding-top: 12px;
   padding-bottom: 16px;
+  color: var(--color-muted);
+  font-weight: 500;
+}
+
+.dk-footer-slot a {
+  color: var(--color-muted);
+  font-weight: 500;
+}
+
+.dk-footer-slot a:hover {
+  color: var(--color-accent);
 }
 
 .wrap {
@@ -44,8 +55,7 @@ h1.dk-product {
 }
 
 .phone-top h2,
-.demo,
-.quiet {
+.demo {
   margin: 0;
 }
 
@@ -57,31 +67,13 @@ h1.dk-product {
 .demo,
 .hint,
 .elapsed,
-.behind,
-.quiet {
+.behind {
   color: var(--color-muted);
 }
 
 .demo {
   font-size: 0.9rem;
   line-height: 1.4;
-}
-
-.quiet {
-  font-size: 0.8rem;
-  line-height: 1.4;
-  text-align: center;
-}
-
-.dk-footer-slot .quiet a {
-  color: var(--color-muted);
-  font-weight: 500;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.dk-footer-slot .quiet a:hover {
-  color: var(--color-accent);
 }
 
 .case-chips {
