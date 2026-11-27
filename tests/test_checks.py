@@ -60,7 +60,7 @@ class ProjectChecks(unittest.TestCase):
         self.assertTrue(version == running or version.startswith(running + "."))
 
     def test_a_proposed_change_runs_the_checks(self):
-        """A proposed change runs the automated tests for the pages, urgent words, prices, answers, the demo chat, the Saturday night chips, the daily limit, the icons, and the demo kit."""
+        """A proposed change runs the automated tests for the pages, urgent words, prices, answers, the demo chat, the calm screen, the Saturday night chips, the daily limit, the icons, and the demo kit."""
         workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
         for command in (
             "tests/test_checks.py",
@@ -86,6 +86,7 @@ class ProjectChecks(unittest.TestCase):
             "tests/test_off_topic.py:OffTopicReplyChecks",
             "tests/test_demo.py:DemoChatChecks",
             "tests/test_case_flow.py:CaseFlowChecks",
+            "tests/test_calm_screen.py:CalmScreenChecks",
             "tests/test_chat_limit.py:ChatLimitChecks",
             "tests/test_brand.py:IconChecks",
             "tests/test_brand.py:DemoKitCopyChecks",

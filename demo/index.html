@@ -63,39 +63,33 @@
   <main class="wrap" id="chat">
     <section class="phone" aria-label="Maple Street Plumbing">
       <header class="phone-top">
-        <p class="scene">Saturday night</p>
         <h2>Maple Street Plumbing</h2>
+        <p class="demo">Demo for a fictional plumbing business. It only answers from Maple Street Plumbing's pages.</p>
       </header>
-      <p class="demo">This is a demo. It answers only from Maple Street Plumbing's pages.</p>
-      <p class="proof"><a href="/docs/test-results.md">15 of 15 test questions answered right, 4 Nov 2026</a></p>
-      <p class="next">A live chat assistant. Voice is the next step.</p>
-      <ul class="dk-chips case-chips" id="chips">
-        <li><button type="button" data-message="Water everywhere, pipe burst!">Water everywhere, pipe burst!</button></li>
-        <li><button type="button" data-message="How much is drain cleaning?">How much is drain cleaning?</button></li>
-        <li><button type="button" data-message="Water heater price?">Water heater price?</button></li>
-        <li><button type="button" data-message="Do you sell pizza?">Do you sell pizza?</button></li>
-      </ul>
-      <div id="thread" class="thread" aria-live="polite"></div>
+      <div id="thread" class="thread" aria-live="polite">
+        <div class="empty" id="empty">
+          <p class="greeting">Hi, I'm the Maple Street front desk.<br>How can I help?</p>
+          <ul class="dk-chips case-chips" id="chips">
+            <li><button type="button" data-message="It's Saturday night and my sink is leaking">It's Saturday night and my sink is leaking</button></li>
+            <li><button type="button" data-message="How much is drain cleaning?">How much is drain cleaning?</button></li>
+            <li><button type="button" data-message="Water heater price?">Water heater price?</button></li>
+            <li><button type="button" data-message="Do you sell pizza?">Do you sell pizza?</button></li>
+          </ul>
+        </div>
+      </div>
       <form id="composer" class="composer">
-        <label for="message">Message</label>
-        <p id="message-hint" class="hint">Press Enter to send. Shift+Enter adds a new line.</p>
+        <label class="visually-hidden" for="message">Message</label>
         <div class="row">
           <textarea id="message" name="message" rows="1" aria-describedby="message-hint"></textarea>
           <button id="send" class="btn btn-primary" type="submit">Send</button>
         </div>
+        <p id="message-hint" class="hint">Press Enter to send. Shift+Enter adds a new line.</p>
       </form>
-      <aside class="next-card" aria-disabled="true">
-        <p>Next: the same rules on a phone call</p>
-      </aside>
     </section>
   </main>
   <footer class="dk-footer">
     <div class="dk-footer-slot">
-      <a href="https://roxanatapia.dev/">Built by Roxana Tapia</a>
-      <span aria-hidden="true">·</span>
-      <a href="https://github.com/RoxanaTapia/maple-street-front-desk">How it's built</a>
-      <span aria-hidden="true">·</span>
-      <a href="https://calendar.google.com/calendar/appointments/schedules/AcZssZ3r5LJ7bPLsMMNRH2fcH9DkzDNTf8oA8XIg0NX9aNpoKezPGMN2Z2OTD-baqG9XoB5vfehzJnzt?gv=true">Book a call</a>
+      <p class="quiet">Tested with automated tests. <a href="https://roxanatapia.dev/cases/front-desk">How it's built</a></p>
     </div>
   </footer>
   <script src="/demo-kit/theme.js"></script>

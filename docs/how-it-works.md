@@ -236,6 +236,7 @@ Each automated test prints ok, and the run ends with OK. The same automated test
 - A page that can't be read is noted
 - Off-topic questions
 - The demo chat
+- The calm chat screen
 - The Saturday night chips
 - The daily chat limit
 - The four icons
@@ -251,9 +252,9 @@ A chat page runs the same steps as the command line. From the project folder:
 python3 scripts/demo_chat.py
 ```
 
-It prints `Demo chat at http://127.0.0.1:8080`. Open that address. The page says: This is a demo. It answers only from Maple Street Plumbing's pages. It also says this is a live chat assistant, and that voice is the next step. Maple Street Plumbing is a fictional business. The page is a phone-style chat for a Saturday night. Four messages are ready: Water everywhere, pipe burst!, How much is drain cleaning?, Water heater price?, and Do you sell pizza?. You can still type your own. The sample site starts with it, so there is nothing else to run. Stop it with Ctrl+C.
+It prints `Demo chat at http://127.0.0.1:8080`. Open that address. The title is Maple Street Plumbing. Under it, one line says: Demo for a fictional plumbing business. It only answers from Maple Street Plumbing's pages. The empty chat says: Hi, I'm the Maple Street front desk. How can I help? Four messages sit under that greeting: It's Saturday night and my sink is leaking, How much is drain cleaning?, Water heater price?, and Do you sell pizza?. You can still type your own. The greeting and those messages leave once a conversation starts. A quiet line at the bottom says: Tested with automated tests. How it's built. That link opens the case notes. Maple Street Plumbing is a fictional business. The sample site starts with the chat, so there is nothing else to run. Stop it with Ctrl+C.
 
-An urgent message gets the fixed urgent reply right away, with the line Urgent rule · no AI needed. A price the Pricing page states includes a Pricing page chip that opens a short excerpt from that page. A price the pages don't state gets the callback reply. A question that is not about plumbing gets the off-topic reply. Each reply has a Behind this reply drawer. It names the step that ran: Urgent rule, Page match, or Price check. The page shows the time you waited beside that reply. The line 15 of 15 test questions answered right, 4 Nov 2026 links to the [live test results](test-results.md). A greyed card says: Next: the same rules on a phone call. New lines fade in, and a typing indicator shows while a reply is on the way. Both stay off when the device asks for reduced motion.
+An urgent message gets the fixed urgent reply right away, with the line Urgent rule · no AI needed. A price the Pricing page states includes a Pricing page chip that opens a short excerpt from that page. A price the pages don't state gets the callback reply. A question that is not about plumbing gets the off-topic reply. Each reply has a Behind this reply drawer. It names the step that ran: Urgent rule, Page match, or Price check. The page shows the time you waited beside that reply. New lines fade in, and a typing indicator shows while a reply is on the way. Both stay off when the device asks for reduced motion.
 
 The page uses the shared demo kit in `vendor/demo-kit`. The header shows the wordmark, the name Maple Street front desk, a theme menu, and an Exit demo link to the portfolio site. On a phone the product name sits on its own line, so it stays whole. A line under the header says: Portfolio demo · fictional business. The same server serves favicon.svg, favicon-32.png, apple-touch-icon.png, and favicon.ico. The fonts come from this server. An automated test checks that the copied kit still matches version 2. Another checks that the four icons answer.
 

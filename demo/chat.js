@@ -4,6 +4,7 @@
   var box = document.getElementById("message");
   var button = document.getElementById("send");
   var chips = document.querySelectorAll("#chips button");
+  var empty = document.getElementById("empty");
   var composing = false;
   var waiting = false;
 
@@ -174,11 +175,19 @@
     scrollThread();
   }
 
+  function clearEmpty() {
+    if (empty && empty.parentNode) {
+      empty.parentNode.removeChild(empty);
+      empty = null;
+    }
+  }
+
   function send(message) {
     var text = (message || "").trim();
     if (!text || waiting) {
       return;
     }
+    clearEmpty();
     addCustomer(text);
     box.value = "";
     setWaiting(true);

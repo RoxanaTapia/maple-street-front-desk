@@ -11,11 +11,12 @@ The Claude key is read later, from the server's own settings, and is
 never sent to the browser. DEMO_HOST and DEMO_PORT choose where the
 page listens. The default is http://127.0.0.1:8080.
 
-The page offers four Saturday night messages and still takes a typed
-message. When the page asks, the reply also names which step ran, and
-a price that names a page can include a short excerpt of that page.
-The reply text itself is unchanged. The dated proof line links to
-docs/test-results.md, which this server also sends.
+The page offers four messages, including a Saturday night leak, and
+still takes a typed message. When the page asks, the reply also names
+which step ran, and a price that names a page can include a short
+excerpt of that page. The reply text itself is unchanged. The chat
+page does not link to docs/test-results.md. This server still sends
+that file when it is asked for.
 
 Messages that reach the AI are counted for the Berlin day. CHAT_DAILY_LIMIT
 is the whole chat, and CHAT_VISITOR_DAILY_LIMIT is one visitor. At either

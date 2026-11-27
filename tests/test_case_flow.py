@@ -31,7 +31,7 @@ import read_pages
 import serve_sample_site
 import urgent_reply
 
-BURST = "Water everywhere, pipe burst!"
+BURST = "It's Saturday night and my sink is leaking"
 DRAIN = "How much is drain cleaning?"
 HEATER = "Water heater price?"
 PIZZA = "Do you sell pizza?"
@@ -143,7 +143,7 @@ class CaseFlowChecks(unittest.TestCase):
         return parsed
 
     def test_a_burst_pipe_gets_the_urgent_reply(self):
-        """Water everywhere, pipe burst! gets the urgent reply."""
+        """It's Saturday night and my sink is leaking gets the urgent reply."""
         expected = urgent_reply.fixed_urgent_reply()
         trace = {}
         direct = front_desk.reply_to(BURST, base_url=self.demo.base, trace=trace)
@@ -200,7 +200,7 @@ class CaseFlowChecks(unittest.TestCase):
         self.assertNotIn(PHONE, parsed["reply"])
 
     def test_the_page_shows_the_saturday_night_flow(self):
-        """The page shows the four messages, the proof line, the reply time, and the next card."""
+        """The page shows the four messages, the greeting, and the quiet footer."""
         status, _headers, body = self.demo.get("/")
         self.assertEqual(status, 200)
         for message in (BURST, DRAIN, HEATER, PIZZA):
@@ -208,12 +208,20 @@ class CaseFlowChecks(unittest.TestCase):
             self.assertIn(message, body)
         self.assertIn("Maple Street Plumbing", body)
         self.assertIn("Saturday night", body)
+        self.assertNotIn('class="scene"', body)
         self.assertIn('<h1 class="dk-product">Maple Street front desk</h1>', body)
         self.assertIn("Portfolio demo · fictional business", body)
         self.assertNotIn("sample data", body)
-        self.assertIn(f'href="/docs/test-results.md">{PROOF}</a>', body)
-        self.assertIn("Next: the same rules on a phone call", body)
-        self.assertIn('aria-disabled="true"', body)
+        self.assertIn("Hi, I'm the Maple Street front desk.", body)
+        self.assertIn("How can I help?", body)
+        self.assertNotIn(PROOF, body)
+        self.assertNotIn('href="/docs/test-results.md"', body)
+        self.assertNotIn("Next: the same rules on a phone call", body)
+        self.assertNotIn("A live chat assistant. Voice is the next step.", body)
+        self.assertIn(
+            'href="https://roxanatapia.dev/cases/front-desk">How it\'s built</a>',
+            body,
+        )
         self.assertIn("/demo-kit/motion.js", body)
         self.assertNotIn("—", body)
         self.assertNotIn("simulated", body.casefold())
