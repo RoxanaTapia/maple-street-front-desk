@@ -38,17 +38,6 @@ h1.dk-product {
   color: var(--color-accent);
 }
 
-.tested,
-:root[data-theme="dark"] .tested {
-  flex-basis: 100%;
-  margin: 2px 0 0;
-  color: var(--color-muted);
-  font-size: 0.8rem;
-  font-weight: 400;
-  line-height: 1.4;
-  text-align: center;
-}
-
 .wrap {
   width: 100%;
   max-width: 28rem;

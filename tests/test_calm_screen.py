@@ -91,13 +91,15 @@ class CalmScreenChecks(unittest.TestCase):
         self.assertIn("removeChild", self.script.split("function clearEmpty", 1)[1])
 
     def test_the_footer_matches_the_demo_kit_slot(self):
-        """The footer is the shared line, How it's built opens the case notes, and the tested line stays."""
+        """The footer is the shared line, and How it's built opens the case notes."""
         composer = self.page.index('id="composer"')
         footer_at = self.page.index('<footer class="dk-footer">')
         self.assertLess(composer, footer_at)
         footer = self.page.split('<footer class="dk-footer">', 1)[1].split("</footer>", 1)[0]
         self.assertIn('class="dk-footer-slot"', footer)
-        self.assertIn('<p class="tested">Tested with automated tests.</p>', footer)
+        self.assertNotIn("Tested with automated tests.", self.page)
+        self.assertNotIn('class="tested"', self.page)
+        self.assertNotIn(".tested", self.style)
         self.assertNotIn("github.com/RoxanaTapia/maple-street-front-desk", self.page)
         self.assertNotIn("Exit demo", self.page)
         self.assertNotIn("Log out", self.page)
@@ -110,10 +112,8 @@ class CalmScreenChecks(unittest.TestCase):
         book = footer.index(
             'href="__BOOKING_URL__" target="_blank" rel="noopener noreferrer">Book a call</a>'
         )
-        tested = footer.index("Tested with automated tests.")
         self.assertLess(built, case)
         self.assertLess(case, book)
-        self.assertLess(book, tested)
         self.assertEqual(footer.count("·"), 2)
         self.assertNotIn('target="_blank"', footer[:case])
         url = demo_chat.booking_page()
@@ -126,11 +126,7 @@ class CalmScreenChecks(unittest.TestCase):
         self.assertNotIn("__BOOKING_URL__", served)
         self.assertIsNone(re.search(r"\bchecks\b", self.page, re.IGNORECASE))
         self.assertIn(".dk-footer-slot a {\n  color: var(--color-muted);\n", self.style)
-        tested_css = self.style.split(".tested", 1)[1].split("}", 1)[0]
-        self.assertIn("color: var(--color-muted)", tested_css)
-        self.assertIn("font-size: 0.8rem", tested_css)
-        self.assertIn("text-align: center", tested_css)
-        self.assertIn(':root[data-theme="dark"] .tested', self.style)
+        self.assertNotIn("Tested with automated tests.", served)
         back_css = self.style.split(".dk-back", 1)[1].split("}", 1)[0]
         self.assertIn("color: var(--color-muted)", back_css)
         self.assertIn(':root[data-theme="dark"] .dk-back', self.style)

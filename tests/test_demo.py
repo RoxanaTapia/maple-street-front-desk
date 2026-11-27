@@ -453,7 +453,7 @@ class DemoChatChecks(unittest.TestCase):
         self.assertNotIn("Log out", body)
         self.assertNotIn('id="demo-exit"', body)
         self.assertIn('class="dk-back" href="https://roxanatapia.dev/">Back to portfolio</a>', body)
-        self.assertIn("Tested with automated tests.", body)
+        self.assertNotIn("Tested with automated tests.", body)
         self.assertIn(f'href="{demo_chat.booking_page()}"', body)
         self.assertNotIn("__BOOKING_URL__", body)
         self.assertIn('id="theme-toggle"', body)
