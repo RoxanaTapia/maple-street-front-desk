@@ -65,8 +65,8 @@ class MisspellingAndPlainPriceChecks(unittest.TestCase):
         self.assertIn("small misspelling", behaviour.lower())
         self.assertIn("without a dollar sign", behaviour.lower())
         readme = (ROOT / "README.md").read_text(encoding="utf-8")
-        self.assertIn("18 agreed questions", readme)
-        self.assertIn("18 test questions", readme)
+        self.assertIn("agreed test questions", readme)
+        self.assertIn("[What we've agreed](docs/agreements.md)", readme)
 
         spelled_reply = front_desk.reply_to(spelled, base_url=self.site.base)
         self.assertEqual(spelled_reply, drain_price)
